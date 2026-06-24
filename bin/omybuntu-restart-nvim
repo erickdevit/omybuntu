@@ -13,7 +13,7 @@ if pgrep -x nvim >/dev/null; then
         if [[ -S "$server" ]]; then
           # Send escape to normal mode, tell Lazy to sync (installs the plugin if missing), 
           # and set the new colorscheme
-          nvim --server "$server" --remote-send "<C-\><C-N>:Lazy! sync<CR>:colorscheme $COLORSCHEME<CR>"
+          nvim --server "$server" --remote-send "<C-\><C-N>:Lazy! sync<CR>:sleep 1<CR>:colorscheme $COLORSCHEME<CR>:Lazy close<CR>"
         fi
       done
     fi

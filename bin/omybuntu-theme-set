@@ -60,8 +60,6 @@ omybuntu-restart-btop
 omybuntu-restart-opencode
 omybuntu-restart-mako
 omybuntu-restart-helix
-omybuntu-restart-nvim
-
 # Change app-specific themes
 omybuntu-theme-set-foot
 omybuntu-theme-set-gnome
@@ -70,6 +68,9 @@ omybuntu-theme-set-vscode
 omybuntu-theme-set-obsidian
 omybuntu-theme-set-keyboard
 omybuntu-nvim-setup
+
+# Restart/Reload app themes
+omybuntu-restart-nvim
 
 # Call hook on theme set
 omybuntu-hook theme-set "$THEME_NAME" >/dev/null

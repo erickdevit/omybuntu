@@ -2,5 +2,14 @@
 
 # omybuntu:summary=Toggles transparency for the currently focused window.
 
-# Modern Hyprland has a native dispatcher for toggling opacity
-hyprctl dispatch toggleopaque
+addr=$(hyprctl activewindow -j | jq -r '.address')
+
+if [[ -n "$addr" && "$addr" != "null" ]]; then
+  # Try the modern top-level setprop with lock (overrides windowrules)
+  hyprctl setprop "address:$addr" opaque toggle lock >/dev/null 2>&1 || \
+    hyprctl dispatch setprop "address:$addr" opaque toggle >/dev/null 2>&1 || \
+    hyprctl dispatch toggleopaque >/dev/null 2>&1
+else
+  # If we couldn't get an address, just try the dispatcher
+  hyprctl dispatch toggleopaque >/dev/null 2>&1
+fi

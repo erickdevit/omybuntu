@@ -18,7 +18,8 @@ for file in $OMYBUNTU_PATH/migrations/*.sh; do
     if bash $file; then
       touch "$STATE_DIR/$filename"
     else
-      if gum confirm "Migration ${filename%.sh} failed. Skip and continue?"; then
+      source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+      if gum confirm "$I18N_MIG_FAILED"; then
         touch "$STATE_DIR/skipped/$filename"
       else
         exit 1

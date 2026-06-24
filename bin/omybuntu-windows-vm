@@ -6,6 +6,8 @@
 
 COMPOSE_FILE="$HOME/.config/windows/docker-compose.yml"
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 check_prerequisites() {
   local DISK_SIZE_GB=${1:-64}
   local REQUIRED_SPACE=$((DISK_SIZE_GB + 10))  # Add 10GB for Windows ISO and overhead
@@ -73,22 +75,15 @@ EOF
   echo "  Total CPU Cores: $TOTAL_CORES"
   echo ""
 
-  RAM_OPTIONS=""
-  for size in 2 4 8 16 32 64; do
-    if (( size <= TOTAL_RAM_GB )); then
-      RAM_OPTIONS="$RAM_OPTIONS ${size}G"
-    fi
-  done
+  RAM_OPTIONS="2G 4G 6G 8G 12G 16G 24G 32G"
+  SELECTED_RAM=$(echo $RAM_OPTIONS | tr ' ' '\n' | gum choose --selected="4G" --header="$I18N_WIN_RAM_HEADER")
 
-  SELECTED_RAM=$(echo $RAM_OPTIONS | tr ' ' '\n' | gum choose --selected="4G" --header="How much RAM would you like to allocate to Windows VM?")
+  # Check if user cancelled (Ctrl+C in gum choose returns empty string)
+  [[ -n $SELECTED_RAM ]] || { echo "Installation cancelled"; exit 0; }
 
-  # Check if user cancelled
-  if [[ -z $SELECTED_RAM ]]; then
-    echo "Installation cancelled by user"
-    exit 1
-  fi
-
-  SELECTED_CORES=$(gum input --placeholder="Number of CPU cores (1-$TOTAL_CORES)" --value="2" --header="How many CPU cores would you like to allocate to Windows VM?" --char-limit=2)
+  local cores_placeholder
+  cores_placeholder=$(printf "$I18N_WIN_CORES_PLACEHOLDER" "$TOTAL_CORES")
+  SELECTED_CORES=$(gum input --placeholder="$cores_placeholder" --value="2" --header="$I18N_WIN_CORES_HEADER" --char-limit=2)
 
   # Check if user cancelled (Ctrl+C in gum input returns empty string)
   if [[ -z $SELECTED_CORES ]]; then
@@ -112,20 +107,15 @@ EOF
     exit 1
   fi
 
-  DISK_OPTIONS=""
-  for size in 32 64 128 256 512; do
-    if (( size <= MAX_DISK_GB )); then
-      DISK_OPTIONS="$DISK_OPTIONS ${size}G"
-    fi
-  done
-
+  DISK_OPTIONS="32G 64G 128G 256G 512G"
+  
   # Default to 64G if available, otherwise 32G
   DEFAULT_DISK="64G"
   if ! echo "$DISK_OPTIONS" | grep -q "64G"; then
     DEFAULT_DISK="32G"
   fi
 
-  SELECTED_DISK=$(echo $DISK_OPTIONS | tr ' ' '\n' | gum choose --selected="$DEFAULT_DISK" --header="How much disk space would you like to give Windows VM? (64GB+ recommended)")
+  SELECTED_DISK=$(echo $DISK_OPTIONS | tr ' ' '\n' | gum choose --selected="$DEFAULT_DISK" --header="$I18N_WIN_DISK_HEADER")
 
   # Check if user cancelled
   if [[ -z $SELECTED_DISK ]]; then
@@ -139,13 +129,13 @@ EOF
   # Re-check prerequisites with selected disk size
   check_prerequisites "$DISK_SIZE_NUM"
 
-  # Prompt for username and password
-  USERNAME=$(gum input --placeholder="Username (Press enter to use default: docker)" --header="Enter Windows username:")
+  # Set Windows credentials
+  USERNAME=$(gum input --placeholder="$I18N_WIN_USER_PLACEHOLDER" --header="$I18N_WIN_USER_HEADER")
   if [[ -z $USERNAME ]]; then
     USERNAME="docker"
   fi
 
-  PASSWORD=$(gum input --placeholder="Password (Press enter to use default: admin)" --password --header="Enter Windows password:")
+  PASSWORD=$(gum input --placeholder="$I18N_WIN_PASS_PLACEHOLDER" --password --header="$I18N_WIN_PASS_HEADER")
   if [[ -z $PASSWORD ]]; then
     PASSWORD="admin"
     PASSWORD_DISPLAY="(default)"
@@ -160,7 +150,7 @@ EOF
     --margin "1" \
     --align left \
     --bold \
-    "Windows VM Configuration" \
+    "$I18N_WIN_CONFIG_TITLE" \
     "" \
     "RAM:       $SELECTED_RAM" \
     "CPU:       $SELECTED_CORES cores" \
@@ -170,7 +160,7 @@ EOF
 
   # Ask for confirmation
   echo ""
-  if ! gum confirm "Proceed with this configuration?"; then
+  if ! gum confirm "$I18N_WIN_CONFIRM_PROCEED"; then
     echo "Installation cancelled by user"
     exit 1
   fi
@@ -247,7 +237,7 @@ EOF
 }
 
 remove_windows() {
-  if ! gum confirm --default=false "Remove Windows VM and delete all associated data?"; then
+  if ! gum confirm --default=false "$I18N_WIN_CONFIRM_REMOVE"; then
     echo "Removal cancelled by user"
     exit 1
   fi
@@ -319,10 +309,9 @@ launch_windows() {
 
   # Build the connection info
   if [[ $KEEP_ALIVE = "true" ]]; then
-    LIFECYCLE="VM will keep running after RDP closes
-To stop: omybuntu-windows-vm stop"
+    LIFECYCLE="$I18N_WIN_LIFECYCLE_KEEP"
   else
-    LIFECYCLE="VM will auto-stop when RDP closes"
+    LIFECYCLE="$I18N_WIN_LIFECYCLE_AUTO"
   fi
 
   gum style \
@@ -330,7 +319,7 @@ To stop: omybuntu-windows-vm stop"
     --padding "1 2" \
     --margin "1" \
     --align center \
-    "Connecting to Windows VM" \
+    "$I18N_WIN_CONNECTING" \
     "" \
     "$LIFECYCLE"
 

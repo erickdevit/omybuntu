@@ -26,8 +26,10 @@ if lsmod | grep -q '^xpad '; then
   sudo modprobe -r xpad 2>/dev/null || needs_reboot=true
 fi
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if $needs_reboot; then
-  gum confirm "Reboot needed to finish setup. Reboot now?" && sudo reboot now
+  gum confirm "$I18N_REBOOT_CONFIRM" && sudo reboot now
   exit 0
 fi
 

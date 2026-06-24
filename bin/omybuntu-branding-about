@@ -10,9 +10,13 @@ set -euo pipefail
 
 SOURCE_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}"
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 case "${1:-}" in
 image)
-  image=$(omybuntu-menu-file "Pick png/svg from $SOURCE_DIR" "${SOURCE_DIR}" "svg png")
+  local picker_msg
+  picker_msg=$(printf "$I18N_BRANDING_PICK_IMAGE" "$SOURCE_DIR")
+  image=$(omybuntu-menu-file "$picker_msg" "${SOURCE_DIR}" "svg png")
   if [[ -n $image ]] && omybuntu-transcode-ascii "$image" ~/.config/omybuntu/branding/about.txt --width 54 --height 26; then
     omybuntu-launch-about >/dev/null 2>&1
   fi

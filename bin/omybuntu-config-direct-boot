@@ -23,12 +23,14 @@ if cat /sys/class/dmi/id/bios_vendor 2>/dev/null | grep -qi "Apple"; then
   exit 1
 fi
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 existing_entry=$(efibootmgr | grep -E "^Boot[0-9A-Fa-f]+\*? Omybuntu([[:space:]]|$)" | head -1)
 
 if [[ -n $existing_entry ]]; then
   boot_num=$(echo "$existing_entry" | sed -n 's/^Boot\([0-9A-Fa-f]\+\).*/\1/p')
 
-  if gum confirm "Disable direct boot (remove Omybuntu EFI entry)?"; then
+  if gum confirm "$I18N_DIRECT_BOOT_DISABLE"; then
     echo "Removing EFI boot entry $boot_num"
     sudo efibootmgr --bootnum "$boot_num" --delete-bootnum >/dev/null
   fi
@@ -46,7 +48,7 @@ else
   disk=$(echo "$boot_source" | sed 's/p\?[0-9]*$//')
   part=$(echo "$boot_source" | grep -o 'p\?[0-9]*$' | sed 's/^p//')
 
-  if gum confirm "Setup direct boot (so snapshot booting must be done via bios)?"; then
+  if gum confirm "$I18N_DIRECT_BOOT_SETUP"; then
     echo "Creating EFI boot entry for $uki_file"
 
     sudo efibootmgr --create \

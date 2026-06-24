@@ -2,6 +2,8 @@
 
 # omybuntu:summary=Prompt for required reboot or service restarts after updates
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 echo
 
 confirm_reboot() {
@@ -23,14 +25,14 @@ for kernel in /usr/lib/modules/*/vmlinuz; do
 done
 
 if [[ $kernel_updated == "true" ]]; then
-  confirm_reboot "Linux kernel has been updated. Reboot?"
+  confirm_reboot "$I18N_UPD_REBOOT_KERNEL"
 elif [[ -f $HOME/.local/state/omybuntu/reboot-required ]]; then
-  confirm_reboot "Updates require reboot. Ready?"
+  confirm_reboot "$I18N_UPD_REBOOT_REQUIRED"
 fi
 
 running_hyprland=$(readlink /proc/$(pgrep -x Hyprland)/exe 2>/dev/null)
 if [[ $running_hyprland == *"(deleted)"* ]]; then
-  confirm_reboot "Hyprland has been updated. Reboot?"
+  confirm_reboot "$I18N_UPD_REBOOT_HYPRLAND"
 fi
 
 for file in "$HOME"/.local/state/omybuntu/restart-*-required; do

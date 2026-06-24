@@ -27,8 +27,10 @@ unlock_dns_to_dhcp() {
   done
 }
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if [[ -z $1 ]]; then
-  dns=$(gum choose --height 6 --header "Select DNS provider" Cloudflare Google DHCP Custom)
+  dns=$(gum choose --height 6 --header "$I18N_DNS_PROVIDER" Cloudflare Google DHCP Custom)
 else
   dns=$1
 fi
@@ -63,11 +65,11 @@ EOF
   ;;
 
 Custom)
-  echo "Enter your DNS servers (space-separated, e.g. '192.168.1.1 1.1.1.1'):"
+  echo "$I18N_DNS_CUSTOM_PROMPT"
   read -r dns_servers
 
   if [[ -z $dns_servers ]]; then
-    echo "Error: No DNS servers provided."
+    echo "$I18N_DNS_CUSTOM_ERROR"
     exit 1
   fi
 

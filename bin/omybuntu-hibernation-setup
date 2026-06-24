@@ -13,6 +13,8 @@ for arg in "$@"; do
   esac
 done
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if [[ ! -f /sys/power/image_size ]]; then
   echo -e "Hibernation is not supported on your system" >&2
   exit 0
@@ -48,7 +50,8 @@ fi
 
 if ! $FORCE; then
   MEM_TOTAL_HUMAN=$(free --human | awk '/Mem/ {print $2}')
-  if ! gum confirm "Use $MEM_TOTAL_HUMAN on boot drive to make hibernation available?"; then
+  confirm_msg=$(printf "$I18N_HIBERNATION_SETUP_WARN" "$MEM_TOTAL_HUMAN")
+  if ! gum confirm "$confirm_msg"; then
     exit 0
   fi
 fi
@@ -127,6 +130,6 @@ if ! $NO_REBUILD; then
   echo
 fi
 
-if ! $FORCE && ! $NO_REBUILD && gum confirm "Reboot to enable hibernation?"; then
+if ! $FORCE && ! $NO_REBUILD && gum confirm "$I18N_HIBERNATION_REBOOT_WARN"; then
   omybuntu-system-reboot
 fi

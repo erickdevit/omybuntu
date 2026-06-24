@@ -14,5 +14,7 @@ while IFS= read -r drive; do
   drives_with_info+="$(omybuntu-drive-info "$drive")"$'\n'
 done <<<"$drives"
 
-selected_drive="$(printf "%s" "$drives_with_info" | gum choose --header "Select drive")" || exit 1
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+selected_drive="$(printf "%s" "$drives_with_info" | gum choose --header "$I18N_DRIVE_SELECT_HEADER")" || exit 1
 printf "%s\n" "$selected_drive" | awk '{print $1}'

@@ -14,5 +14,7 @@ sudo usermod -aG nordvpn "$USER"
 
 echo -e "\nNordVPN installed! After reboot, run 'nordvpn login' to authenticate."
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 echo
-gum confirm "Reboot now to make NordVPN usable?" && omybuntu-system-reboot
+gum confirm "$I18N_REBOOT_CONFIRM" && omybuntu-system-reboot

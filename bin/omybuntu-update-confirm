@@ -2,17 +2,19 @@
 
 # omybuntu:summary=Prompt for confirmation before starting an update
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 gum style --border normal --padding "1 2" \
-  "Ready to update?" \
+  "$I18N_UPD_READY" \
   "" \
-  "• You cannot stop the update once you start!" \
-  "• Make sure you're connected to power or have a full battery" \
+  "$I18N_UPD_WARN_NO_STOP" \
+  "$I18N_UPD_WARN_POWER" \
   "" \
-  "What's new: https://github.com/basecamp/omybuntu/releases"
+  "$I18N_UPD_WHATS_NEW"
 
 echo
 
-if ! gum confirm "Continue with update?"; then
-  echo "Update cancelled"
+if ! gum confirm "$I18N_UPDATE_PROCEED"; then
+  echo "$I18N_UPD_CANCELLED"
   exit 1
 fi

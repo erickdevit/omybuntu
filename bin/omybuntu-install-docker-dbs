@@ -5,8 +5,10 @@
 
 options=("MySQL" "PostgreSQL" "Redis" "MongoDB" "MariaDB" "MSSQL")
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (( $# == 0 )); then
-  choices=$(printf "%s\n" "${options[@]}" | gum choose --header "Select database (return to install, esc to cancel)") || main_menu
+  choices=$(printf "%s\n" "${options[@]}" | gum choose --header "$I18N_DOCKER_DB_HEADER") || main_menu
 else
   choices="$@"
 fi

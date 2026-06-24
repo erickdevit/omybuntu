@@ -11,7 +11,9 @@ if [[ ! -f $MKINITCPIO_CONF ]] || ! grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CON
   exit 0
 fi
 
-if ! gum confirm "Remove hibernation setup?"; then
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+if ! gum confirm "$I18N_HIBERNATION_REMOVE_WARN"; then
   exit 0
 fi
 

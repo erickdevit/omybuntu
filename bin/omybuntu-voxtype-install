@@ -7,7 +7,9 @@ set -e
 
 # Install voxtype and configure it for use.
 
-if gum confirm "Install Voxtype + AI model (~150MB) to enable dictation?"; then
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+if gum confirm "$I18N_VOXTYPE_WARN"; then
   omybuntu-pkg-add wtype voxtype-bin
 
   # Setup voxtype
@@ -22,5 +24,5 @@ if gum confirm "Install Voxtype + AI model (~150MB) to enable dictation?"; then
 
   omybuntu-hyprland-toggle voxtype on
   omybuntu-restart-waybar
-  notify-send "    Voxtype Dictation Ready" "Hold F9 to dictate (or toggle with Super + Ctrl + X)." -t 10000
+  omybuntu-notification-send -g  "$I18N_VOXTYPE_READY" "$I18N_VOXTYPE_READY_MSG"
 fi

@@ -147,6 +147,10 @@ tooltip {
 
 .left #custom-voxtype, .right #custom-voxtype { margin: 3.75px 0; min-width: 0; min-height: 12px; }
 
+.left, .right {
+  padding-right: 2px;
+}
+
 #custom-expand-icon.vertical,
 .left #custom-expand-icon.horizontal,
 .right #custom-expand-icon.horizontal {

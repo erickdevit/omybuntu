@@ -13,13 +13,13 @@ if [[ -z $device ]]; then
 fi
 
 enable() {
-  hyprctl eval "hl.device({ name = \"$device\", enabled = true })" >/dev/null
+  hyprctl eval "hl.device({ name = \"$device\", enabled = true })" >/dev/null 2>&1 || hyprctl keyword "device:$device:enabled" true >/dev/null
   rm -f "$STATE_FILE"
   omybuntu-swayosd-client --custom-icon device-support-touch-symbolic --custom-message "Touchscreen enabled"
 }
 
 disable() {
-  hyprctl eval "hl.device({ name = \"$device\", enabled = false })" >/dev/null
+  hyprctl eval "hl.device({ name = \"$device\", enabled = false })" >/dev/null 2>&1 || hyprctl keyword "device:$device:enabled" false >/dev/null
   mkdir -p "$(dirname "$STATE_FILE")"
   printf 'hl.device({ name = "%s", enabled = false })\n' "$device" >"$STATE_FILE"
   omybuntu-swayosd-client --custom-icon touch-disabled-symbolic --custom-message "Touchscreen disabled"

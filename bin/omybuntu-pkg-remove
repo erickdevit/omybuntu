@@ -5,7 +5,7 @@
 
 fzf_args=(
   --multi
-  --preview 'yay -Qi {1}'
+  --preview 'apt-cache show {1} 2>/dev/null || snap info {1} 2>/dev/null || echo "No preview available"'
   --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
@@ -15,10 +15,10 @@ fzf_args=(
   --color 'pointer:red,marker:red'
 )
 
-pkg_names=$(yay -Qqe | fzf "${fzf_args[@]}")
+pkg_names=$({ apt-mark showmanual; snap list 2>/dev/null | awk 'NR>1 {print $1}'; } | sort -u | fzf "${fzf_args[@]}")
 
 if [[ -n $pkg_names ]]; then
-  # Convert newline-separated selections to space-separated for yay
-  echo "$pkg_names" | tr '\n' ' ' | xargs sudo pacman -Rns --noconfirm
+  # Convert newline-separated selections to space-separated and pass to our drop helper
+  echo "$pkg_names" | xargs omybuntu-pkg-drop
   omybuntu-show-done
 fi

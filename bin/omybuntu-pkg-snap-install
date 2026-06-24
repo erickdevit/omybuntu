@@ -1,11 +1,13 @@
 #!/bin/bash
 
-# omybuntu:summary=Show a fuzzy-finder TUI for picking new Apt packages to install.
+# omybuntu:summary=Show a fuzzy-finder TUI for picking new Snap packages to install.
 # omybuntu:requires-sudo=true
+
+RELOAD="snap find {q} 2>/dev/null | awk 'NR>1 {print \$1}'"
 
 fzf_args=(
   --multi
-  --preview 'apt-cache show {1} 2>/dev/null || echo "No preview available"'
+  --preview 'snap info {1} 2>/dev/null || echo "No preview available"'
   --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
@@ -13,14 +15,16 @@ fzf_args=(
   --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
   --bind 'alt-k:preview-up,alt-j:preview-down'
   --color 'pointer:green,marker:green'
+  --bind "change:reload($RELOAD)"
+  --phony
+  --header "Type to search for snaps..."
 )
 
-pkg_names=$(apt-cache pkgnames | sort | fzf "${fzf_args[@]}")
+pkg_names=$(echo "" | fzf "${fzf_args[@]}")
 
 if [[ -n $pkg_names ]]; then
   source omybuntu-sudo-keepalive
 
-  # Pass selections to omybuntu-pkg-add
-  echo "$pkg_names" | xargs omybuntu-pkg-add
+  echo "$pkg_names" | xargs -n1 sudo snap install
   omybuntu-show-done
 fi

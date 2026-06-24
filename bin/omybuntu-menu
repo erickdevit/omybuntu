@@ -526,9 +526,10 @@ show_setup_system_menu() {
 }
 
 show_install_menu() {
-  case $(menu "Install" "󰣇  Package\n󰣇  AUR\n  Web App\n  TUI\n  Service\n  Style\n󰵮  Development\n  Editor\n  Terminal\n  Browser\n󱚤  AI\n  Gaming\n󰍲  Windows") in
-  *Package*) terminal omybuntu-pkg-install ;;
-  *AUR*) terminal omybuntu-pkg-aur-install ;;
+  case $(menu "Install" "󰣇  Packages\n󰣇  Snaps\n󰣇  Flatpaks\n  Web App\n  TUI\n  Service\n  Style\n󰵮  Development\n  Editor\n  Terminal\n  Browser\n󱚤  AI\n  Gaming\n󰍲  Windows") in
+  *Packages*) terminal omybuntu-pkg-install ;;
+  *Snaps*) terminal omybuntu-pkg-snap-install ;;
+  *Flatpaks*) terminal omybuntu-pkg-flatpak-install ;;
   *Web*) present_terminal omybuntu-webapp-install ;;
   *TUI*) present_terminal omybuntu-tui-install ;;
   *Service*) show_install_service_menu ;;

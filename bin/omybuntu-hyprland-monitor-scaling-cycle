@@ -34,7 +34,19 @@ fi
 NEW_SCALE=${SCALES[$NEW_IDX]}
 NEW_GDK_SCALE=${GDK_SCALES[$NEW_IDX]}
 
-hyprctl eval "hl.monitor({ output = \"$ACTIVE_MONITOR\", mode = \"${WIDTH}x${HEIGHT}@${REFRESH_RATE}\", position = \"auto\", scale = $NEW_SCALE })" >/dev/null
+hyprctl eval "hl.monitor({ output = \"$ACTIVE_MONITOR\", mode = \"${WIDTH}x${HEIGHT}@${REFRESH_RATE}\", position = \"auto\", scale = $NEW_SCALE })" >/dev/null 2>&1 || hyprctl keyword monitor "$ACTIVE_MONITOR,preferred,auto,$NEW_SCALE" >/dev/null
+
+# Set GDK scale via hyprctl (for new windows in current session)
+hyprctl keyword env "GDK_SCALE,$NEW_GDK_SCALE" >/dev/null
+
+# Persist to monitors.conf for Omybuntu
+MONITOR_CONF="$HOME/.config/hypr/monitors.conf"
+if [[ -f $MONITOR_CONF ]]; then
+  sed -i -E \
+    -e "s|^(monitor=.*,preferred,auto,)([^ ]+)|\1${NEW_SCALE}|" \
+    -e "s|^(env = GDK_SCALE,)(.*)|\1${NEW_GDK_SCALE}|" \
+    "$MONITOR_CONF"
+fi
 
 # Persist to monitors.lua if the user still has Omybuntu's generic catch-all
 # defaults, so the scale survives reboots.

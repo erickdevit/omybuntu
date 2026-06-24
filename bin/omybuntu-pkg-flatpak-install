@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# omybuntu:summary=Show a fuzzy-finder TUI for picking new Apt packages to install.
+# omybuntu:summary=Show a fuzzy-finder TUI for picking new Flatpak packages to install.
 # omybuntu:requires-sudo=true
 
 fzf_args=(
   --multi
-  --preview 'apt-cache show {1} 2>/dev/null || echo "No preview available"'
+  --preview 'flatpak remote-info flathub {1} 2>/dev/null || echo "No preview available"'
   --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
   --preview-label-pos='bottom'
   --preview-window 'down:65%:wrap'
@@ -15,12 +15,11 @@ fzf_args=(
   --color 'pointer:green,marker:green'
 )
 
-pkg_names=$(apt-cache pkgnames | sort | fzf "${fzf_args[@]}")
+pkg_names=$(flatpak remote-ls flathub --app --columns=application 2>/dev/null | sort | fzf "${fzf_args[@]}")
 
 if [[ -n $pkg_names ]]; then
   source omybuntu-sudo-keepalive
 
-  # Pass selections to omybuntu-pkg-add
-  echo "$pkg_names" | xargs omybuntu-pkg-add
+  echo "$pkg_names" | xargs -n1 sudo flatpak install -y flathub
   omybuntu-show-done
 fi

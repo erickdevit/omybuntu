@@ -41,7 +41,7 @@
     }
   },
   "custom/omybuntu": {
-    "format": "<span font='omybuntu'>\ue900</span>",
+    "format": "",
     "on-click": "omybuntu-menu",
     "on-click-right": "xdg-terminal-exec",
     "tooltip-format": "Omybuntu Menu\n\nSuper + Alt + Space"

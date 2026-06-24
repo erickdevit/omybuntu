@@ -16,7 +16,7 @@ fi
 
 pkill slurp && exit 0
 
-SCREENSHOT_EDITOR="${OMYBUNTU_SCREENSHOT_EDITOR:-satty}"
+SCREENSHOT_EDITOR="${OMYBUNTU_SCREENSHOT_EDITOR:-swappy}"
 
 # Parse --editor flag from any position
 ARGS=()
@@ -37,6 +37,8 @@ open_editor() {
       --actions-on-enter save-to-clipboard \
       --save-after-copy \
       --copy-command 'wl-copy'
+  elif [[ $SCREENSHOT_EDITOR == "swappy" ]]; then
+    swappy -f "$filepath" -o "$filepath"
   else
     $SCREENSHOT_EDITOR "$filepath"
   fi

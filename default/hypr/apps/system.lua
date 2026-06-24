@@ -1,6 +1,6 @@
 o.window({ tag = "floating-window" }, { float = true, center = true, size = { 875, 600 } })
 
-o.window("(org.omybuntu.bluetui|org.omybuntu.impala|org.omybuntu.wiremix|org.omybuntu.btop|org.omybuntu.terminal|org.omybuntu.bash|org.codeberg.dnkl.foot|org.gnome.NautilusPreviewer|org.gnome.Evince|com.gabm.satty|Omybuntu|About|TUI.float|imv|mpv)", { tag = "+floating-window" })
+o.window("(org.omybuntu.bluetui|org.omybuntu.impala|org.omybuntu.wiremix|org.omybuntu.btop|org.omybuntu.terminal|org.omybuntu.bash|org.codeberg.dnkl.foot|org.gnome.NautilusPreviewer|org.gnome.Evince|com.gabm.satty|swappy|Omybuntu|About|TUI.float|imv|mpv)", { tag = "+floating-window" })
 o.window({ class = "(xdg-desktop-portal-gtk|sublime_text|DesktopEditors|org.gnome.Nautilus)", title = "^(Open.*Files?|Open [F|f]older.*|Save.*Files?|Save.*As|Save|All Files|.*wants to [open|save].*|[C|c]hoose.*)" }, { tag = "+floating-window" })
 o.window("org.gnome.Calculator", { float = true })
 

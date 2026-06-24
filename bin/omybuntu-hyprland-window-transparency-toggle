@@ -2,10 +2,7 @@
 
 # omybuntu:summary=Toggles transparency for the currently focused window.
 
-current=$(hyprctl getprop active opaque 2>/dev/null)
+addr=$(hyprctl activewindow -j | jq -r '.address')
 
-if [[ "$current" == "false" || "$current" == "0" ]]; then
-  hyprctl dispatch setprop active opaque 1 lock >/dev/null 2>&1
-else
-  hyprctl dispatch setprop active opaque 0 lock >/dev/null 2>&1
-fi
+# Pass the exact arguments recommended for Hyprland 0.53+ without the 'lock' parameter
+hyprctl dispatch setprop active opaque toggle >/dev/null 2>&1

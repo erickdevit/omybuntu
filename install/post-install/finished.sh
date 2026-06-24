@@ -1,18 +1,18 @@
 stop_install_log
 
 echo_in_style() {
-  echo "$1" | tte --canvas-width 0 --anchor-text c --frame-rate 640 print
+  echo -e "\033[1;36m$1\033[0m"
 }
 
 clear
 echo
-tte -i ~/.local/share/omarchy/logo.txt --canvas-width 0 --anchor-text c --frame-rate 920 laseretch
+cat "$OMYBUNTU_PATH"/logo.txt 2>/dev/null || true
 echo
 
 # Display installation time if available
-if [[ -f $OMARCHY_INSTALL_LOG_FILE ]] && grep -q "Total:" "$OMARCHY_INSTALL_LOG_FILE" 2>/dev/null; then
+if [[ -f $OMYBUNTU_INSTALL_LOG_FILE ]] && grep -q "Total:" "$OMYBUNTU_INSTALL_LOG_FILE" 2>/dev/null; then
   echo
-  TOTAL_TIME=$(tail -n 20 "$OMARCHY_INSTALL_LOG_FILE" | grep "^Total:" | sed 's/^Total:[[:space:]]*//')
+  TOTAL_TIME=$(tail -n 20 "$OMYBUNTU_INSTALL_LOG_FILE" | grep "^Total:" | sed 's/^Total:[[:space:]]*//')
   if [[ -n $TOTAL_TIME ]]; then
     echo_in_style "Installed in $TOTAL_TIME"
   fi
@@ -20,8 +20,8 @@ else
   echo_in_style "Finished installing"
 fi
 
-if sudo test -f /etc/sudoers.d/99-omarchy-installer; then
-  sudo rm -f /etc/sudoers.d/99-omarchy-installer &>/dev/null
+if sudo test -f /etc/sudoers.d/99-omybuntu-installer; then
+  sudo rm -f /etc/sudoers.d/99-omybuntu-installer &>/dev/null
 fi
 
 # Exit gracefully if user chooses not to reboot
@@ -29,8 +29,8 @@ if gum confirm --padding "0 0 0 $((PADDING_LEFT + 32))" --show-help=false --defa
   # Clear screen to hide any shutdown messages
   clear
 
-  if [[ -n ${OMARCHY_CHROOT_INSTALL:-} ]]; then
-    touch /var/tmp/omarchy-install-completed
+  if [[ -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+    touch /var/tmp/omybuntu-install-completed
     exit 0
   else
     sudo reboot 2>/dev/null

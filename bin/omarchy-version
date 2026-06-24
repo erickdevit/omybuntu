@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Print the installed Omarchy version
-
-cat $OMARCHY_PATH/version

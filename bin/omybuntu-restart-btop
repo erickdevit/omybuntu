@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Reload btop configuration (used by the Omybuntu theme switching).
+
+pkill -SIGUSR2 btop

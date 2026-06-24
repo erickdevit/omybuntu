@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omybuntu:summary=Toggle screensaver availability
+
+omybuntu-toggle \
+  --enabled-notification "󱄄   Screensaver disabled" \
+  --disabled-notification "󱄄   Screensaver enabled" \
+  screensaver-off

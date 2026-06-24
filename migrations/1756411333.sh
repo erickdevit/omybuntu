@@ -1,3 +1,3 @@
-echo "Use new Omarchy mirror as default"
+echo "Use new Omybuntu mirror as default"
 
-omarchy-refresh-pacman
+omybuntu-refresh-pacman

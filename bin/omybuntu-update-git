@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# omybuntu:summary=Pull the latest Omybuntu git changes
+
+set -e
+
+echo -e "\e[32mUpdate Omybuntu\e[0m"
+
+omybuntu-update-time
+
+# Suppress Hyprland config errors while git updates default config files mid-pull
+hyprctl keyword debug:suppress_errors true &>/dev/null || true
+hyprctl eval 'hl.config({ debug = { suppress_errors = true } })' &>/dev/null || true
+
+git -C $OMYBUNTU_PATH pull --autostash
+git -C $OMYBUNTU_PATH --no-pager diff --check || git -C $OMYBUNTU_PATH reset --merge
+
+hyprctl reload &>/dev/null || true

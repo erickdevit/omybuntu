@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=Overwrite the user config for hypridle with the Omybuntu default and restart the service.
+
+omybuntu-refresh-config hypr/hypridle.conf
+omybuntu-restart-hypridle

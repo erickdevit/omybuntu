@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# omybuntu:summary=Remove Moonlight and its configs and caches.
+# omybuntu:requires-sudo=true
+
+set -e
+
+omybuntu-pkg-drop moonlight-qt
+
+rm -rf \
+  "$HOME/.config/Moonlight Game Streaming Project" \
+  "$HOME/.cache/Moonlight Game Streaming Project"
+
+echo ""
+echo "Moonlight and its data have been removed."

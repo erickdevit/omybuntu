@@ -1,9 +1,9 @@
-echo "Migrate Hyprland user config from Omarchy hyprlang files to Lua files"
+echo "Migrate Hyprland user config from Omybuntu hyprlang files to Lua files"
 
 hypr_config_dir="$HOME/.config/hypr"
-omarchy_hypr_config_dir="$OMARCHY_PATH/config/hypr"
-toggle_state_dir="$HOME/.local/state/omarchy/toggles/hypr"
-toggle_defaults_dir="$OMARCHY_PATH/default/hypr/toggles"
+omybuntu_hypr_config_dir="$OMYBUNTU_PATH/config/hypr"
+toggle_state_dir="$HOME/.local/state/omybuntu/toggles/hypr"
+toggle_defaults_dir="$OMYBUNTU_PATH/default/hypr/toggles"
 timestamp=$(date +%s)
 
 lua_escape() {
@@ -15,7 +15,7 @@ lua_escape() {
 
 mkdir -p "$hypr_config_dir" "$toggle_state_dir"
 
-for lua_config in "$omarchy_hypr_config_dir"/*.lua "$omarchy_hypr_config_dir"/.luarc.json; do
+for lua_config in "$omybuntu_hypr_config_dir"/*.lua "$omybuntu_hypr_config_dir"/.luarc.json; do
   if [[ -f $lua_config ]]; then
     cp -f "$lua_config" "$hypr_config_dir/"
   fi
@@ -73,9 +73,9 @@ sddm_hypr_lua="/usr/share/sddm/hyprland.lua"
 sddm_wayland_conf="/etc/sddm.conf.d/10-wayland.conf"
 
 if [[ -f $sddm_hypr_conf || -f $sddm_wayland_conf ]]; then
-  if [[ -f $OMARCHY_PATH/default/sddm/hyprland.lua ]]; then
+  if [[ -f $OMYBUNTU_PATH/default/sddm/hyprland.lua ]]; then
     sudo mkdir -p /usr/share/sddm
-    sudo cp "$OMARCHY_PATH/default/sddm/hyprland.lua" "$sddm_hypr_lua"
+    sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.lua" "$sddm_hypr_lua"
   fi
 
   if [[ -f $sddm_wayland_conf ]]; then
@@ -87,6 +87,6 @@ if [[ -f $sddm_hypr_conf || -f $sddm_wayland_conf ]]; then
   fi
 fi
 
-omarchy-state set reboot-required
+omybuntu-state set reboot-required
 
 echo "Hyprland must be restarted to switch from hyprland.conf to hyprland.lua. Log out and back in, or reboot when ready."

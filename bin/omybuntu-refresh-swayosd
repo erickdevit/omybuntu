@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omybuntu:summary=Overwrite the user configs for swayosd (controls on-screen feedback for changing volume/songs etc) with the Omybuntu defaults and restart the service.
+
+omybuntu-refresh-config swayosd/config.toml
+omybuntu-refresh-config swayosd/style.css
+omybuntu-restart-swayosd

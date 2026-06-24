@@ -1,3 +1,3 @@
-echo "Add xmlstarlet needed for updating fonts via Omarchy menu"
+echo "Add xmlstarlet needed for updating fonts via Omybuntu menu"
 
-omarchy-pkg-add xmlstarlet
+omybuntu-pkg-add xmlstarlet

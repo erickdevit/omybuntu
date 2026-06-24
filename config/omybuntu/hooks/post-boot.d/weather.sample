@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Show the weather status notification after Omybuntu has started.
+# To put it into use, remove .sample from this file name.
+
+weather=$(omybuntu-weather-status 2>/dev/null) || true
+
+if [[ -n $weather && $weather != "Weather unavailable" ]]; then
+  notify-send -u low "$weather"
+fi

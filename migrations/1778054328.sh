@@ -1,3 +1,3 @@
-echo "Use omarchy-system-lock and omarchy-system-wake in hypridle"
+echo "Use omybuntu-system-lock and omybuntu-system-wake in hypridle"
 
-omarchy-refresh-hypridle
+omybuntu-refresh-hypridle

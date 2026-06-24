@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Restart the hypridle service (used for idle detection and auto-lock).
+
+omybuntu-restart-app hypridle

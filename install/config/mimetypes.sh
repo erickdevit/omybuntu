@@ -1,4 +1,4 @@
-omarchy-refresh-applications
+omybuntu-refresh-applications
 update-desktop-database ~/.local/share/applications
 
 # Open directories in file manager

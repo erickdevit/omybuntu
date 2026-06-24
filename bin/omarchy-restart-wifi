@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Unblock and restart the Wi-Fi service.
-
-echo -e "Unblocking wifi...\n"
-rfkill unblock wifi
-rfkill list wifi

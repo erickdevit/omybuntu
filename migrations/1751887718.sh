@@ -1,6 +1,6 @@
 echo "Install Impala as new wifi selection TUI"
 
-if omarchy-cmd-missing impala; then
-  omarchy-pkg-add impala
-  omarchy-refresh-waybar
+if omybuntu-cmd-missing impala; then
+  omybuntu-pkg-add impala
+  omybuntu-refresh-waybar
 fi

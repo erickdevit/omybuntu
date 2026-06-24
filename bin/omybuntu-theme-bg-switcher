@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# omybuntu:summary=Open the Omybuntu background switcher
+# omybuntu:group=theme
+# omybuntu:name=bg-switcher
+# omybuntu:aliases=omybuntu background
+
+OMYBUNTU_PATH=${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}
+theme_name=$(cat "$HOME/.config/omybuntu/current/theme.name" 2>/dev/null)
+current_background=$(readlink -f "$HOME/.config/omybuntu/current/background" 2>/dev/null)
+
+omybuntu-menu-images \
+  --selected "$current_background" \
+  "$HOME/.config/omybuntu/current/theme/backgrounds" \
+  "$HOME/.config/omybuntu/backgrounds/$theme_name"

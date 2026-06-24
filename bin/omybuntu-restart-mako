@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Reload mako configuration (used by the Omybuntu theme switching).
+
+makoctl reload

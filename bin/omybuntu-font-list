@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=List available monospace fonts
+# omybuntu:examples=omybuntu font list | omybuntu font set "CaskaydiaMono Nerd Font"
+
+fc-list :spacing=100 -f "%{family[0]}\n" | grep -v -i -E 'emoji|signwriting|omybuntu' | sort -u

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# omybuntu:summary=Finish the installation of Omybuntu with items that can only be done after logging in.
+# omybuntu:requires-sudo=true
+
+set -e
+
+FIRST_RUN_MODE=~/.local/state/omybuntu/first-run.mode
+
+if [[ -f $FIRST_RUN_MODE ]]; then
+  rm -f "$FIRST_RUN_MODE"
+
+  bash "$OMYBUNTU_PATH/install/first-run/battery-monitor.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/recover-internal-monitor.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/cleanup-reboot-sudoers.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/firewall.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/dns-resolver.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/gnome-theme.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/gdk-scale.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/swayosd.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/gtk-primary-paste.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/elephant.sh"
+  omybuntu-hook-install post-update "$OMYBUNTU_PATH/install/first-run/install-voxtype.hook"
+  sudo rm -f /etc/sudoers.d/first-run
+
+  bash "$OMYBUNTU_PATH/install/first-run/welcome.sh"
+  bash "$OMYBUNTU_PATH/install/first-run/wifi.sh"
+fi

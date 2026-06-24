@@ -1,6 +1,6 @@
 echo "Update to use UWSM and seamless login"
 
-if omarchy-cmd-missing uwsm; then
+if omybuntu-cmd-missing uwsm; then
   sudo rm -f /etc/systemd/system/getty@tty1.service.d/override.conf
   sudo rmdir /etc/systemd/system/getty@tty1.service.d/ 2>/dev/null || true
 
@@ -15,5 +15,5 @@ if omarchy-cmd-missing uwsm; then
     sed -i 's/^GTK_IM_MODULE=fcitx$//' "$HOME/.config/environment.d/fcitx.conf"
   fi
 
-  source $OMARCHY_PATH/install/login/plymouth.sh
+  source $OMYBUNTU_PATH/install/login/plymouth.sh
 fi

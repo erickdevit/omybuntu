@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Set the correct power profile on boot based on current AC/battery state.
+
+if omybuntu-battery-present && ! omybuntu-ac-present; then
+  omybuntu-powerprofiles-set battery
+else
+  omybuntu-powerprofiles-set ac
+fi

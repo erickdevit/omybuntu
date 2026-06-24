@@ -10,5 +10,5 @@ if ! grep -q '"headset": ""' "$HOME/.config/waybar/config.jsonc"; then
     }
   ' "$HOME/.config/waybar/config.jsonc"
 
-  omarchy-restart-waybar
+  omybuntu-restart-waybar
 fi

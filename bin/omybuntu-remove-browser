@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# omybuntu:summary=Remove a supported browser and clean up Omybuntu browser defaults
+# omybuntu:args=<chrome|brave|brave-origin|edge|firefox|zen>
+# omybuntu:examples=omybuntu remove browser firefox | omybuntu remove browser brave
+# omybuntu:requires-sudo=true
+
+set_fallback_default_browser() {
+  local current_browser
+  current_browser=$(xdg-settings get default-web-browser)
+
+  if [[ $current_browser != "$1" ]]; then
+    return
+  fi
+
+  if omybuntu-cmd-present chromium; then
+    xdg-settings set default-web-browser chromium.desktop
+    xdg-mime default chromium.desktop x-scheme-handler/http
+    xdg-mime default chromium.desktop x-scheme-handler/https
+    xdg-mime default chromium.desktop text/html
+  fi
+}
+
+case $1 in
+chrome)
+  echo "Removing Chrome..."
+  set_fallback_default_browser google-chrome.desktop
+  omybuntu-pkg-drop google-chrome
+  rm -f ~/.config/chrome-flags.conf
+  sudo rm -f /etc/opt/chrome/policies/managed/color.json
+  ;;
+edge)
+  echo "Removing Edge..."
+  set_fallback_default_browser microsoft-edge.desktop
+  omybuntu-pkg-drop microsoft-edge-stable-bin
+  rm -f ~/.config/microsoft-edge-stable-flags.conf
+  sudo rm -f /etc/opt/edge/policies/managed/color.json
+  ;;
+brave)
+  echo "Removing Brave..."
+  set_fallback_default_browser brave-browser.desktop
+  omybuntu-pkg-drop brave-bin
+  rm -f ~/.config/brave-flags.conf
+
+  if omybuntu-pkg-missing brave-origin-beta-bin; then
+    sudo rm -rf /etc/brave
+  fi
+  ;;
+brave-origin)
+  echo "Removing Brave Origin..."
+  set_fallback_default_browser brave-origin-beta.desktop
+  omybuntu-pkg-drop brave-origin-beta-bin
+  rm -f ~/.config/brave-origin-beta-flags.conf
+
+  if omybuntu-pkg-missing brave-bin; then
+    sudo rm -rf /etc/brave
+  fi
+  ;;
+firefox)
+  echo "Removing Firefox..."
+  set_fallback_default_browser firefox.desktop
+  omybuntu-pkg-drop firefox
+  ;;
+zen)
+  echo "Removing Zen..."
+  set_fallback_default_browser zen.desktop
+  omybuntu-pkg-drop zen-browser-bin
+  ;;
+*)
+  echo "Usage: omybuntu-remove-browser <chrome|brave|brave-origin|edge|firefox|zen>"
+  exit 1
+  ;;
+esac

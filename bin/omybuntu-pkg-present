@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# omybuntu:summary=Returns true if all of the named packages are installed on the system (or false if any of them are missing).
+# omybuntu:args=<packages...>
+
+for pkg in "$@"; do
+  if ! (dpkg -l "$pkg" 2>/dev/null | grep -q "^ii") && ! snap list "$pkg" &>/dev/null; then
+    exit 1
+  fi
+done
+
+exit 0

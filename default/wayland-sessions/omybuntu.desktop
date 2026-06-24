@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Omybuntu (Hyprland uwsm)
+Comment=Omybuntu Hyprland session managed by uwsm
+Exec=uwsm start -g -1 -e -D Hyprland hyprland.desktop
+TryExec=uwsm
+Type=Application

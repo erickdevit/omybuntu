@@ -1,4 +1,4 @@
--- Change the default Omarchy look'n'feel.
+-- Change the default Omybuntu look'n'feel.
 
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#general
 -- hl.config({

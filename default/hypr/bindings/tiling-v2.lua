@@ -1,5 +1,5 @@
 o.bind("SUPER + W", "Close window", hl.dsp.window.close())
-o.bind("CTRL + ALT + DELETE", "Close all windows", "omarchy-hyprland-window-close-all")
+o.bind("CTRL + ALT + DELETE", "Close all windows", "omybuntu-hyprland-window-close-all")
 
 o.bind("SUPER + J", "Toggle window split", hl.dsp.layout("togglesplit"))
 o.bind("SUPER + P", "Pseudo window", hl.dsp.window.pseudo())
@@ -7,8 +7,8 @@ o.bind("SUPER + T", "Toggle window floating/tiling", hl.dsp.window.float({ actio
 o.bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 o.bind("SUPER + CTRL + F", "Tiled full screen", hl.dsp.window.fullscreen_state({ internal = 0, client = 2 }))
 o.bind("SUPER + ALT + F", "Full width", hl.dsp.window.fullscreen({ mode = "maximized" }))
-o.bind("SUPER + O", "Pop window out (float & pin)", "omarchy-hyprland-window-pop")
-o.bind("SUPER + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
+o.bind("SUPER + O", "Pop window out (float & pin)", "omybuntu-hyprland-window-pop")
+o.bind("SUPER + L", "Toggle workspace layout", "omybuntu-hyprland-workspace-layout-toggle")
 
 o.bind("SUPER + LEFT", "Focus on left window", hl.dsp.focus({ direction = "l" }))
 o.bind("SUPER + RIGHT", "Focus on right window", hl.dsp.focus({ direction = "r" }))
@@ -89,5 +89,5 @@ for index = 1, 5 do
   o.bind("SUPER + ALT + code:" .. tostring(index + 9), "Switch to group window " .. index, hl.dsp.group.active({ index = index }))
 end
 
-o.bind("SUPER + code:61", "Cycle monitor scaling", "omarchy-hyprland-monitor-scaling-cycle")
-o.bind("SUPER + ALT + code:61", "Cycle monitor scaling backwards", "omarchy-hyprland-monitor-scaling-cycle --reverse")
+o.bind("SUPER + code:61", "Cycle monitor scaling", "omybuntu-hyprland-monitor-scaling-cycle")
+o.bind("SUPER + ALT + code:61", "Cycle monitor scaling backwards", "omybuntu-hyprland-monitor-scaling-cycle --reverse")

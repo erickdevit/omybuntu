@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omybuntu:summary=Toggle suspend availability in the system menu
+
+omybuntu-toggle \
+  --enabled-notification "󰒲   Suspend removed from system menu" \
+  --disabled-notification "󰒲   Suspend now available in system menu" \
+  suspend-off

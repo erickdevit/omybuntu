@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# omybuntu:summary=Set the branch for Omybuntu's git repository.
+# omybuntu:args=<master|rc|dev>
+
+if (($# == 0)); then
+  echo "Usage: omybuntu-branch-set [master|rc|dev]"
+  exit 1
+else
+  branch="$1"
+fi
+
+if [[ $branch != "master" && $branch != "rc" && $branch != "dev" ]]; then
+  echo "Error: Invalid branch '$branch'. Must be one of: master, rc, dev"
+  exit 1
+fi
+
+git -C $OMYBUNTU_PATH switch $branch

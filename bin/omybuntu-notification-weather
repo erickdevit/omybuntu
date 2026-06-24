@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Show the current weather notification
+
+omybuntu-notification-send -g $(omybuntu-weather-icon) -u low "$(omybuntu-weather-status)"

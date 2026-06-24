@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Detect ASUS Zenbook UX5406AA series laptops on Intel Panther Lake.
+
+omybuntu-hw-match "ux5406aa" && omybuntu-hw-intel-ptl

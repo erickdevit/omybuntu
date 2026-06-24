@@ -2,7 +2,7 @@
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "logo": {
     "type": "file",
-    "source": "~/.config/omarchy/branding/about.txt",
+    "source": "~/.config/omybuntu/branding/about.txt",
     "color": { "1": "green" },
     "padding": {
       "top": 2,
@@ -66,19 +66,19 @@
       "type": "command",
       "key": "\ue900 OS",
       "keyColor": "blue",
-      "text": "version=$(omarchy-version); echo \"Omarchy $version\""
+      "text": "version=$(omybuntu-version); echo \"Omybuntu $version\""
     },
     {
       "type": "command",
       "key": "│ ├󰘬",
       "keyColor": "blue",
-      "text": "branch=$(omarchy-version-branch); echo \"$branch\""
+      "text": "branch=$(omybuntu-version-branch); echo \"$branch\""
     },
     {
       "type": "command",
       "key": "│ ├󰔫",
       "keyColor": "blue",
-      "text": "channel=$(omarchy-version-channel); echo \"$channel\""
+      "text": "channel=$(omybuntu-version-channel); echo \"$channel\""
     },
     {
       "type": "kernel",
@@ -114,7 +114,7 @@
       "type": "command",
       "key": "│ ├󰸌",
       "keyColor": "blue",
-      "text": "theme=$(omarchy-theme-current); echo -e \"$theme \\e[38m●\\e[37m●\\e[36m●\\e[35m●\\e[34m●\\e[33m●\\e[32m●\\e[31m●\""
+      "text": "theme=$(omybuntu-theme-current); echo -e \"$theme \\e[38m●\\e[37m●\\e[36m●\\e[35m●\\e[34m●\\e[33m●\\e[32m●\\e[31m●\""
     },
     {
       "type": "terminalfont",
@@ -145,7 +145,7 @@
       "type": "command",
       "key": " Update",
       "keyColor": "magenta",
-      "text": "updated=$(omarchy-version-pkgs); echo \"$updated\""
+      "text": "updated=$(omybuntu-version-pkgs); echo \"$updated\""
     },
     {
       "type": "custom",

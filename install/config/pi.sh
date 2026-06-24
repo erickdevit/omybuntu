@@ -1,2 +1,2 @@
 mkdir -p ~/.pi/agent/extensions
-cp "$OMARCHY_PATH/default/pi/agent/extensions/omarchy-system-theme.ts" ~/.pi/agent/extensions/
+cp "$OMYBUNTU_PATH/default/pi/agent/extensions/omybuntu-system-theme.ts" ~/.pi/agent/extensions/

@@ -1,4 +1,4 @@
-@import "../omarchy/current/theme/waybar.css";
+@import "../omybuntu/current/theme/waybar.css";
 
 * {
   background-color: @background;
@@ -33,7 +33,7 @@
 #cpu,
 #battery,
 #pulseaudio,
-#custom-omarchy,
+#custom-omybuntu,
 #custom-update {
   min-width: 12px;
   margin: 0 7.5px;
@@ -122,7 +122,7 @@ tooltip {
 .left #cpu, .right #cpu,
 .left #battery, .right #battery,
 .left #pulseaudio, .right #pulseaudio,
-.left #custom-omarchy, .right #custom-omarchy,
+.left #custom-omybuntu, .right #custom-omybuntu,
 .left #custom-update, .right #custom-update {
   margin: 1.5px 0;
   padding: 6px 0;

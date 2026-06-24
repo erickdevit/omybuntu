@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Show the current battery status notification
+
+omybuntu-notification-send -g 󰁹 -u low "$(omybuntu-battery-status)"

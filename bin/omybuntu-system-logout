@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omybuntu:summary=Log out after closing application windows
+# omybuntu:examples=omybuntu logout | omybuntu system logout
+# omybuntu:aliases=omybuntu logout
+
+nohup bash -c "sleep 2 && uwsm stop" >/dev/null 2>&1 &
+
+# Now close all windows
+omybuntu-hyprland-window-close-all
+sleep 1 # Allow apps like Chrome to shutdown correctly

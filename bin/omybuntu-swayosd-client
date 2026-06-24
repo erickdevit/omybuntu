@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=Wrapper for swayosd-client that targets the currently focused monitor.
+# omybuntu:args=<swayosd-client-args...>
+
+exec swayosd-client --monitor "$(omybuntu-hyprland-monitor-focused)" "$@"

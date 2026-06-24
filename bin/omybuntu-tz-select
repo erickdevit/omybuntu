@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Select and set the system timezone
+# omybuntu:requires-sudo=true
+
+timezone=$(timedatectl list-timezones | gum filter --height 20 --header "Set timezone") || exit 1
+sudo timedatectl set-timezone "$timezone"
+echo "Timezone is now set to $timezone"
+omybuntu-restart-waybar

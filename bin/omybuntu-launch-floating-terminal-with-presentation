@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omybuntu:summary=Launch a floating terminal with the Omybuntu presentation wrapper
+# omybuntu:args=<command>
+
+cmd="$*"
+exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.omybuntu.terminal --title=Omybuntu -e bash -c "omybuntu-show-logo; $cmd; if (( \$? != 130 )); then omybuntu-show-done; fi"

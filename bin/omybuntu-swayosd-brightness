@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# omybuntu:summary=Display brightness level using SwayOSD on the current monitor.
+# omybuntu:args=<0-100>
+# omybuntu:examples=omybuntu swayosd brightness 0 | omybuntu swayosd brightness 50 | omybuntu swayosd brightness 100
+
+percent="$1"
+
+progress="$(awk -v p="$percent" 'BEGIN{printf "%.2f", p/100}')"
+[[ $progress == "0.00" ]] && progress="0.01"
+
+omybuntu-swayosd-client \
+  --custom-icon display-brightness-symbolic \
+  --custom-progress "$progress" \
+  --custom-progress-text "$(printf '%3d%%' "$percent")"

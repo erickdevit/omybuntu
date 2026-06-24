@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omybuntu:summary=Toggle single-window square aspect ratio.
+
+case $(omybuntu-hyprland-toggle single-window-aspect-ratio) in
+  on) omybuntu-notification-send -g  "Enable single-window square aspect ratio" ;;
+  off) omybuntu-notification-send -g  "Disable single-window square aspect ratio" ;;
+esac

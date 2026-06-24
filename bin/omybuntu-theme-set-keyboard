@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omybuntu:summary=Apply the current theme keyboard color to supported keyboards
+# omybuntu:hidden=true
+
+omybuntu-theme-set-keyboard-asus-rog
+omybuntu-theme-set-keyboard-f16

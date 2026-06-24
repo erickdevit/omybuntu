@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Print the installed Omybuntu version
+
+cat $OMYBUNTU_PATH/version

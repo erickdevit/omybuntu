@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# omybuntu:summary=Run the full Omybuntu update pipeline
+# omybuntu:requires-sudo=true
+
+set -e
+
+# Ensure screensaver/sleep doesn't set in during updates
+hyprctl dispatch 'hl.dsp.window.tag({ tag = "+noidle" })' &>/dev/null || hyprctl dispatch tagwindow +noidle &>/dev/null || true
+
+# Perform all update steps
+omybuntu-update-keyring
+omybuntu-update-available-reset
+omybuntu-update-system-pkgs
+omybuntu-migrate
+omybuntu-update-aur-pkgs
+omybuntu-update-orphan-pkgs
+omybuntu-hook post-update
+
+omybuntu-update-analyze-logs
+
+omybuntu-update-restart
+
+# Re-enable screensaver/sleep after updates
+hyprctl dispatch 'hl.dsp.window.tag({ tag = "-noidle" })' &>/dev/null || hyprctl dispatch tagwindow -- -noidle &>/dev/null || true

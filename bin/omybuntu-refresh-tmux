@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=Overwrite the user tmux config with the Omybuntu default and reload tmux.
+
+omybuntu-refresh-config tmux/tmux.conf
+omybuntu-restart-tmux

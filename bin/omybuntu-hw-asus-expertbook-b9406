@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Detect ASUS ExpertBook B9406 series laptops on Intel Panther Lake.
+
+omybuntu-hw-match "B9406" && omybuntu-hw-intel-ptl

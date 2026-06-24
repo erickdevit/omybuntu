@@ -1,3 +1,3 @@
-echo "Add Omarchy AI skill to pi, Codex, and shared Agent Skills directories"
+echo "Add Omybuntu AI skill to pi, Codex, and shared Agent Skills directories"
 
-source "$OMARCHY_PATH/install/config/omarchy-ai-skill.sh"
+source "$OMYBUNTU_PATH/install/config/omybuntu-ai-skill.sh"

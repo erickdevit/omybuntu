@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# omybuntu:summary=Set the Plymouth boot theme from an Omybuntu theme
+# omybuntu:args=<theme-name>
+# omybuntu:requires-sudo=true
+
+# Resolve a theme by name and apply its unlock.png + colors.toml as the
+# Plymouth boot screen via omybuntu-plymouth-set.
+
+if [[ $# -ne 1 ]]; then
+  echo "Usage: omybuntu-plymouth-set-by-theme <theme-name>" >&2
+  exit 1
+fi
+
+theme=$1
+
+if [[ -d ~/.config/omybuntu/themes/$theme ]]; then
+  theme_dir=~/.config/omybuntu/themes/$theme
+else
+  theme_dir="$OMYBUNTU_PATH/themes/$theme"
+fi
+
+bg=$(awk -F'"' '/^background/{print $2}' "$theme_dir/colors.toml")
+text=$(awk -F'"' '/^foreground/{print $2}' "$theme_dir/colors.toml")
+
+exec omybuntu-plymouth-set "$bg" "$text" "$theme_dir/unlock.png"

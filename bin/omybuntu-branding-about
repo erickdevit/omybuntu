@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# omybuntu:summary=Edit, set, or reset About branding
+# omybuntu:group=branding
+# omybuntu:name=about
+# omybuntu:args=<image|text|reset>
+# omybuntu:examples=omybuntu branding about image | omybuntu branding about text | omybuntu branding about reset
+
+set -euo pipefail
+
+SOURCE_DIR="${XDG_PICTURES_DIR:-$HOME/Pictures}"
+
+case "${1:-}" in
+image)
+  image=$(omybuntu-menu-file "Pick png/svg from $SOURCE_DIR" "${SOURCE_DIR}" "svg png")
+  if [[ -n $image ]] && omybuntu-transcode-ascii "$image" ~/.config/omybuntu/branding/about.txt --width 54 --height 26; then
+    omybuntu-launch-about >/dev/null 2>&1
+  fi
+  ;;
+text)
+  omybuntu-launch-editor ~/.config/omybuntu/branding/about.txt >/dev/null 2>&1 && omybuntu-launch-about >/dev/null 2>&1
+  ;;
+reset)
+  cp "$OMYBUNTU_PATH/icon.txt" ~/.config/omybuntu/branding/about.txt && omybuntu-launch-about >/dev/null 2>&1
+  ;;
+*)
+  echo "Usage: omybuntu-branding-about <image|text|reset>" >&2
+  exit 1
+  ;;
+esac

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Reload hyprland configuration (used by the Omybuntu theme switching).
+
+hyprctl reload >/dev/null

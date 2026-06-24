@@ -11,7 +11,7 @@ trap error_exit ERR
 
 echo "Change display manager to SDDM"
 
-omarchy-pkg-add sddm libsecret gnome-keyring || error_exit
+omybuntu-pkg-add sddm libsecret gnome-keyring || error_exit
 
 sudo mkdir -p /etc/sddm.conf.d
 
@@ -24,14 +24,14 @@ Session=hyprland-uwsm
 Current=breeze
 EOF
 
-sudo systemctl disable omarchy-seamless-login.service
+sudo systemctl disable omybuntu-seamless-login.service
 sudo systemctl unmask plymouth-quit-wait.service
 sudo systemctl enable getty@tty1.service
 sudo systemctl enable sddm.service
 sudo systemctl daemon-reload
 
-if systemctl is-enabled omarchy-seamless-login.service >/dev/null 2>&1; then
-  echo -e "\033[31mError: omarchy-seamless-login.service is still enabled\033[0m" >&2
+if systemctl is-enabled omybuntu-seamless-login.service >/dev/null 2>&1; then
+  echo -e "\033[31mError: omybuntu-seamless-login.service is still enabled\033[0m" >&2
   error_exit
 fi
 
@@ -52,4 +52,4 @@ fi
 
 sudo rm -f /usr/local/bin/seamless-login
 sudo rm -f /etc/systemd/system/plymouth-quit.service.d/wait-for-graphical.conf
-sudo rm -f /etc/systemd/system/omarchy-seamless-login.service
+sudo rm -f /etc/systemd/system/omybuntu-seamless-login.service

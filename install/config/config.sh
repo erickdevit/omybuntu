@@ -1,6 +1,7 @@
-# Copy over Omarchy configs
+# Copy over Omybuntu configs
 mkdir -p ~/.config
-cp -R ~/.local/share/omarchy/config/* ~/.config/
+cp -R "$OMYBUNTU_PATH"/config/* ~/.config/
+mkdir -p ~/.config/omybuntu/branding
 
-# Use default bashrc from Omarchy
-cp ~/.local/share/omarchy/default/bashrc ~/.bashrc
+# Use default bashrc from Omybuntu
+cp "$OMYBUNTU_PATH"/default/bashrc ~/.bashrc

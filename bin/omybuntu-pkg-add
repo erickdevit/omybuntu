@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Ubuntu packages if they are missing
+# omybuntu:args=<packages...>
+# omybuntu:examples=omybuntu pkg add jq ripgrep
+# omybuntu:requires-sudo=true
+
+for pkg in "$@"; do
+  if omybuntu-pkg-missing "$pkg"; then
+    echo "Installing $pkg..."
+    if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg" 2>/dev/null; then
+      if ! sudo snap install "$pkg" 2>/dev/null; then
+        if ! sudo snap install "$pkg" --classic 2>/dev/null; then
+          echo -e "\033[33mWarning: Package '$pkg' could not be installed via apt or snap. Skipping.\033[0m" >&2
+          continue
+        fi
+      fi
+    fi
+  fi
+done
+
+exit 0

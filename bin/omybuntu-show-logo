@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Display the Omybuntu logo in the terminal using green color.
+
+clear
+echo -e "\033[32m"
+cat <~/.local/share/omybuntu/logo.txt
+echo -e "\033[0m"
+echo

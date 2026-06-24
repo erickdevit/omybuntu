@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Match Dell XPS systems with the Synaptics haptic touchpad.
+
+omybuntu-hw-match "XPS" && [[ -e /sys/bus/i2c/devices/i2c-VEN_06CB:00 ]]

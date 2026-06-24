@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# omybuntu:summary=Remove preinstalled Omybuntu applications (web apps, TUIs, and selected packages).
+
+if gum confirm "Are you sure you want to remove all preinstalled web apps, TUI wrappers, and desktop applications?"; then
+  echo -e "Removing preinstalled Omybuntu applications...\n"
+
+  omybuntu-webapp-remove-all
+  omybuntu-tui-remove-all
+
+  [[ -f ~/.config/hypr/bindings.lua ]] && cp ~/.config/hypr/bindings.lua ~/.config/hypr/bindings.lua.bak
+  cp "$OMYBUNTU_PATH/default/hypr/plain-bindings.lua" ~/.config/hypr/bindings.lua
+  hyprctl reload
+
+  # Remove npm stubs
+  rm -f ~/.local/bin/codex ~/.local/bin/gemini ~/.local/bin/copilot \
+       ~/.local/bin/opencode ~/.local/bin/playwright-cli ~/.local/bin/pi
+
+  omybuntu-pkg-drop \
+    aether \
+    cliamp \
+    typora \
+    spotify \
+    libreoffice-fresh \
+    1password-beta \
+    1password-cli \
+    xournalpp \
+    signal-desktop \
+    pinta \
+    obsidian \
+    obs-studio \
+    kdenlive \
+    lazydocker \
+    opencode \
+    claude-code
+fi

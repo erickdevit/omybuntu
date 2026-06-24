@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=Launch the Omybuntu wifi controls (provided by the Impala TUI).
+
+rfkill unblock wifi
+omybuntu-launch-or-focus-tui impala

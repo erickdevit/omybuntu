@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# omybuntu:summary=Apply the current theme keyboard color to ASUS ROG keyboards
+# omybuntu:hidden=true
+
+ASUSCTL_THEME=~/.config/omybuntu/current/theme/keyboard.rgb
+
+if omybuntu-cmd-present asusctl; then
+  asusctl aura effect static -c $(sed 's/^#//' $ASUSCTL_THEME)
+fi

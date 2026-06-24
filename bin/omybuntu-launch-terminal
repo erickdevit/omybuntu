@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=Launch a terminal in the active terminal's current directory
+# omybuntu:args=[command...]
+
+exec setsid uwsm-app -- xdg-terminal-exec --dir="$(omybuntu-cmd-terminal-cwd)" "$@"

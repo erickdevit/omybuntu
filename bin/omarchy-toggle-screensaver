@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# omarchy:summary=Toggle screensaver availability
-
-omarchy-toggle \
-  --enabled-notification "󱄄   Screensaver disabled" \
-  --disabled-notification "󱄄   Screensaver enabled" \
-  screensaver-off

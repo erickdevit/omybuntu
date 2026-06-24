@@ -10,8 +10,8 @@
 # via udev, not libinput quirks. This udev rule marks the touchpad as internal
 # so dwt can properly pair it with the keyboard.
 
-if omarchy-hw-asus-rog && omarchy-hw-match "GZ302"; then
-  sudo tee /etc/udev/rules.d/99-omarchy-asus-z13-touchpad.rules > /dev/null <<'EOF'
+if omybuntu-hw-asus-rog && omybuntu-hw-match "GZ302"; then
+  sudo tee /etc/udev/rules.d/99-omybuntu-asus-z13-touchpad.rules > /dev/null <<'EOF'
 ACTION=="add|change", KERNEL=="event*", ATTRS{idVendor}=="0b05", ATTRS{idProduct}=="1a30", ENV{ID_INPUT_TOUCHPAD}=="1", ENV{ID_INPUT_TOUCHPAD_INTEGRATION}="internal"
 EOF
   sudo udevadm control --reload-rules

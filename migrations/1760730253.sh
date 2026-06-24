@@ -1,3 +1,3 @@
-echo "Install Aether for Omarchy theme creation"
+echo "Install Aether for Omybuntu theme creation"
 
-omarchy-pkg-add aether
+omybuntu-pkg-add aether

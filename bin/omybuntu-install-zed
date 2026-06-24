@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Zed Editor and configure it with the current Omybuntu theme
+
+echo "Installing Zed Editor..."
+omybuntu-pkg-add zed omazed
+
+# Apply Omybuntu theme to Zed
+omazed setup
+
+setsid gtk-launch dev.zed.Zed

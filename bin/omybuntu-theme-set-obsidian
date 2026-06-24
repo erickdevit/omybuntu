@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# omybuntu:summary=Sync Omybuntu theme to all Obsidian vaults
+# omybuntu:hidden=true
+
+CURRENT_THEME_DIR="$HOME/.config/omybuntu/current/theme"
+
+[[ -f $CURRENT_THEME_DIR/obsidian.css ]] || exit 0
+
+jq -r '.vaults | values[].path' ~/.config/obsidian/obsidian.json 2>/dev/null | while read -r vault_path; do
+  [[ -d $vault_path/.obsidian ]] || continue
+
+  theme_dir="$vault_path/.obsidian/themes/Omybuntu"
+  mkdir -p "$theme_dir"
+
+  [[ -f $theme_dir/manifest.json ]] || cat >"$theme_dir/manifest.json" <<'EOF'
+{
+  "name": "Omybuntu",
+  "version": "1.0.0",
+  "minAppVersion": "0.16.0",
+  "description": "Automatically syncs with your current Omybuntu system theme colors and fonts",
+  "author": "Omybuntu",
+  "authorUrl": "https://omybuntu.org"
+}
+EOF
+
+  cp "$CURRENT_THEME_DIR/obsidian.css" "$theme_dir/theme.css"
+done

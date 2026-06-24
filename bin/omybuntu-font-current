@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# omybuntu:summary=Show current monospace font
+# omybuntu:examples=omybuntu font current
+
+grep -oP 'font-family:\s*["'\'']?\K[^;"'\'']+' ~/.config/waybar/style.css | head -n1

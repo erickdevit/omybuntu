@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omybuntu:summary=Refresh the SDDM theme from default
+# omybuntu:requires-sudo=true
+
+sudo rm -rf /usr/share/sddm/themes/omybuntu
+sudo cp -r $OMYBUNTU_PATH/default/sddm/omybuntu /usr/share/sddm/themes/omybuntu

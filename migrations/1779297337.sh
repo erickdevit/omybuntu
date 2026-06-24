@@ -1,5 +1,5 @@
 echo "Enable Voxtype keybindings toggle for existing installs"
 
-if omarchy-cmd-present voxtype; then
-  omarchy-hyprland-toggle voxtype on
+if omybuntu-cmd-present voxtype; then
+  omybuntu-hyprland-toggle voxtype on
 fi

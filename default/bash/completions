@@ -1,13 +1,13 @@
-_omarchy_complete() {
+_omybuntu_complete() {
   COMPREPLY=()
   local cur="${COMP_WORDS[COMP_CWORD]}"
 
-  local omarchy_path bin_dir
-  omarchy_path=$(command -v omarchy 2>/dev/null) || return 0
-  bin_dir=$(dirname -- "$(readlink -f -- "$omarchy_path" 2>/dev/null || printf '%s' "$omarchy_path")")
+  local omybuntu_path bin_dir
+  omybuntu_path=$(command -v omybuntu 2>/dev/null) || return 0
+  bin_dir=$(dirname -- "$(readlink -f -- "$omybuntu_path" 2>/dev/null || printf '%s' "$omybuntu_path")")
   [[ -d $bin_dir ]] || return 0
 
-  local prefix="omarchy"
+  local prefix="omybuntu"
   local i part
   for ((i = 1; i < COMP_CWORD; i++)); do
     part="${COMP_WORDS[i]}"
@@ -42,7 +42,7 @@ _omarchy_complete() {
 
   if (( ${#candidates[@]} == 0 )) && [[ -x $bin_dir/$prefix ]]; then
     local args enum
-    args=$(grep -m 1 '^# omarchy:args=<' "$bin_dir/$prefix" 2>/dev/null)
+    args=$(grep -m 1 '^# omybuntu:args=<' "$bin_dir/$prefix" 2>/dev/null)
     enum="${args#*<}"
     enum="${enum%%>*}"
 
@@ -57,8 +57,8 @@ _omarchy_complete() {
   fi
 }
 
-complete -o default -F _omarchy_complete omarchy
+complete -o default -F _omybuntu_complete omybuntu
 
-# Hide individual omarchy-* binaries from initial-word command completion;
-# the unified `omarchy` dispatcher is the user-facing entry point.
-complete -I -A command -X 'omarchy-*'
+# Hide individual omybuntu-* binaries from initial-word command completion;
+# the unified `omybuntu` dispatcher is the user-facing entry point.
+complete -I -A command -X 'omybuntu-*'

@@ -17,8 +17,8 @@ SUPPORTED_EXTENSIONS = {
 
 class TranscodeAction(GObject.GObject, Nautilus.MenuProvider):
     def _launch_transcode(self, paths):
-        wrapper = shutil.which("omarchy-launch-floating-terminal-with-presentation")
-        binary = shutil.which("omarchy-transcode")
+        wrapper = shutil.which("omybuntu-launch-floating-terminal-with-presentation")
+        binary = shutil.which("omybuntu-transcode")
         if not wrapper or not binary:
             return
 
@@ -66,7 +66,7 @@ class TranscodeAction(GObject.GObject, Nautilus.MenuProvider):
     def _make_item(self, paths):
         label = "Transcode" if len(paths) == 1 else f"Transcode {len(paths)} items"
         item = Nautilus.MenuItem(
-            name="OmarchyTranscodeNautilus::transcode",
+            name="OmybuntuTranscodeNautilus::transcode",
             label=label,
             icon="media-playback-start",
         )
@@ -78,8 +78,8 @@ class TranscodeAction(GObject.GObject, Nautilus.MenuProvider):
 
     def _tools_available(self):
         return bool(
-            shutil.which("omarchy-launch-floating-terminal-with-presentation")
-            and shutil.which("omarchy-transcode")
+            shutil.which("omybuntu-launch-floating-terminal-with-presentation")
+            and shutil.which("omybuntu-transcode")
         )
 
     def get_file_items(self, *args):

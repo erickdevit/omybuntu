@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# omybuntu:summary=Update Omybuntu and system packages
+# omybuntu:args=[-y]
+# omybuntu:examples=omybuntu update | omybuntu update -y
+# omybuntu:requires-sudo=true
+
+set -e
+
+# Run the update inside a PTY so pacman/yay keep showing download progress
+# while still logging the full session for later analysis.
+if [[ -z $OMYBUNTU_UPDATE_LOGGED ]]; then
+  script_command=$(printf '%q ' "$0" "$@")
+  exec env OMYBUNTU_UPDATE_LOGGED=1 script -qefc "$script_command" "/tmp/omybuntu-update.log"
+fi
+
+trap 'echo ""; echo -e "\033[0;31mSomething went wrong during the update!\n\nPlease review the output above carefully, correct the error, and retry the update.\n\nIf you need assistance, get help from the community at https://omybuntu.org/discord\033[0m"' ERR
+
+if [[ $1 == "-y" ]] || omybuntu-update-confirm; then
+  omybuntu-snapshot create || (($? == 127))
+  omybuntu-update-git
+  omybuntu-update-perform
+fi

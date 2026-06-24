@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Restart the hyprsunset service (used for blue light filtering/night light).
+
+omybuntu-restart-app hyprsunset

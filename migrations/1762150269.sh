@@ -1,2 +1,2 @@
-echo "Install omarchy-walker meta package"
-omarchy-pkg-add omarchy-walker
+echo "Install omybuntu-walker meta package"
+omybuntu-pkg-add omybuntu-walker

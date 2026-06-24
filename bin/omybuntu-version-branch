@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Print the current Omybuntu git branch
+
+echo $(git -C "$OMYBUNTU_PATH" rev-parse --abbrev-ref HEAD)

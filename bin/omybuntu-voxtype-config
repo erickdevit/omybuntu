@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Open the Voxtype configuration file
+
+set -e
+
+# Used by Voxtype waybar module to open config on right click
+
+exec omybuntu-launch-editor ~/.config/voxtype/config.toml

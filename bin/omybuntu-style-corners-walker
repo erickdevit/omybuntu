@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# omybuntu:summary=Set or toggle rounded Walker corners
+# omybuntu:args=[toggle|sharp|round]
+# omybuntu:examples=omybuntu style corners walker toggle | omybuntu style corners walker round | omybuntu style corners walker sharp
+
+TOGGLES_CSS="$HOME/.local/state/omybuntu/toggles/walker.css"
+
+set_radius() {
+  local radius="$1"
+
+  mkdir -p "$(dirname "$TOGGLES_CSS")"
+  touch "$TOGGLES_CSS"
+
+  if grep -q '^  border-radius:' "$TOGGLES_CSS"; then
+    sed -i "s/^  border-radius:.*/  border-radius: ${radius}px;/" "$TOGGLES_CSS"
+  elif grep -q '^border-radius:' "$TOGGLES_CSS"; then
+    sed -i "s/^border-radius:.*/border-radius: ${radius}px;/" "$TOGGLES_CSS"
+  else
+    echo ".box-wrapper { border-radius: ${radius}px; }" >>"$TOGGLES_CSS"
+  fi
+}
+
+case "${1:-toggle}" in
+  round) set_radius 6 ;;
+  sharp) set_radius 0 ;;
+  toggle)
+    if [[ -f $TOGGLES_CSS ]] && grep -q 'border-radius: 6px;' "$TOGGLES_CSS"; then
+      set_radius 0
+    else
+      set_radius 6
+    fi
+    ;;
+  *)
+    echo "Usage: omybuntu-style-corners-walker [toggle|sharp|round]"
+    exit 1
+    ;;
+esac
+
+omybuntu-restart-walker

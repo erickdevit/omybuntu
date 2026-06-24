@@ -1,14 +1,14 @@
 -- Learn how to configure Hyprland: https://wiki.hypr.land/Configuring/Start/
 
--- Load user modules from ~/.config and Omarchy defaults from $OMARCHY_PATH.
+-- Load user modules from ~/.config and Omybuntu defaults from $OMYBUNTU_PATH.
 package.path = os.getenv("HOME")
   .. "/.config/?.lua;"
-  .. (os.getenv("OMARCHY_PATH") or (os.getenv("HOME") .. "/.local/share/omarchy"))
+  .. (os.getenv("OMYBUNTU_PATH") or (os.getenv("HOME") .. "/.local/share/omybuntu"))
   .. "/?.lua;"
   .. package.path
 
--- All Omarchy default setups
-require("default.hypr.omarchy")
+-- All Omybuntu default setups
+require("default.hypr.omybuntu")
 
 -- Change your own setup in these files and override defaults.
 require("hypr.monitors")

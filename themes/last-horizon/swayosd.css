@@ -5,7 +5,7 @@
 @define-color progress #e2dddc;
 
 
-/* Cancel out Omarchy settings */
+/* Cancel out Omybuntu settings */
 window:not(:backdrop),
 window:backdrop {
     border: none;

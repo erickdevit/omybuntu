@@ -1,4 +1,4 @@
-echo "Copy Omarchy logo to ~/.config/omarchy/branding/screensaver.txt so screensaver can be personalized"
+echo "Copy Omybuntu logo to ~/.config/omybuntu/branding/screensaver.txt so screensaver can be personalized"
 
-mkdir -p ~/.config/omarchy/branding
-cp $OMARCHY_PATH/logo.txt ~/.config/omarchy/branding/screensaver.txt
+mkdir -p ~/.config/omybuntu/branding
+cp $OMYBUNTU_PATH/logo.txt ~/.config/omybuntu/branding/screensaver.txt

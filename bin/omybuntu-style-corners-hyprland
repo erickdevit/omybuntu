@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# omybuntu:summary=Set or toggle shape of Hyprland window corners
+# omybuntu:args=[toggle|sharp|round]
+# omybuntu:examples=omybuntu style corners hyprland toggle | omybuntu style corners hyprland round | omybuntu style corners hyprland sharp
+
+case "${1:-toggle}" in
+  round) set -- on ;;
+  sharp) set -- off ;;
+  toggle) ;;
+  *)
+    echo "Usage: omybuntu-style-corners-hyprland [toggle|sharp|round]"
+    exit 1
+    ;;
+esac
+
+omybuntu-hyprland-toggle rounded-corners "$1"

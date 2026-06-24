@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omybuntu:summary=Remove the Xbox Cloud Gaming web app.
+
+set -e
+
+omybuntu-webapp-remove "Xbox Cloud Gaming"

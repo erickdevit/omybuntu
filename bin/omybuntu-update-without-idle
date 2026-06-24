@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# omybuntu:summary=No-op now that omybuntu-update-perform is responsible for idle management.
+# omybuntu:hidden=true

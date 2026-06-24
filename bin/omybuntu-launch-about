@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Launch the fastfetch TUI that gives information about the current system.
+
+exec omybuntu-launch-or-focus-tui "bash -c 'fastfetch; read -n 1 -s'"

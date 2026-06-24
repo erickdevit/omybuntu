@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Wake displays and restore brightness after idle
+# omybuntu:group=system
+# omybuntu:name=wake
+# omybuntu:examples=omybuntu system wake
+
+omybuntu-brightness-display on
+omybuntu-brightness-keyboard restore

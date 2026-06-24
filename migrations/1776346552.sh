@@ -5,8 +5,8 @@ destination=~/.config/wireplumber/wireplumber.conf.d/bluetooth-a2dp-autoconnect.
 mkdir -p ~/.config/wireplumber/wireplumber.conf.d/
 
 if [[ ! -f "$destination" ]]; then
-  cp "$OMARCHY_PATH/default/wireplumber/wireplumber.conf.d/bluetooth-a2dp-autoconnect.conf" \
+  cp "$OMYBUNTU_PATH/default/wireplumber/wireplumber.conf.d/bluetooth-a2dp-autoconnect.conf" \
     "$destination"
 fi
 
-omarchy-state set reboot-required
+omybuntu-state set reboot-required

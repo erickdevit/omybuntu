@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Restart the XCompose input method service (fcitx5) to apply new compose key settings.
+
+omybuntu-restart-app fcitx5 --disable notificationitem

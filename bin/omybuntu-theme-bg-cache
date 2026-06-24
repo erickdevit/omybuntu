@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# omybuntu:summary=Cache background switcher thumbnails for the current theme
+
+theme_name=$(cat "$HOME/.config/omybuntu/current/theme.name" 2>/dev/null)
+
+omybuntu-menu-images \
+  --cache-only \
+  "$HOME/.config/omybuntu/current/theme/backgrounds" \
+  "$HOME/.config/omybuntu/backgrounds/$theme_name"

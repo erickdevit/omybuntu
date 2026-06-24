@@ -1,4 +1,4 @@
-source $OMARCHY_INSTALL/helpers/chroot.sh
-source $OMARCHY_INSTALL/helpers/presentation.sh
-source $OMARCHY_INSTALL/helpers/errors.sh
-source $OMARCHY_INSTALL/helpers/logging.sh
+source $OMYBUNTU_INSTALL/helpers/chroot.sh
+source $OMYBUNTU_INSTALL/helpers/presentation.sh
+source $OMYBUNTU_INSTALL/helpers/errors.sh
+source $OMYBUNTU_INSTALL/helpers/logging.sh

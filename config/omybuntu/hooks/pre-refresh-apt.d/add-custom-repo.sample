@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# This hook is called by `omybuntu refresh apt` AFTER the channel template
+# is copied to /etc/apt/sources.list and BEFORE `apt update && apt upgrade` runs. Use it to
+# layer customizations onto the freshly-written sources so they're
+# respected by the upgrade — common cases are adding a custom repository
+# or extra preferences.
+#
+# The hook runs as the invoking user with a warm sudo cache.
+#
+# To put it into use, remove .sample from this file name.
+
+# Example: add a line for a custom repo.
+# Maintain the repo entries in /etc/apt/sources.list.d/custom-repos.list yourself.
+
+CONF=/etc/apt/sources.list
+SNIPPET=/etc/apt/sources.list.d/custom-repos.list
+MARKER="deb [signed-by=/etc/apt/keyrings/custom.gpg] https://custom.repo.local stable main"
+
+[[ -r $SNIPPET ]] || exit 0
+grep -qxF "$MARKER" "$CONF" && exit 0
+
+sudo sh -c "echo '$MARKER' >> $CONF"

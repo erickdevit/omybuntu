@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# omybuntu:summary=Reset all Omybuntu user configs to the defaults
+# omybuntu:requires-sudo=true
+
+set -e
+
+# Overwrite all user configs with the Omybuntu defaults.
+
+if (( EUID == 0 )); then
+  echo "Error: This script should not be run as root"
+  exit 1
+fi
+
+echo "Resetting all Omybuntu configs"
+cp -R ~/.local/share/omybuntu/config/* ~/.config/
+cp ~/.local/share/omybuntu/default/bashrc ~/.bashrc
+echo '[[ -f ~/.bashrc ]] && . ~/.bashrc' | tee ~/.bash_profile >/dev/null
+
+$(bash $OMYBUNTU_PATH/install/config/theme.sh)
+
+omybuntu-refresh-limine
+omybuntu-refresh-plymouth
+omybuntu-nvim-setup

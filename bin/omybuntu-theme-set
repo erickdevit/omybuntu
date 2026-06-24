@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# omybuntu:summary=Apply an Omybuntu theme
+# omybuntu:args=<theme-name>
+# omybuntu:examples=omybuntu theme list | omybuntu theme set "Tokyo Night"
+
+if [[ -z $1 ]]; then
+  echo "Usage: omybuntu-theme-set <theme-name>"
+  exit 1
+fi
+
+CURRENT_THEME_PATH="$HOME/.config/omybuntu/current/theme"
+NEXT_THEME_PATH="$HOME/.config/omybuntu/current/next-theme"
+USER_THEMES_PATH="$HOME/.config/omybuntu/themes"
+OMYBUNTU_THEMES_PATH="$OMYBUNTU_PATH/themes"
+
+THEME_NAME=$(echo "$1" | sed -E 's/<[^>]+>//g' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
+if [[ ! -d $OMYBUNTU_THEMES_PATH/$THEME_NAME ]] && [[ ! -d $USER_THEMES_PATH/$THEME_NAME ]]; then
+  echo "Theme '$THEME_NAME' does not exist"
+  exit 1
+fi
+
+# Setup clean next theme directory (for atomic theme config swapping)
+rm -rf "$NEXT_THEME_PATH"
+mkdir -p "$NEXT_THEME_PATH"
+
+# Copy official theme first, then overlay user customizations on top
+cp -r "$OMYBUNTU_THEMES_PATH/$THEME_NAME/"* "$NEXT_THEME_PATH/" 2>/dev/null
+cp -r "$USER_THEMES_PATH/$THEME_NAME/"* "$NEXT_THEME_PATH/" 2>/dev/null
+
+# Generate colors.toml from alacritty.toml if theme is missing colors.toml
+if [[ ! -f $NEXT_THEME_PATH/colors.toml && -f $NEXT_THEME_PATH/alacritty.toml ]]; then
+  omybuntu-theme-colors-from-alacritty "$NEXT_THEME_PATH"
+fi
+
+# Generate dynamic configs
+omybuntu-theme-set-templates
+
+# Swap next theme in as current
+rm -rf "$CURRENT_THEME_PATH"
+mv "$NEXT_THEME_PATH" "$CURRENT_THEME_PATH"
+
+# Store theme name for reference
+echo "$THEME_NAME" >"$HOME/.config/omybuntu/current/theme.name"
+
+# Change background with theme
+if [[ $OMYBUNTU_THEME_SKIP_BACKGROUND != "1" ]]; then
+  omybuntu-theme-bg-next
+fi
+
+# Restart components to apply new theme
+if pgrep -x waybar >/dev/null; then
+  omybuntu-restart-waybar
+fi
+omybuntu-restart-swayosd
+omybuntu-restart-terminal
+omybuntu-restart-hyprctl
+omybuntu-restart-btop
+omybuntu-restart-opencode
+omybuntu-restart-mako
+omybuntu-restart-helix
+
+# Change app-specific themes
+omybuntu-theme-set-foot
+omybuntu-theme-set-gnome
+omybuntu-theme-set-browser
+omybuntu-theme-set-vscode
+omybuntu-theme-set-obsidian
+omybuntu-theme-set-keyboard
+
+# Call hook on theme set
+omybuntu-hook theme-set "$THEME_NAME" >/dev/null
+
+# Warm the background selector cache after the theme is applied, off the critical path.
+omybuntu-theme-bg-cache >/dev/null 2>&1 &

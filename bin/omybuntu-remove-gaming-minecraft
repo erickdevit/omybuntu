@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# omybuntu:summary=Remove the Minecraft launcher along with its worlds, mods, and caches.
+# omybuntu:requires-sudo=true
+
+set -e
+
+omybuntu-pkg-drop minecraft-launcher
+
+rm -rf \
+  "$HOME/.minecraft" \
+  "$HOME/.config/Minecraft Launcher" \
+  "$HOME/.local/share/minecraft-launcher" \
+  "$HOME/.cache/minecraft"
+
+echo ""
+echo "Minecraft and its data have been removed."

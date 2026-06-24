@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Show the current time and date notification
+
+omybuntu-notification-send -g  -u low "$(date +"%A %H:%M  ·  %d %B %Y  ·  Week %V")"

@@ -1,5 +1,5 @@
 echo "Cleanup extra UKI if needed to prevent errors"
-if [[ -f /boot/EFI/linux/omarchy_linux.efi ]] && [[ -f /boot/EFI/linux/$(cat /etc/machine-id)_linux.efi ]]; then
+if [[ -f /boot/EFI/linux/omybuntu_linux.efi ]] && [[ -f /boot/EFI/linux/$(cat /etc/machine-id)_linux.efi ]]; then
   sudo rm -f /boot/EFI/Linux/$(cat /etc/machine-id)_linux.efi
 
   if grep -q "/boot/EFI/Linux/$(cat /etc/machine-id)_linux.efi" /boot/limine.conf; then
@@ -10,7 +10,7 @@ if [[ -f /boot/EFI/linux/omarchy_linux.efi ]] && [[ -f /boot/EFI/linux/$(cat /et
 ### Read more at config document: https://github.com/limine-bootloader/limine/blob/trunk/CONFIG.md
 #timeout: 3
 default_entry: 2
-interface_branding: Omarchy Bootloader
+interface_branding: Omybuntu Bootloader
 interface_branding_color: 2
 hash_mismatch_panic: no
 

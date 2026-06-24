@@ -9,7 +9,7 @@ local function require_file_if_exists(path, module)
 end
 
 -- GUM environment variables for styling purposes.
-require_file_if_exists(paths.config_home .. "/omarchy/current/theme/gum_env.lua", "omarchy.current.theme.gum_env")
+require_file_if_exists(paths.config_home .. "/omybuntu/current/theme/gum_env.lua", "omybuntu.current.theme.gum_env")
 
 -- Cursor size.
 hl.env("XCURSOR_SIZE", "24")

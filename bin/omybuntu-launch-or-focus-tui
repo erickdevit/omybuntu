@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Launch a TUI or focus an existing terminal window for it
+# omybuntu:args=<command> [args...]
+
+APP_ID="org.omybuntu.$(basename "$1")"
+LAUNCH_COMMAND="omybuntu-launch-tui $@"
+
+exec omybuntu-launch-or-focus "$APP_ID" "$LAUNCH_COMMAND"

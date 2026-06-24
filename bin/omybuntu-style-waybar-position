@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# omybuntu:summary=Set Waybar position
+# omybuntu:args=<top|bottom|left|right>
+# omybuntu:examples=omybuntu-style-waybar-position top | omybuntu style waybar-position bottom
+
+set -e
+
+WAYBAR_CONFIG="$HOME/.config/waybar/config.jsonc"
+
+position=$1
+
+if [[ ! $position =~ ^(top|bottom|left|right)$ ]]; then
+  echo "Usage: omybuntu-style-waybar-position top|bottom|left|right" >&2
+  exit 1
+fi
+
+if [[ $position == "left" || $position == "right" ]]; then
+  height=0
+  width=28
+else
+  height=26
+  width=0
+fi
+
+sed -i -E "s/(\"position\"[[:space:]]*:[[:space:]]*\")[a-z]+(\")/\\1${position}\\2/" "$WAYBAR_CONFIG"
+sed -i -E "s/(\"height\"[[:space:]]*:[[:space:]]*)[0-9]+/\\1${height}/; s/(\"width\"[[:space:]]*:[[:space:]]*)[0-9]+/\\1${width}/" "$WAYBAR_CONFIG"
+
+omybuntu-restart-waybar

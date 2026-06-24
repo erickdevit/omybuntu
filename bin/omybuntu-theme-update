@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# omybuntu:summary=Update user-installed git themes
+
+for dir in ~/.config/omybuntu/themes/*/; do
+  if [[ -d $dir ]] && [[ ! -L ${dir%/} ]] && [[ -d $dir/.git ]]; then
+    echo "Updating: $(basename "$dir")"
+    git -C "$dir" pull
+  fi
+done

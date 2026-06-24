@@ -1,3 +1,3 @@
 echo "Use explicit timezone selector when right-clicking on clock"
 
-sed -i 's/omarchy-cmd-tzupdate/omarchy-launch-floating-terminal-with-presentation omarchy-tz-select/g' ~/.config/waybar/config.jsonc
+sed -i 's/omybuntu-cmd-tzupdate/omybuntu-launch-floating-terminal-with-presentation omybuntu-tz-select/g' ~/.config/waybar/config.jsonc

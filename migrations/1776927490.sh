@@ -1,6 +1,6 @@
 echo "Drop /home snapshots, btrfs quotas, and timeline snapshots (keep 5 root snapshots, never more)"
 
-if ! omarchy-cmd-present snapper btrfs; then
+if ! omybuntu-cmd-present snapper btrfs; then
   exit 0
 fi
 
@@ -39,7 +39,7 @@ fi
 if ! sudo snapper list-configs 2>/dev/null | grep -q "root"; then
   sudo snapper -c root create-config /
 fi
-sudo cp $OMARCHY_PATH/default/snapper/root /etc/snapper/configs/root
+sudo cp $OMYBUNTU_PATH/default/snapper/root /etc/snapper/configs/root
 
 # Delete all timeline snapshots — we only want pre-update (cleanup=number) snapshots
 sudo snapper -c root list --columns number,cleanup 2>/dev/null | \

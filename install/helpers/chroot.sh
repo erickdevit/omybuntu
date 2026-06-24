@@ -1,9 +1,9 @@
-# Starting the installer with OMARCHY_CHROOT_INSTALL=1 will put it into chroot mode
+# Starting the installer with OMYBUNTU_CHROOT_INSTALL=1 will put it into chroot mode
 chrootable_systemctl_enable() {
-  if [[ -n ${OMARCHY_CHROOT_INSTALL:-} ]]; then
-    sudo systemctl enable $1
+  if [[ -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+    sudo systemctl enable $1 || true
   else
-    sudo systemctl enable --now $1
+    sudo systemctl enable --now $1 || true
   fi
 }
 

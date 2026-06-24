@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# omybuntu:summary=Refresh the current theme from its templates.
+
+THEME_NAME_PATH="$HOME/.config/omybuntu/current/theme.name"
+
+if [[ -f $THEME_NAME_PATH ]]; then
+  OMYBUNTU_THEME_SKIP_BACKGROUND=1 omybuntu-theme-set "$(cat $THEME_NAME_PATH)"
+fi

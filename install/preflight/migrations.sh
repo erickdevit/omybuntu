@@ -1,6 +1,6 @@
-OMARCHY_MIGRATIONS_STATE_PATH=~/.local/state/omarchy/migrations
-mkdir -p $OMARCHY_MIGRATIONS_STATE_PATH
+OMYBUNTU_MIGRATIONS_STATE_PATH=~/.local/state/omybuntu/migrations
+mkdir -p $OMYBUNTU_MIGRATIONS_STATE_PATH
 
-for file in ~/.local/share/omarchy/migrations/*.sh; do
-  touch "$OMARCHY_MIGRATIONS_STATE_PATH/$(basename "$file")"
+for file in "$OMYBUNTU_PATH"/migrations/*.sh; do
+  touch "$OMYBUNTU_MIGRATIONS_STATE_PATH/$(basename "$file")"
 done

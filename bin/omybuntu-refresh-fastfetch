@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Overwrite the user config for fastfetch with the Omybuntu default.
+
+omybuntu-refresh-config fastfetch/config.jsonc

@@ -8,11 +8,11 @@ import QtQuick.Shapes
 ShellRoot {
   id: root
 
-  property string imageDirs: Quickshell.env("OMARCHY_IMAGE_SELECTOR_DIRS") || Quickshell.env("OMARCHY_IMAGE_SELECTOR_DIR") || Quickshell.env("OMARCHY_STOCK_BACKGROUNDS_DIR") || (Quickshell.env("HOME") + "/.config/omarchy/current/theme/backgrounds")
+  property string imageDirs: Quickshell.env("OMYBUNTU_IMAGE_SELECTOR_DIRS") || Quickshell.env("OMYBUNTU_IMAGE_SELECTOR_DIR") || Quickshell.env("OMYBUNTU_STOCK_BACKGROUNDS_DIR") || (Quickshell.env("HOME") + "/.config/omybuntu/current/theme/backgrounds")
   property string imageRows: ""
-  property string selectionFile: Quickshell.env("OMARCHY_IMAGE_SELECTOR_SELECTION_FILE") || Quickshell.env("OMARCHY_BACKGROUND_SELECTION_FILE")
-  property string selectedImage: Quickshell.env("OMARCHY_IMAGE_SELECTOR_SELECTED")
-  property string colorsFile: Quickshell.env("OMARCHY_IMAGE_SELECTOR_COLORS_FILE") || (Quickshell.env("HOME") + "/.config/omarchy/current/theme/quickshell.json")
+  property string selectionFile: Quickshell.env("OMYBUNTU_IMAGE_SELECTOR_SELECTION_FILE") || Quickshell.env("OMYBUNTU_BACKGROUND_SELECTION_FILE")
+  property string selectedImage: Quickshell.env("OMYBUNTU_IMAGE_SELECTOR_SELECTED")
+  property string colorsFile: Quickshell.env("OMYBUNTU_IMAGE_SELECTOR_COLORS_FILE") || (Quickshell.env("HOME") + "/.config/omybuntu/current/theme/quickshell.json")
   property int selectedIndex: 0
   property bool imagesLoaded: false
   property bool opened: false
@@ -24,7 +24,7 @@ ShellRoot {
   property string doneFile: ""
   property string filterText: ""
   property var doneFilesToRelease: []
-  property string socketPath: (Quickshell.env("XDG_RUNTIME_DIR") || ("/run/user/" + Quickshell.env("UID"))) + "/omarchy-image-selector.sock"
+  property string socketPath: (Quickshell.env("XDG_RUNTIME_DIR") || ("/run/user/" + Quickshell.env("UID"))) + "/omybuntu-image-selector.sock"
   property color accent: "#798186"
   property color background: "#101315"
   property color foreground: "#cacccc"
@@ -251,7 +251,7 @@ ShellRoot {
     showLabels = nextShowLabels === true || nextShowLabels === "true"
     filterable = nextFilterable === true || nextFilterable === "true"
     filterText = ""
-    colorsFile = nextColorsFile || (Quickshell.env("HOME") + "/.config/omarchy/current/theme/quickshell.json")
+    colorsFile = nextColorsFile || (Quickshell.env("HOME") + "/.config/omybuntu/current/theme/quickshell.json")
     if (nextColorsRaw)
       loadColors(nextColorsRaw)
     imageArray = []
@@ -280,7 +280,7 @@ ShellRoot {
   Process {
     id: loadImagesProc
     property string output: ""
-    command: ["bash", "-lc", "cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}/omarchy/image-selector; while IFS= read -r dir; do [[ -n $dir && -d $dir ]] && find -L \"$dir\" -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.webp' \\) -print0; done <<< " + shellQuote(root.imageDirs) + " | sort -z | while IFS= read -r -d '' image; do hash=$(md5sum \"$image\" | cut -d ' ' -f 1); thumb=\"$cache_dir/$hash.jpg\"; [[ -f $thumb ]] || thumb=$image; printf '%s\\t%s\\n' \"$image\" \"$thumb\"; done"]
+    command: ["bash", "-lc", "cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}/omybuntu/image-selector; while IFS= read -r dir; do [[ -n $dir && -d $dir ]] && find -L \"$dir\" -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.gif' -o -iname '*.bmp' -o -iname '*.webp' \\) -print0; done <<< " + shellQuote(root.imageDirs) + " | sort -z | while IFS= read -r -d '' image; do hash=$(md5sum \"$image\" | cut -d ' ' -f 1); thumb=\"$cache_dir/$hash.jpg\"; [[ -f $thumb ]] || thumb=$image; printf '%s\\t%s\\n' \"$image\" \"$thumb\"; done"]
     stdout: SplitParser {
       onRead: function(data) {
         loadImagesProc.output += data + "\n"
@@ -293,7 +293,7 @@ ShellRoot {
 
   Component.onCompleted: {
     if (selectionFile)
-      openSelector(imageDirs, "", selectedImage, selectionFile, Quickshell.env("OMARCHY_IMAGE_SELECTOR_DONE_FILE"), colorsFile, "", false, false)
+      openSelector(imageDirs, "", selectedImage, selectionFile, Quickshell.env("OMYBUNTU_IMAGE_SELECTOR_DONE_FILE"), colorsFile, "", false, false)
   }
 
   IpcHandler {
@@ -360,7 +360,7 @@ ShellRoot {
     visible: root.opened && root.imagesLoaded
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
-    WlrLayershell.namespace: "omarchy-image-selector"
+    WlrLayershell.namespace: "omybuntu-image-selector"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore

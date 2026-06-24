@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# omybuntu:summary=Remove all the named packages from the system if they're installed (otherwise ignore).
+# omybuntu:args=<packages...>
+# omybuntu:requires-sudo=true
+
+for pkg in "$@"; do
+  if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+    sudo apt-get remove -y "$pkg"
+  fi
+  if snap list "$pkg" &>/dev/null; then
+    sudo snap remove "$pkg"
+  fi
+done

@@ -1,4 +1,4 @@
 echo "Switch from lazydocker-bin to lazydocker official"
 
-omarchy-pkg-drop lazydocker-bin
-omarchy-pkg-add lazydocker
+omybuntu-pkg-drop lazydocker-bin
+omybuntu-pkg-add lazydocker

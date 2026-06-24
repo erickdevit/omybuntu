@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omybuntu:summary=Overwrite the user config for hyprlock with the Omybuntu default.
+
+omybuntu-refresh-config hypr/hyprlock.conf

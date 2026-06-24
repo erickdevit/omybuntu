@@ -1,0 +1,6 @@
+[SddmGreeterTheme]
+Name=Omybuntu
+Description=Minimal terminal-style login theme matching the Limine bootloader aesthetic
+Author=Omybuntu
+Type=sddm-theme
+Version=1.0

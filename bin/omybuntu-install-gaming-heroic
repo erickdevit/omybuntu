@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Heroic Games Launcher (Epic, GOG, Amazon Prime Gaming) with graphics drivers.
+# omybuntu:requires-sudo=true
+
+set -e
+
+echo "Installing Heroic Games Launcher..."
+omybuntu-pkg-add heroic-games-launcher-bin
+omybuntu-install-gaming-gpu-lib32
+
+setsid gtk-launch heroic >/dev/null 2>&1 &

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# omybuntu:summary=Overwrite the user config for the Plymouth drive decryption and boot sequence with the Omybuntu default and rebuild it.
+# omybuntu:requires-sudo=true
+
+sudo cp -r ~/.local/share/omybuntu/default/plymouth/* /usr/share/plymouth/themes/omybuntu/
+sudo plymouth-set-default-theme omybuntu
+
+if command -v limine-mkinitcpio &>/dev/null; then
+  sudo limine-mkinitcpio
+else
+  sudo mkinitcpio -P
+fi

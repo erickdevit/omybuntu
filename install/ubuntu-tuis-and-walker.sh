@@ -8,6 +8,8 @@ echo "Downloading Walker..."
 curl -sL https://github.com/abenz1267/walker/releases/download/v2.16.2/walker-v2.16.2-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C ~/.local/bin/
 
 echo "Downloading Elephant..."
+pkill -f "elephant" || true
+rm -f ~/.local/bin/elephant
 curl -sL https://github.com/abenz1267/elephant/releases/download/v2.21.0/elephant-linux-amd64.tar.gz | tar -xzf - -O > ~/.local/bin/elephant
 chmod +x ~/.local/bin/elephant
 

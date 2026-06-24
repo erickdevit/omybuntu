@@ -73,7 +73,7 @@ Install stage files follow this pattern:
 - keep hardware-specific logic under `install/config/hardware/`
 - prefer helper commands for package and command checks where available
 
-Raw `command -v`, `pacman`, and `pacman-key` are acceptable in bootstrap/preflight/package-helper contexts where the helper commands may not be available yet or where direct package-manager behavior is the point of the script.
+Raw `command -v`, `apt`, `snap`, and `flatpak` are acceptable in bootstrap/preflight/package-helper contexts where the helper commands may not be available yet or where direct package-manager behavior is the point of the script.
 
 # Helper Commands
 
@@ -81,8 +81,8 @@ Use these instead of raw shell commands:
 
 - `omybuntu-cmd-missing` / `omybuntu-cmd-present` - check for commands
 - `omybuntu-pkg-missing` / `omybuntu-pkg-present` - check for packages
-- `omybuntu-pkg-add` - install packages (handles both pacman and AUR)
-- `omybuntu-pkg-drop` - remove packages; use this instead of raw `pacman -R*`
+- `omybuntu-pkg-add` - install packages (handles apt and snap)
+- `omybuntu-pkg-drop` - remove packages; use this instead of raw `apt remove` or `snap remove`
 - `omybuntu-notification-send` - send desktop notifications; do not call `notify-send` directly
 - `omybuntu-hw-asus-rog` - detect ASUS ROG hardware (and similar `hw-*` commands)
 
@@ -125,7 +125,7 @@ New migration format:
 
 Some older migrations predate these rules. Do not copy older migrations that start with shebangs, omit the leading `echo`, or hard-code `~/.local/share/omybuntu`.
 
-Migrations may use raw `pacman`, `command -v`, or direct config edits when needed for historical compatibility or one-off repair work.
+Migrations may use raw `apt`, `snap`, `flatpak`, `command -v`, or direct config edits when needed for historical compatibility or one-off repair work.
 
 Example:
 ```bash

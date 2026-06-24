@@ -23,7 +23,11 @@ else
   width=0
 fi
 
-sed -i -E "s/(\"position\"[[:space:]]*:[[:space:]]*\")[a-z]+(\")/\\1${position}\\2/" "$WAYBAR_CONFIG"
-sed -i -E "s/(\"height\"[[:space:]]*:[[:space:]]*)[0-9]+/\\1${height}/; s/(\"width\"[[:space:]]*:[[:space:]]*)[0-9]+/\\1${width}/" "$WAYBAR_CONFIG"
+for TARGET in "$WAYBAR_CONFIG" "$OMYBUNTU_PATH/config/waybar/config.jsonc"; do
+  if [[ -f "$TARGET" ]]; then
+    sed -i -E "s/(\"position\"[[:space:]]*:[[:space:]]*\")[a-z]+(\")/\\1${position}\\2/" "$TARGET"
+    sed -i -E "s/(\"height\"[[:space:]]*:[[:space:]]*)[0-9]+/\\1${height}/; s/(\"width\"[[:space:]]*:[[:space:]]*)[0-9]+/\\1${width}/" "$TARGET"
+  fi
+done
 
 omybuntu-restart-waybar

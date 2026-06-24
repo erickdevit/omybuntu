@@ -68,6 +68,7 @@ omybuntu-theme-set-browser
 omybuntu-theme-set-vscode
 omybuntu-theme-set-obsidian
 omybuntu-theme-set-keyboard
+omybuntu-nvim-setup
 
 # Call hook on theme set
 omybuntu-hook theme-set "$THEME_NAME" >/dev/null

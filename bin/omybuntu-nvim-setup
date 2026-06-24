@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# omybuntu:summary=Initialize and configure Neovim with LazyVim and Omybuntu theme
+
+OMYBUNTU_PATH=${OMYBUNTU_PATH:-$(cd -- "$(dirname -- "$0")/.." && pwd)}
+USER_NVIM_DIR="$HOME/.config/nvim"
+BASE_NVIM_DIR="$OMYBUNTU_PATH/config/nvim"
+
+# If the user doesn't have a neovim config, copy the starter
+if [[ ! -d "$USER_NVIM_DIR" ]]; then
+  echo "Initializing LazyVim configuration..."
+  cp -r "$BASE_NVIM_DIR" "$USER_NVIM_DIR"
+fi
+
+# Apply the current theme to Neovim
+CURRENT_THEME_DIR="$HOME/.config/omybuntu/current/theme"
+if [[ -f "$CURRENT_THEME_DIR/neovim.lua" ]]; then
+  mkdir -p "$USER_NVIM_DIR/lua/plugins"
+  cp -f "$CURRENT_THEME_DIR/neovim.lua" "$USER_NVIM_DIR/lua/plugins/theme.lua"
+fi

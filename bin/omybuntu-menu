@@ -2,6 +2,8 @@
 
 # omybuntu:summary=Launch the Omybuntu Menu or takes a parameter to jump straight to a submenu.
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 # Set to true when going directly to a submenu, so we can exit directly
 BACK_TO_EXIT=false
 
@@ -342,24 +344,25 @@ show_font_menu() {
 }
 
 show_setup_menu() {
-  local options="  Audio\n  Wifi\n󰂯  Bluetooth\n󱐋  Power Profile\n  System Sleep\n󰍹  Monitors"
-  [[ -f ~/.config/hypr/bindings.lua ]] && options="$options\n  Keybindings"
-  [[ -f ~/.config/hypr/input.lua ]] && options="$options\n  Input"
-  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Config"
+  local options="$I18N_SET_AUDIO\n$I18N_SET_WIFI\n$I18N_SET_BLUETOOTH\n$I18N_SET_POWER\n$I18N_SET_SLEEP\n$I18N_SET_MONITORS"
+  [[ -f ~/.config/hypr/bindings.lua ]] && options="$options\n$I18N_SET_KEYBINDINGS"
+  [[ -f ~/.config/hypr/input.lua ]] && options="$options\n$I18N_SET_INPUT"
+  options="$options\n$I18N_SET_DEFAULTS\n$I18N_SET_DNS\n$I18N_SET_SECURITY\n$I18N_SET_CONFIG\n$I18N_SET_LANGUAGE"
 
-  case $(menu "Setup" "$options") in
-  *Audio*) omybuntu-launch-audio ;;
-  *Wifi*) omybuntu-launch-wifi ;;
-  *Bluetooth*) omybuntu-launch-bluetooth ;;
-  *Power*) show_setup_power_menu ;;
-  *System*) show_setup_system_menu ;;
-  *Monitors*) open_in_editor "$(hypr_config_file monitors)" ;;
-  *Keybindings*) open_in_editor "$(hypr_config_file bindings)" ;;
-  *Input*) open_in_editor "$(hypr_config_file input)" ;;
-  *Defaults*) show_setup_default_menu ;;
-  *DNS*) present_terminal omybuntu-setup-dns ;;
-  *Security*) show_setup_security_menu ;;
-  *Config*) show_setup_config_menu ;;
+  case $(menu "$I18N_MENU_SETUP" "$options") in
+  *"$I18N_SET_AUDIO"*) omybuntu-launch-audio ;;
+  *"$I18N_SET_WIFI"*) omybuntu-launch-wifi ;;
+  *"$I18N_SET_BLUETOOTH"*) omybuntu-launch-bluetooth ;;
+  *"$I18N_SET_POWER"*) show_setup_power_menu ;;
+  *"$I18N_SET_SLEEP"*) show_setup_system_menu ;;
+  *"$I18N_SET_MONITORS"*) open_in_editor "$(hypr_config_file monitors)" ;;
+  *"$I18N_SET_KEYBINDINGS"*) open_in_editor "$(hypr_config_file bindings)" ;;
+  *"$I18N_SET_INPUT"*) open_in_editor "$(hypr_config_file input)" ;;
+  *"$I18N_SET_DEFAULTS"*) show_setup_default_menu ;;
+  *"$I18N_SET_DNS"*) present_terminal omybuntu-setup-dns ;;
+  *"$I18N_SET_SECURITY"*) show_setup_security_menu ;;
+  *"$I18N_SET_CONFIG"*) show_setup_config_menu ;;
+  *"$I18N_SET_LANGUAGE"*) show_language_menu ;;
   *) show_main_menu ;;
   esac
 }
@@ -881,15 +884,38 @@ show_system_menu() {
   esac
 }
 
+show_language_menu() {
+  case $(menu "$I18N_SET_LANGUAGE" "English\nPortuguês (Brasil)\nEspañol") in
+  *English*) echo "en" > ~/.config/omybuntu/language ;;
+  *Português*) echo "pt-br" > ~/.config/omybuntu/language ;;
+  *Español*) echo "es" > ~/.config/omybuntu/language ;;
+  esac
+
+  # Reload translation variables
+  source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+  # Back to setup menu
+  show_setup_menu
+}
+
 show_main_menu() {
-  go_to_menu "$(menu "Go" "󰀻  Apps\n󰧑  Learn\n󱓞  Trigger\n  Style\n  Setup\n󰉉  Install\n󰭌  Remove\n  Update\n  About\n  System")"
+  go_to_menu "$(menu "$I18N_MENU_GO" "$I18N_OPT_APPS\n$I18N_OPT_LEARN\n$I18N_OPT_TRIGGER\n$I18N_OPT_STYLE\n$I18N_OPT_SETUP\n$I18N_OPT_INSTALL\n$I18N_OPT_REMOVE\n$I18N_OPT_UPDATE\n$I18N_OPT_ABOUT\n$I18N_OPT_SYSTEM")"
 }
 
 go_to_menu() {
-  case "${1,,}" in
-  *apps*) walker -p "Launch…" ;;
-  *learn*) show_learn_menu ;;
-  *trigger*) show_trigger_menu ;;
+  local val="$1"
+  case "$val" in
+  *"$I18N_OPT_APPS"* | *apps*) walker -p "Launch…" ;;
+  *"$I18N_OPT_LEARN"* | *learn*) show_learn_menu ;;
+  *"$I18N_OPT_TRIGGER"* | *trigger*) show_trigger_menu ;;
+  *"$I18N_OPT_STYLE"* | *style*) show_style_menu ;;
+  *"$I18N_OPT_SETUP"* | *setup*) show_setup_menu ;;
+  *"$I18N_OPT_INSTALL"* | *install*) show_install_menu ;;
+  *"$I18N_OPT_REMOVE"* | *remove*) show_remove_menu ;;
+  *"$I18N_OPT_UPDATE"* | *update*) show_update_menu ;;
+  *"$I18N_OPT_ABOUT"* | *about*) show_about ;;
+  *"$I18N_OPT_SYSTEM"* | *system*) show_system_menu ;;
+  # English-only legacy or CLI argument entry points
   *toggle*) show_toggle_menu ;;
   *hardware*) show_hardware_menu ;;
   *share*) show_share_menu ;;
@@ -897,16 +923,9 @@ go_to_menu() {
   *reminder*) show_reminder_menu ;;
   *background*) show_background_menu ;;
   *capture*) show_capture_menu ;;
-  *style*) show_style_menu ;;
   *theme*) show_theme_menu ;;
   *screenrecord*) show_screenrecord_menu ;;
-  *setup*) show_setup_menu ;;
   *power*) show_setup_power_menu ;;
-  *install*) show_install_menu ;;
-  *remove*) show_remove_menu ;;
-  *update*) show_update_menu ;;
-  *about*) show_about ;;
-  *system*) show_system_menu ;;
   esac
 }
 

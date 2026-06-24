@@ -84,6 +84,11 @@ catch_errors() {
   # Store exit code immediately before it gets overwritten
   local exit_code=$?
 
+  # Ensure translation variables are loaded
+  if [[ -z ${I18N_ERR_WHAT_TO_DO:-} ]]; then
+    source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh" || true
+  fi
+
   stop_log_output
   restore_outputs
 
@@ -106,36 +111,36 @@ catch_errors() {
 
     # If online install, show retry first
     if [[ -n ${OMYBUNTU_ONLINE_INSTALL:-} ]]; then
-      options+=("Retry installation")
+      options+=("$I18N_ERR_RETRY")
     fi
 
     # Add upload option if internet is available
     if ping -c 1 -W 1 1.1.1.1 >/dev/null 2>&1; then
-      options+=("Upload log for support")
+      options+=("$I18N_ERR_UPLOAD")
     fi
 
     # Add remaining options
-    options+=("View full log")
-    options+=("Exit")
+    options+=("$I18N_ERR_VIEW")
+    options+=("$I18N_ERR_EXIT")
 
-    choice=$(gum choose "${options[@]}" --header "What would you like to do?" --height 6 --padding "1 $PADDING_LEFT")
+    choice=$(gum choose "${options[@]}" --header "$I18N_ERR_WHAT_TO_DO" --height 6 --padding "1 $PADDING_LEFT")
 
     case "$choice" in
-    "Retry installation")
+    "$I18N_ERR_RETRY")
       bash "$OMYBUNTU_PATH"/install.sh
       break
       ;;
-    "View full log")
+    "$I18N_ERR_VIEW")
       if command -v less &>/dev/null; then
         less "$OMYBUNTU_INSTALL_LOG_FILE"
       else
         tail "$OMYBUNTU_INSTALL_LOG_FILE"
       fi
       ;;
-    "Upload log for support")
+    "$I18N_ERR_UPLOAD")
       omybuntu-upload-log
       ;;
-    "Exit" | "")
+    "$I18N_ERR_EXIT" | "")
       exit 1
       ;;
     esac

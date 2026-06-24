@@ -1,8 +1,7 @@
 # Must be Ubuntu
 if [[ ! -f /etc/os-release ]] || ! grep -qi "ubuntu" /etc/os-release; then
-  echo -e "\e[31mOmybuntu install requires: Ubuntu\e[0m"
-  echo
-  gum confirm "Proceed anyway on your own accord and without assistance?" || exit 1
+  printf "\e[31m$(printf "$I18N_ERR_INSTALL_REQ" "Ubuntu")\e[0m\n\n"
+  gum confirm "$I18N_PROCEED_ANYWAY" || exit 1
 fi
 
 if [[ -n ${OMYBUNTU_ONLINE_INSTALL:-} ]]; then

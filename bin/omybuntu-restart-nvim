@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# omybuntu:summary=Reload Neovim themes on the fly
+
+if pgrep -x nvim >/dev/null; then
+  CURRENT_THEME_DIR="$HOME/.config/omybuntu/current/theme"
+  if [[ -f "$CURRENT_THEME_DIR/neovim.lua" ]]; then
+    COLORSCHEME=$(grep -oP "colorscheme\s*=\s*['\"]\K[^'\"]+" "$CURRENT_THEME_DIR/neovim.lua" | head -n 1)
+    
+    if [[ -n "$COLORSCHEME" ]]; then
+      # Find all active Neovim sockets
+      for server in "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/nvim.*.*; do
+        if [[ -S "$server" ]]; then
+          # Send escape to normal mode, tell Lazy to sync (installs the plugin if missing), 
+          # and set the new colorscheme
+          nvim --server "$server" --remote-send "<C-\><C-N>:Lazy! sync<CR>:colorscheme $COLORSCHEME<CR>"
+        fi
+      done
+    fi
+  fi
+fi

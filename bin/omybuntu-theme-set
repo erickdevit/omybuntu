@@ -60,6 +60,7 @@ omybuntu-restart-btop
 omybuntu-restart-opencode
 omybuntu-restart-mako
 omybuntu-restart-helix
+omybuntu-restart-nvim
 
 # Change app-specific themes
 omybuntu-theme-set-foot

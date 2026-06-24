@@ -135,3 +135,9 @@ if omybuntu-cmd-missing fprintd-list || ! fprintd-list "$USER" 2>/dev/null | gre
   sed -i 's/fingerprint:enabled = .*/fingerprint:enabled = false/' ~/.config/hypr/hyprlock.conf
 fi
 ```
+
+# Porting from Omarchy
+
+- Look exactly at how Omarchy originally implemented scripts and features. Nothing should be reinvented unless extremely necessary.
+- If an existing feature is broken, find and fix the root cause of why the Omarchy implementation is failing instead of rewriting it from scratch.
+- You must ask for permission from the user before reinventing or rewriting any script.

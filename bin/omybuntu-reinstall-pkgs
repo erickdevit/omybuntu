@@ -5,14 +5,9 @@
 
 set -e
 
-# Reinstall all default Omybuntu packages from the stable channel and downgrade any packages that are too new.
+# Update local cache
+sudo apt-get update -y
 
-# Set the package repository to the stable mirrors
-omybuntu-refresh-pacman
-
-# Downgrade any packages to the stable setup
-sudo pacman -Suu --noconfirm
-
-# Ensure all packages are installed
+# Ensure all base packages are installed and up to date
 mapfile -t packages < <(grep -v '^#' "$OMYBUNTU_PATH/install/omybuntu-base.packages" | grep -v '^$')
-sudo pacman -Syu --noconfirm --needed "${packages[@]}"
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --reinstall "${packages[@]}"

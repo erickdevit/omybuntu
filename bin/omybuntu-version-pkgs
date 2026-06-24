@@ -2,4 +2,4 @@
 
 # omybuntu:summary=Print when system packages were last upgraded
 
-date -d "$(grep upgraded /var/log/pacman.log | tail -1 | sed -E 's/\[([^]]+)\].*/\1/')" "+%A, %B %d %Y at %H:%M"
+date -d "@$(stat -c %Y /var/lib/dpkg/status)" "+%A, %B %d %Y at %H:%M"

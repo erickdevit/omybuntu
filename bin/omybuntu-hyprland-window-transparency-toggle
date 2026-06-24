@@ -3,10 +3,5 @@
 # omybuntu:summary=Toggles transparency for the currently focused window.
 
 addr=$(hyprctl activewindow -j | jq -r '.address')
-current=$(hyprctl getprop active opaque 2>/dev/null)
-
-if [[ "$current" == "false" || "$current" == "0" ]]; then
-  hyprctl setprop "address:$addr" opaque 1 lock >/dev/null 2>&1
-else
-  hyprctl setprop "address:$addr" opaque 0 lock >/dev/null 2>&1
-fi
+# In Hyprland 0.53+, setprop is a dispatcher. We add 'lock' to override windowrules.
+hyprctl dispatch setprop "address:$addr" opaque toggle lock >/dev/null 2>&1

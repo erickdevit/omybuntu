@@ -29,8 +29,9 @@ echo "Downloading Impala..."
 curl -sL https://github.com/pythops/impala/releases/download/v0.7.4/impala-x86_64-unknown-linux-musl -o ~/.local/bin/impala
 chmod +x ~/.local/bin/impala
 
-echo "Downloading Bluetuith..."
-curl -sL https://github.com/bluetuith-org/bluetuith/releases/download/v0.2.6/bluetuith_0.2.6_Linux_x86_64.tar.gz | tar -xz -C ~/.local/bin/ bluetuith
+echo "Downloading Bluetui..."
+curl -sL https://github.com/pythops/bluetui/releases/download/v0.8.1/bluetui-x86_64-linux-musl -o ~/.local/bin/bluetui
+chmod +x ~/.local/bin/bluetui
 
 echo "Downloading Wiremix..."
 curl -sL https://archlinux.org/packages/extra/x86_64/wiremix/download/ -o /tmp/wiremix.pkg.tar.zst

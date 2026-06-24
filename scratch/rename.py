@@ -1,7 +1,7 @@
 import os
 import re
 
-TARGET_DIR = "/home/erick/repos/omarchy"
+TARGET_DIR = "/home/erick/repos/omybuntu"
 
 def replace_text_in_file(filepath):
     # Skip binary files by trying to read as utf-8

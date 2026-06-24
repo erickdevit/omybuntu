@@ -81,8 +81,8 @@ Use these instead of raw shell commands:
 
 - `omybuntu-cmd-missing` / `omybuntu-cmd-present` - check for commands
 - `omybuntu-pkg-missing` / `omybuntu-pkg-present` - check for packages
-- `omybuntu-pkg-add` - install packages (handles apt and snap)
-- `omybuntu-pkg-drop` - remove packages; use this instead of raw `apt remove` or `snap remove`
+- `omybuntu-pkg-add` - install packages (handles apt, snap, and flatpak)
+- `omybuntu-pkg-drop` - remove packages; use this instead of raw `apt remove`, `snap remove`, or `flatpak uninstall`
 - `omybuntu-notification-send` - send desktop notifications; do not call `notify-send` directly
 - `omybuntu-hw-asus-rog` - detect ASUS ROG hardware (and similar `hw-*` commands)
 

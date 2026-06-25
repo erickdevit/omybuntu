@@ -20,6 +20,9 @@ ln -snf ~/.config/omybuntu/current/theme/btop.theme ~/.config/btop/themes/curren
 mkdir -p ~/.config/mako
 ln -snf ~/.config/omybuntu/current/theme/mako.ini ~/.config/mako/config
 
+mkdir -p ~/.config/cava
+ln -snf ~/.config/omybuntu/current/theme/cava.ini ~/.config/cava/config
+
 # Default Chromium to follow system appearance ("device") instead of dark
 sudo mkdir -p /usr/lib/chromium
 echo '{"browser":{"theme":{"color_scheme":0,"color_scheme2":0}}}' | sudo tee /usr/lib/chromium/initial_preferences >/dev/null

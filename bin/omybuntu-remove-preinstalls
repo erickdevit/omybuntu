@@ -14,9 +14,10 @@ if gum confirm "$I18N_REMOVE_PREINSTALLS_WARN"; then
   cp "$OMYBUNTU_PATH/default/hypr/plain-bindings.lua" ~/.config/hypr/bindings.lua
   hyprctl reload
 
-  # Remove npm stubs
+  # Remove npm stubs and custom binaries
   rm -f ~/.local/bin/codex ~/.local/bin/gemini ~/.local/bin/copilot \
-       ~/.local/bin/opencode ~/.local/bin/playwright-cli ~/.local/bin/pi
+       ~/.local/bin/opencode ~/.local/bin/playwright-cli ~/.local/bin/pi \
+       ~/.local/bin/cliamp
 
   omybuntu-pkg-drop \
     aether \

@@ -39,6 +39,11 @@
   margin: 0 7.5px;
 }
 
+#custom-omybuntu {
+  font-family: 'icomoon';
+  font-size: 16px;
+}
+
 #tray {
   margin-right: 16px;
 }

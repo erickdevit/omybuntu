@@ -2,6 +2,9 @@
 
 # omybuntu:summary=Launch the Omybuntu screensaver in the default terminal on the system with the correct font configuration.
 
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+export PATH="$OMYBUNTU_PATH/bin:$PATH"
+
 if ! command -v tte &>/dev/null; then
   exit 1
 fi
@@ -15,19 +18,24 @@ if omybuntu-toggle-enabled screensaver-off && [[ $1 != "force" ]]; then
 fi
 
 # Silently quit Walker on overlay
-walker -q
+command -v walker &>/dev/null && walker -q
 
 focused=$(omybuntu-hyprland-monitor-focused)
 terminal=$(xdg-terminal-exec --print-id)
 
 hypr_focus_monitor() {
-  hyprctl dispatch "hl.dsp.focus({ monitor = \"$1\" })" >/dev/null 2>&1 || hyprctl dispatch focusmonitor "$1" >/dev/null
+  local res
+  if ! res=$(hyprctl dispatch "hl.dsp.focus({ monitor = \"$1\" })" 2>&1) || [[ $res == *"Invalid dispatcher"* ]]; then
+    hyprctl dispatch focusmonitor "$1" >/dev/null
+  fi
 }
 
 hypr_exec() {
   local command="$1"
-
-  hyprctl dispatch "hl.dsp.exec_cmd([[$command]])" >/dev/null 2>&1 || hyprctl dispatch exec -- bash -lc "$command" >/dev/null
+  local res
+  if ! res=$(hyprctl dispatch "hl.dsp.exec_cmd([[$command]])" 2>&1) || [[ $res == *"Invalid dispatcher"* ]]; then
+    hyprctl dispatch exec -- "$command" >/dev/null
+  fi
 }
 
 for m in $(hyprctl monitors -j | jq -r '.[] | .name'); do
@@ -35,16 +43,16 @@ for m in $(hyprctl monitors -j | jq -r '.[] | .name'); do
 
   case $terminal in
   *Alacritty*)
-    hypr_exec "alacritty --class=org.omybuntu.screensaver --config-file ~/.local/share/omybuntu/default/alacritty/screensaver.toml -e omybuntu-screensaver"
+    hypr_exec "alacritty --class=org.omybuntu.screensaver --config-file ~/.local/share/omybuntu/default/alacritty/screensaver.toml -e \"$OMYBUNTU_PATH/bin/omybuntu-screensaver\""
     ;;
   *ghostty*)
-    hypr_exec "ghostty --class=org.omybuntu.screensaver --config-file=~/.local/share/omybuntu/default/ghostty/screensaver --font-size=18 -e omybuntu-screensaver"
+    hypr_exec "ghostty --class=org.omybuntu.screensaver --config-file=~/.local/share/omybuntu/default/ghostty/screensaver --font-size=18 -e \"$OMYBUNTU_PATH/bin/omybuntu-screensaver\""
     ;;
   *foot*)
-    hypr_exec "foot --app-id=org.omybuntu.screensaver --config=\"$OMYBUNTU_PATH/default/foot/screensaver.ini\" -e omybuntu-screensaver"
+    hypr_exec "foot --app-id=org.omybuntu.screensaver --config=\"$OMYBUNTU_PATH/default/foot/screensaver.ini\" -e \"$OMYBUNTU_PATH/bin/omybuntu-screensaver\""
     ;;
   *kitty*)
-    hypr_exec "kitty --class=org.omybuntu.screensaver --override font_size=18 --override window_padding_width=0 -e omybuntu-screensaver"
+    hypr_exec "kitty --class=org.omybuntu.screensaver --override font_size=18 --override window_padding_width=0 -e \"$OMYBUNTU_PATH/bin/omybuntu-screensaver\""
     ;;
   *)
     notify-send -u low "✋  Screensaver only runs in Alacritty, Foot, Ghostty, or Kitty"

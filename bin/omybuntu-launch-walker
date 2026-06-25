@@ -11,4 +11,4 @@ if ! pgrep -f "/home/erick/.local/bin/walker --gapplication-service" > /dev/null
   setsid uwsm-app -- env GSK_RENDERER=cairo /home/erick/.local/bin/walker --gapplication-service &
 fi
 
-exec /home/erick/.local/bin/walker --width 644 --maxheight 300 --minheight 300 "$@"
+exec /home/erick/.local/bin/walker --width 504 --maxheight 300 --minheight 300 "$@"

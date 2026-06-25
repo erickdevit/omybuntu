@@ -39,4 +39,8 @@ tar --zstd -xf /tmp/wiremix.pkg.tar.zst usr/bin/wiremix -O > ~/.local/bin/wiremi
 chmod +x ~/.local/bin/wiremix
 rm -f /tmp/wiremix.pkg.tar.zst
 
+echo "Downloading Cliamp..."
+curl -sL https://github.com/bjarneo/cliamp/releases/latest/download/cliamp-linux-amd64 -o ~/.local/bin/cliamp
+chmod +x ~/.local/bin/cliamp
+
 echo "Done!"

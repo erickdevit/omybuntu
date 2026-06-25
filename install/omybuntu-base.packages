@@ -83,6 +83,7 @@ libpq-dev
 power-profiles-daemon
 python3-gi
 python3-poetry-core
+python3-terminaltexteffects
 qemu-user-static
 qtwayland5
 ripgrep

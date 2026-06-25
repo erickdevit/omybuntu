@@ -16,7 +16,7 @@ fi
 
 pkill slurp && exit 0
 
-SCREENSHOT_EDITOR="${OMYBUNTU_SCREENSHOT_EDITOR:-swappy}"
+SCREENSHOT_EDITOR="${OMYBUNTU_SCREENSHOT_EDITOR:-satty}"
 
 # Parse --editor flag from any position
 ARGS=()

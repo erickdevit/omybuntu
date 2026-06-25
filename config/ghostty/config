@@ -3,6 +3,7 @@ config-file = ?"~/.config/omybuntu/current/theme/ghostty.conf"
 
 # Font
 font-family = "JetBrainsMono Nerd Font"
+font-family = "icomoon"
 font-style = Regular
 font-size = 9
 
@@ -17,6 +18,9 @@ gtk-toolbar-style = flat
 # Cursor styling
 cursor-style = "block"
 cursor-style-blink = false
+cursor-opacity = 0
+custom-shader = "~/.config/ghostty/shaders/cursor_tail.glsl"
+custom-shader-animation = always
 
 # Cursor styling + SSH session terminfo
 # (all shell integration options must be passed together)

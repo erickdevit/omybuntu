@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# omybuntu:summary=Set Ghostty terminal cursor style to normal or slanted (with trail)
+# omybuntu:args=<normal|slanted>
+# omybuntu:examples=omybuntu-style-terminal-cursor normal | omybuntu style terminal-cursor slanted
+
+if [[ $1 != "normal" && $1 != "slanted" ]]; then
+  echo "Usage: omybuntu-style-terminal-cursor <normal|slanted>" >&2
+  exit 1
+fi
+
+set_config() {
+  local file="$1"
+  if [[ -f $file ]]; then
+    sed -i '/cursor-opacity/d' "$file"
+    sed -i '/custom-shader/d' "$file"
+    
+    if [[ $2 == "slanted" ]]; then
+      cat << 'EOF' >> "$file"
+cursor-opacity = 0
+custom-shader = "~/.config/ghostty/shaders/cursor_tail.glsl"
+custom-shader-animation = always
+EOF
+    fi
+  fi
+}
+
+set_config "$HOME/.config/ghostty/config" "$1"
+set_config "$OMYBUNTU_PATH/config/ghostty/config" "$1"
+
+if pgrep -x ghostty >/dev/null; then
+  pkill -SIGUSR2 ghostty
+fi
+
+case $1 in
+  normal) omybuntu-notification-send "Normal cursor enabled" -g 󰳽 || true ;;
+  slanted) omybuntu-notification-send "Slanted cursor enabled" -g 󰳽 || true ;;
+esac

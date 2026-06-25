@@ -109,10 +109,13 @@ export I18N_STY_CORNERS="󰘇  Corners"
 export I18N_STY_HYPRLAND="  Hyprland"
 export I18N_STY_SCREENSAVER="󱄄  Screensaver"
 export I18N_STY_ABOUT="  About"
+export I18N_STY_CURSOR="󰳽  Terminal Cursor"
 
 # Style Options
 export I18N_CORNERS_SHARP="󰝣  Sharp"
 export I18N_CORNERS_ROUND="󰘇  Round"
+export I18N_CURSOR_NORMAL="󰳽  Normal (Default)"
+export I18N_CURSOR_SLANTED="󰳽  Slanted (With Trail)"
 export I18N_WAYBAR_TOP="󰁝  Top"
 export I18N_WAYBAR_BOTTOM="󰁅  Bottom"
 export I18N_WAYBAR_LEFT="󰁍  Left"

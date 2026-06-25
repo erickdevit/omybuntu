@@ -109,10 +109,13 @@ export I18N_STY_CORNERS="󰘇  Bordes de Ventana"
 export I18N_STY_HYPRLAND="  Configuración de Hyprland"
 export I18N_STY_SCREENSAVER="󱄄  Salvapantallas"
 export I18N_STY_ABOUT="  Acerca de"
+export I18N_STY_CURSOR="󰳽  Cursor del Terminal"
 
 # Style Options
 export I18N_CORNERS_SHARP="󰝣  Rectos"
 export I18N_CORNERS_ROUND="󰘇  Redondeados"
+export I18N_CURSOR_NORMAL="󰳽  Normal (Predeterminado)"
+export I18N_CURSOR_SLANTED="󰳽  Inclinado (Con Rastro)"
 export I18N_WAYBAR_TOP="󰁝  Arriba"
 export I18N_WAYBAR_BOTTOM="󰁅  Abajo"
 export I18N_WAYBAR_LEFT="󰁍  Izquierda"

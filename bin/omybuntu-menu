@@ -273,13 +273,14 @@ show_hardware_touchpad_haptics_menu() {
 }
 
 show_style_menu() {
-  case $(menu "$I18N_MENU_STYLE" "$I18N_STY_THEME\n$I18N_STY_UNLOCK\n$I18N_STY_FONT\n$I18N_STY_BACKGROUND\n$I18N_STY_WAYBAR\n$I18N_STY_CORNERS\n$I18N_STY_HYPRLAND\n$I18N_STY_SCREENSAVER\n$I18N_STY_ABOUT") in
+  case $(menu "$I18N_MENU_STYLE" "$I18N_STY_THEME\n$I18N_STY_UNLOCK\n$I18N_STY_FONT\n$I18N_STY_BACKGROUND\n$I18N_STY_WAYBAR\n$I18N_STY_CORNERS\n$I18N_STY_CURSOR\n$I18N_STY_HYPRLAND\n$I18N_STY_SCREENSAVER\n$I18N_STY_ABOUT") in
 
   *"$I18N_STY_THEME"*) show_theme_menu ;;
   *"$I18N_STY_UNLOCK"*) omybuntu-launch-walker -m menus:omybuntuunlocks --width 800 --minheight 400 ;;
   *"$I18N_STY_FONT"*) show_font_menu ;;
   *"$I18N_STY_BACKGROUND"*) show_background_menu ;;
   *"$I18N_STY_CORNERS"*) show_style_corners_menu ;;
+  *"$I18N_STY_CURSOR"*) show_style_cursor_menu ;;
   *"$I18N_STY_HYPRLAND"*) open_in_editor "$(hypr_config_file looknfeel)" ;;
   *"$I18N_STY_WAYBAR"*) show_waybar_position_menu ;;
   *"$I18N_STY_SCREENSAVER"*) show_screensaver_menu ;;
@@ -292,6 +293,14 @@ show_style_corners_menu() {
   case $(omybuntu-menu-select "$I18N_STY_CORNERS" "$I18N_CORNERS_SHARP" "$I18N_CORNERS_ROUND") in
   *"$I18N_CORNERS_SHARP"*) omybuntu-style-corners sharp ;;
   *"$I18N_CORNERS_ROUND"*) omybuntu-style-corners round ;;
+  *) show_style_menu ;;
+  esac
+}
+
+show_style_cursor_menu() {
+  case $(omybuntu-menu-select "$I18N_STY_CURSOR" "$I18N_CURSOR_NORMAL" "$I18N_CURSOR_SLANTED") in
+  *"$I18N_CURSOR_NORMAL"*) omybuntu-style-terminal-cursor normal ;;
+  *"$I18N_CURSOR_SLANTED"*) omybuntu-style-terminal-cursor slanted ;;
   *) show_style_menu ;;
   esac
 }

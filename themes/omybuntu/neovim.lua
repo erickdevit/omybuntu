@@ -5,7 +5,7 @@ return {
     name = "aether",
     priority = 1000,
     opts = {
-      transparent = false,
+      transparent = true,
       colors = {
         bg           = "#140a05",
         bg_dark      = "#140a05",

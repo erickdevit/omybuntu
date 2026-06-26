@@ -141,3 +141,10 @@ fi
 - Look exactly at how Omarchy originally implemented scripts and features. Nothing should be reinvented unless extremely necessary.
 - If an existing feature is broken, find and fix the root cause of why the Omarchy implementation is failing instead of rewriting it from scratch.
 - You must ask for permission from the user before reinventing or rewriting any script.
+
+# Commits
+
+- Ao concluir uma rodada de desenvolvimento ou tarefa específica, faça o commit das alterações antes de finalizar o turno.
+- Siga a convenção de **Conventional Commits** (ex: `feat(escopo): descrição`, `fix(escopo): descrição`, `style(escopo): descrição`, `test: descrição`, `chore: descrição`).
+- Agrupe e divida as alterações em commits lógicos separados quando as mudanças forem de naturezas diferentes (por exemplo, separar uma correção de teste de uma nova funcionalidade de instalação).
+

@@ -65,6 +65,16 @@ EOF
 
 # 6. Run System Installations inside Chroot
 echo "Installing kernel, systemd, boot, and live utilities inside chroot..."
+
+# Add Charm repo (provides gum)
+sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive bash -c "
+  apt-get update -qq && apt-get install -y -qq curl gpg ca-certificates
+  mkdir -p /etc/apt/keyrings
+  curl -fsSL https://repo.charm.sh/apt/gpg.key | gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+  echo 'deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *' \
+    > /etc/apt/sources.list.d/charm.list
+"
+
 sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get update
 sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get install -y \
   linux-image-generic \
@@ -78,11 +88,18 @@ sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get install -y 
   grub-common \
   grub-pc-bin \
   grub-efi-amd64-bin \
+  grub-efi-amd64 \
   binutils \
   git \
   curl \
   sudo \
-  wget
+  wget \
+  rsync \
+  gdisk \
+  btrfs-progs \
+  cryptsetup \
+  dosfstools \
+  gum
 
 # 7. Copy Omybuntu to Chroot and Run Installations
 echo "Copying Omybuntu codebase and running installation..."

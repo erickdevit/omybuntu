@@ -1,18 +1,18 @@
 # Directs user to Omybuntu Discord
 QR_CODE='
-█▀▀▀▀▀█ ▄ ▄ ▀▄▄▄█ █▀▀▀▀▀█
-█ ███ █ ▄▄▄▄▀▄▀▄▀ █ ███ █
-█ ▀▀▀ █ ▄█  ▄█▄▄▀ █ ▀▀▀ █
-▀▀▀▀▀▀▀ ▀▄█ █ █ █ ▀▀▀▀▀▀▀
-▀▀█▀▀▄▀▀▀▀▄█▀▀█  ▀ █ ▀ █
-█▄█ ▄▄▀▄▄ ▀ ▄ ▀█▄▄▄▄ ▀ ▀█
-▄ ▄▀█ ▀▄▀▀▀▄ ▄█▀▄█▀▄▀▄▀█▀
-█ ▄▄█▄▀▄█ ▄▄▄  ▀ ▄▀██▀ ▀█
-▀ ▀   ▀ █ ▀▄  ▀▀█▀▀▀█▄▀
-█▀▀▀▀▀█ ▀█  ▄▀▀ █ ▀ █▄▀██
-█ ███ █ █▀▄▄▀ █▀███▀█▄██▄
-█ ▀▀▀ █ ██  ▀ █▄█ ▄▄▄█▀ █
-▀▀▀▀▀▀▀ ▀ ▀ ▀▀▀  ▀ ▀▀▀▀▀▀'
+█▀▀▀▀▀█  ▀▀█▄██ ▄ █▀▀▀▀▀█
+█ ███ █ ▄▀██▄▄█ █ █ ███ █
+█ ▀▀▀ █ ▀▄█ ▀█▄ ▀ █ ▀▀▀ █
+▀▀▀▀▀▀▀ ▀▄▀ █ █▄█ ▀▀▀▀▀▀▀
+█▀▄▄▄▀▀█▄▀█▄▀ █▄▄  ▄██▄▄
+▀▄▄▄▄▀▀▀ ▀▄▄▄ ▄▀▄▄▄▄ █ ▀█
+▄▄ ▄ █▀█▀██▄▀▀▄██▄▀█   ▄▀
+█ ▄▄▄▄▀ ▀█ ▄ ▀▀█▄▄▀█▀█▄▀█
+▀ ▀▀▀▀▀▀█ ▄ ▀▀▀██▀▀▀█ ▀
+█▀▀▀▀▀█ █▄▄█ ▀▄▄█ ▀ █   █
+█ ███ █  ▄▀  ███▀██▀▀ ▀█▄
+█ ▀▀▀ █ ▄█▀▄█▀▀ █ ▄▄▄▀▀ █
+▀▀▀▀▀▀▀ ▀▀▀▀▀▀  ▀    ▀  ▀'
 
 # Track if we're already handling an error to prevent double-trapping
 ERROR_HANDLING=false
@@ -103,7 +103,7 @@ catch_errors() {
 
   gum style "$QR_CODE"
   echo
-  gum style "Get help from the community via QR code or at https://discord.gg/tXFUdasqhY"
+  gum style "Get help from the community via QR code or at https://discord.gg/AWenBWGka"
 
   # Offer options menu
   while true; do

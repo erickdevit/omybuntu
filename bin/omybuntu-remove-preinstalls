@@ -25,8 +25,8 @@ if gum confirm "$I18N_REMOVE_PREINSTALLS_WARN"; then
     typora \
     spotify \
     libreoffice-fresh \
-    1password-beta \
-    1password-cli \
+    bitwarden \
+    bitwarden-cli \
     xournalpp \
     signal-desktop \
     pinta \

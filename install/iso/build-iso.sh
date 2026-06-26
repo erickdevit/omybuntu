@@ -181,7 +181,8 @@ EOF
     build-essential \
     pkg-config \
     libssl-dev \
-    gum
+    gum \
+    mtools
 
   # --- Save base cache (right after apt, before codebase rsync) --------------
   echo "Saving base chroot cache..."

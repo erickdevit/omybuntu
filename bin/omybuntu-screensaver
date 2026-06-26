@@ -22,13 +22,23 @@ hyprctl eval 'hl.config({ cursor = { invisible = true } })' &>/dev/null || hyprc
 
 tty=$(tty 2>/dev/null)
 
+duration=0
+
 while true; do
   tte -i ~/.config/omybuntu/branding/screensaver.txt \
     --frame-rate 120 --canvas-width 0 --canvas-height 0 --reuse-canvas --anchor-canvas c --anchor-text c\
     --random-effect --no-eol --no-restore-cursor &
 
   while pgrep -t "${tty#/dev/}" -x tte >/dev/null; do
-    if read -n1 -t 1 || ! screensaver_in_focus; then
+    if read -n1 -t 1; then
+      exit_screensaver
+    fi
+    if ! screensaver_in_focus; then
+      exit_screensaver
+    fi
+    (( duration++ ))
+    if (( duration >= 120 )); then
+      omybuntu-system-lock
       exit_screensaver
     fi
   done

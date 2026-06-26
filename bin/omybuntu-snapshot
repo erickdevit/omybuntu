@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omybuntu:summary=Create or restore system snapshots with snapper
+# omybuntu:summary=Create or restore system snapshots with timeshift
 # omybuntu:args=<create|restore>
 # omybuntu:requires-sudo=true
 
@@ -14,8 +14,8 @@ if [[ -z $COMMAND ]]; then
   exit 1
 fi
 
-if ! command -v snapper &>/dev/null; then
-  exit 127 # omybuntu-update can use this to just ignore if snapper is not available
+if ! command -v timeshift &>/dev/null; then
+  exit 127 # omybuntu-update can use this to just ignore if timeshift is not available
 fi
 
 case "$COMMAND" in
@@ -23,17 +23,12 @@ create)
   DESC="$(omybuntu-version)"
 
   echo -e "\e[32mCreate system snapshot\e[0m"
-
-  # Get existing snapper config names from CSV output
-  mapfile -t CONFIGS < <(sudo snapper --csvout list-configs | awk -F, 'NR>1 {print $1}')
-
-  for config in "${CONFIGS[@]}"; do
-    sudo snapper -c "$config" create -c number -d "$DESC"
-    sudo snapper -c "$config" cleanup number
-  done
+  
+  sudo timeshift --create --comments "$DESC"
   echo
   ;;
 restore)
-  sudo limine-snapper-restore
+  echo -e "\e[32mRestore system snapshot\e[0m"
+  sudo timeshift --restore
   ;;
 esac

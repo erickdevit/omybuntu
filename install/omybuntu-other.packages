@@ -19,9 +19,8 @@ intel-lpmd
 intel-media-driver
 libva-intel-driver
 libva-nvidia-driver
-limine
-limine-mkinitcpio-hook
-limine-snapper-sync
+grub-btrfs
+timeshift
 linux
 linux-firmware
 linux-headers
@@ -40,7 +39,7 @@ pipewire-alsa
 pipewire-jack
 pipewire-pulse
 qt6-wayland
-snapper
+
 sof-firmware
 thermald
 webp-pixbuf-loader

@@ -5,7 +5,7 @@ if [[ ! -f /etc/os-release ]] || ! grep -qi "ubuntu" /etc/os-release; then
 fi
 
 if [[ -n ${OMYBUNTU_ONLINE_INSTALL:-} ]]; then
-  sudo add-apt-repository ppa:hyprland-community/ppa -y
+  sudo add-apt-repository universe -y
 
   # Add official mise repository
   sudo install -dm 755 /etc/apt/keyrings

@@ -1,0 +1,249 @@
+#!/bin/bash
+
+# omybuntu:summary=Omybuntu system installer (TUI wizard)
+# omybuntu:group=setup
+# omybuntu:requires-sudo=true
+
+set -e
+
+# Load translation variables
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+echo "=========================================="
+echo "      Omybuntu System Installer TUI       "
+echo "=========================================="
+echo ""
+
+# 1. Language Selection
+echo "Select installation language / Selecione o idioma / Seleccione el idioma:"
+CHOSEN_LANG=$(gum choose --height 5 "English" "Português (Brasil)" "Español")
+
+case "$CHOSEN_LANG" in
+  "Português (Brasil)")
+    LANG_VAL="pt-br"
+    LOCALE_STR="pt_BR.UTF-8"
+    ;;
+  "Español")
+    LANG_VAL="es"
+    LOCALE_STR="es_ES.UTF-8"
+    ;;
+  *)
+    LANG_VAL="en"
+    LOCALE_STR="en_US.UTF-8"
+    ;;
+esac
+
+echo "Selected: $CHOSEN_LANG ($LOCALE_STR)"
+echo ""
+
+# 2. Keyboard layout
+echo "Enter keyboard layout code (e.g. us, br, es):"
+KEY_LAYOUT=$(gum input --placeholder "Keyboard layout code" --value "us")
+echo "Keyboard set to: $KEY_LAYOUT"
+echo ""
+
+# 3. Timezone
+echo "Enter your timezone (e.g. America/Sao_Paulo, UTC, Europe/London):"
+TIMEZONE=$(gum input --placeholder "Timezone" --value "America/Sao_Paulo")
+echo "Timezone set to: $TIMEZONE"
+echo ""
+
+# 4. Credentials
+echo "Configure system credentials:"
+HOSTNAME=$(gum input --placeholder "Hostname (e.g. omybuntu-desktop)")
+USERNAME=$(gum input --placeholder "Username / Login (e.g. erick)")
+PASSWORD=$(gum input --password --placeholder "User Password")
+ROOT_PASSWORD=$(gum input --password --placeholder "Root Password")
+
+if [[ -z $HOSTNAME || -z $USERNAME || -z $PASSWORD || -z $ROOT_PASSWORD ]]; then
+  echo "Error: All credential fields are required." >&2
+  exit 1
+fi
+
+echo ""
+
+# 5. Disk selection
+echo "Select installation target disk:"
+DISKS=$(lsblk -d -n -p -o NAME,SIZE,MODEL | awk '{print $1 " (" $2 " - " $3 ")"}')
+if [[ -z $DISKS ]]; then
+  echo "Error: No storage disks found." >&2
+  exit 1
+fi
+
+CHOSEN_DISK_STR=$(echo "$DISKS" | gum choose)
+DISK=$(echo "$CHOSEN_DISK_STR" | awk '{print $1}')
+echo "Selected disk: $DISK"
+echo ""
+
+# 6. LUKS Encryption
+ENCRYPT=$(gum confirm "Do you want to encrypt the installation disk with LUKS?" --default=false && echo "true" || echo "false")
+LUKS_PASS=""
+if [[ $ENCRYPT == "true" ]]; then
+  LUKS_PASS=$(gum input --password --placeholder "Disk Encryption Password")
+  if [[ -z $LUKS_PASS ]]; then
+    echo "Error: Encryption password cannot be empty." >&2
+    exit 1
+  fi
+fi
+echo ""
+
+# 7. Summary and confirmation
+echo "=========================================="
+echo "          INSTALLATION SUMMARY            "
+echo "=========================================="
+echo "Disk:        $DISK"
+echo "Encryption:  $ENCRYPT"
+echo "Hostname:    $HOSTNAME"
+echo "Username:    $USERNAME"
+echo "Language:    $CHOSEN_LANG"
+echo "Keyboard:    $KEY_LAYOUT"
+echo "Timezone:    $TIMEZONE"
+echo "=========================================="
+echo ""
+
+gum confirm "WARNING: This will format $DISK and erase ALL data. Do you want to proceed?" || exit 0
+
+echo "Starting installation process..."
+
+# 8. Partitioning (GPT)
+echo "Partitioning disk $DISK..."
+sudo sgdisk --zap-all "$DISK"
+sudo sgdisk -n 1:0:+512M -t 1:ef00 -n 2:0:0 -t 2:8300 "$DISK"
+
+# Resolve partition names (handling nvme/mmcblk names)
+if [[ $DISK == *nvme* || $DISK == *mmcblk* || $DISK == *loop* ]]; then
+  PART_EFI="${DISK}p1"
+  PART_ROOT="${DISK}p2"
+else
+  PART_EFI="${DISK}1"
+  PART_ROOT="${DISK}2"
+fi
+
+# 9. Cryptsetup / Formatting
+echo "Formatting boot partition $PART_EFI..."
+sudo mkfs.vfat -F32 "$PART_EFI"
+
+ROOT_DEV=""
+if [[ $ENCRYPT == "true" ]]; then
+  echo "Setting up LUKS encryption on root partition $PART_ROOT..."
+  echo -n "$LUKS_PASS" | sudo cryptsetup luksFormat "$PART_ROOT" -d -
+  echo -n "$LUKS_PASS" | sudo cryptsetup open "$PART_ROOT" omybuntu_crypt -d -
+  ROOT_DEV="/dev/mapper/omybuntu_crypt"
+else
+  ROOT_DEV="$PART_ROOT"
+fi
+
+echo "Formatting root BTRFS partition..."
+sudo mkfs.btrfs -f "$ROOT_DEV"
+
+# 10. BTRFS Subvolumes
+echo "Creating BTRFS subvolumes (@, @home, @snapshots)..."
+sudo mount "$ROOT_DEV" /mnt
+sudo btrfs subvolume create /mnt/@
+sudo btrfs subvolume create /mnt/@home
+sudo btrfs subvolume create /mnt/@snapshots
+sudo umount /mnt
+
+# Mount subvolumes in target layout
+echo "Mounting target BTRFS subvolume layout..."
+sudo mount -o subvol=@ "$ROOT_DEV" /mnt
+sudo mkdir -p /mnt/home /mnt/boot/efi /mnt/.snapshots
+sudo mount -o subvol=@home "$ROOT_DEV" /mnt/home
+sudo mount -o subvol=@snapshots "$ROOT_DEV" /mnt/.snapshots
+sudo mount "$PART_EFI" /mnt/boot/efi
+
+# 11. Copy system files via Rsync
+echo "Copying system files to target root (this may take a few minutes)..."
+sudo rsync -aAXv --info=progress2 \
+  --exclude=/dev/* \
+  --exclude=/proc/* \
+  --exclude=/sys/* \
+  --exclude=/tmp/* \
+  --exclude=/run/* \
+  --exclude=/mnt/* \
+  --exclude=/media/* \
+  --exclude=/lost+found \
+  --exclude=/opt/omybuntu/build \
+  / /mnt/
+
+# 12. Configurations in target (Chroot)
+echo "Generating target configuration files..."
+UUID_EFI=$(blkid -s UUID -o value "$PART_EFI")
+UUID_ROOT=$(blkid -s UUID -o value "$ROOT_DEV")
+
+# Generate fstab
+cat <<EOF | sudo tee /mnt/etc/fstab >/dev/null
+UUID=$UUID_ROOT / btrfs subvol=@,defaults,noatime,compress=zstd 0 1
+UUID=$UUID_ROOT /home btrfs subvol=@home,defaults,noatime,compress=zstd 0 2
+UUID=$UUID_ROOT /.snapshots btrfs subvol=@snapshots,defaults,noatime,compress=zstd 0 2
+UUID=$UUID_EFI /boot/efi vfat defaults,noatime 0 2
+EOF
+
+# Generate crypttab
+if [[ $ENCRYPT == "true" ]]; then
+  UUID_LUKS=$(blkid -s UUID -o value "$PART_ROOT")
+  echo "omybuntu_crypt UUID=$UUID_LUKS none luks,discard" | sudo tee /mnt/etc/crypttab >/dev/null
+fi
+
+# Set hostname
+echo "$HOSTNAME" | sudo tee /mnt/etc/hostname >/dev/null
+sudo sed -i "s/127.0.1.1.*/127.0.1.1\t$HOSTNAME/g" /mnt/etc/hosts || true
+
+# Set timezone
+sudo ln -sf "/usr/share/zoneinfo/$TIMEZONE" /mnt/etc/localtime
+
+# Add user and passwords
+echo "Configuring user credentials..."
+sudo chroot /mnt useradd -m -g users -G sudo,audio,video -s /bin/bash "$USERNAME" || true
+echo "$USERNAME:$PASSWORD" | sudo chroot /mnt chpasswd
+echo "root:$ROOT_PASSWORD" | sudo chroot /mnt chpasswd
+
+# SDDM autologin configuration
+sudo mkdir -p /mnt/etc/sddm.conf.d
+cat <<EOF | sudo tee /mnt/etc/sddm.conf.d/autologin.conf >/dev/null
+[Autologin]
+User=$USERNAME
+Session=omybuntu
+
+[Theme]
+Current=omybuntu
+EOF
+
+# Locale and translations
+echo "Configuring locales..."
+echo "LANG=\"$LOCALE_STR\"" | sudo tee /mnt/etc/default/locale >/dev/null
+echo "LANGUAGE=\"${LOCALE_STR%:*}\"" | sudo tee -a /mnt/etc/default/locale >/dev/null
+
+sudo mkdir -p "/mnt/home/$USERNAME/.config/omybuntu"
+echo "$LANG_VAL" | sudo tee "/mnt/home/$USERNAME/.config/omybuntu/language" >/dev/null
+sudo chroot /mnt chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.config"
+
+sudo mkdir -p /mnt/etc/skel/.config/omybuntu
+echo "$LANG_VAL" | sudo tee /mnt/etc/skel/.config/omybuntu/language >/dev/null
+
+# Grub config & generation
+echo "Updating bootloader..."
+if [[ $ENCRYPT == "true" ]]; then
+  echo "GRUB_ENABLE_CRYPTODISK=y" | sudo tee -a /mnt/etc/default/grub >/dev/null
+fi
+
+sudo chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Omybuntu --recheck
+sudo chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
+
+# 13. Unmount target partitions
+echo "Unmounting target file systems..."
+sudo umount -lf /mnt/boot/efi || true
+sudo umount -lf /mnt/home || true
+sudo umount -lf /mnt/.snapshots || true
+sudo umount -lf /mnt || true
+
+if [[ $ENCRYPT == "true" ]]; then
+  sudo cryptsetup close omybuntu_crypt || true
+fi
+
+echo "=========================================="
+echo "       INSTALLATION COMPLETED!            "
+echo "=========================================="
+echo "You can now reboot into your new Omybuntu system."
+echo ""
+gum confirm "Would you like to reboot the computer now?" && sudo reboot || exit 0

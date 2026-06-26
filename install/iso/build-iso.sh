@@ -100,6 +100,7 @@ sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get install -y 
   btrfs-progs \
   cryptsetup \
   dosfstools \
+  software-properties-common \
   gum
 
 # 7. Copy Omybuntu to Chroot (rsync avoids self-copy of build/ into itself)

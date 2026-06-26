@@ -30,9 +30,15 @@ unlock_dns_to_dhcp() {
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
 if [[ -z $1 ]]; then
-  dns=$(gum choose --height 6 --header "$I18N_DNS_PROVIDER" Cloudflare Google DHCP Custom)
+  dns=$(gum choose --height 6 --header "$I18N_DNS_PROVIDER" Cloudflare Google "$I18N_DNS_DHCP" "$I18N_DNS_CUSTOM")
 else
   dns=$1
+fi
+
+if [[ $dns == "$I18N_DNS_DHCP" ]]; then
+  dns="DHCP"
+elif [[ $dns == "$I18N_DNS_CUSTOM" ]]; then
+  dns="Custom"
 fi
 
 case "$dns" in

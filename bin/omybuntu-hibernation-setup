@@ -4,6 +4,8 @@
 # omybuntu:requires-sudo=true
 # omybuntu:args=[--force] [--no-rebuild]
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 FORCE=false
 NO_REBUILD=false
 for arg in "$@"; do
@@ -13,10 +15,8 @@ for arg in "$@"; do
   esac
 done
 
-source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
-
 if [[ ! -f /sys/power/image_size ]]; then
-  echo -e "Hibernation is not supported on your system" >&2
+  echo -e "$I18N_HIBERNATION_ERR_SUPPORT" >&2
   exit 0
 fi
 
@@ -24,7 +24,7 @@ fi
 # (e.g. running before limine-mkinitcpio-hook is installed during initial
 # install), so we only require limine-mkinitcpio when we'd invoke it ourselves.
 if ! $NO_REBUILD && ! command -v limine-mkinitcpio &>/dev/null; then
-  echo "Skipping hibernation setup (requires Limine bootloader)"
+  echo "$I18N_HIBERNATION_ERR_BOOTLOADER"
   exit 0
 fi
 
@@ -33,18 +33,19 @@ SWAP_FILE="/swap/swapfile"
 RESUME_DROP_IN="/etc/limine-entry-tool.d/resume.conf"
 
 # Check if hibernation is already configured
-if [[ -f $MKINITCPIO_CONF ]] && grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; then
+  if [[ -f $MKINITCPIO_CONF ]] && grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; then
   # Fix empty resume_offset if btrfs map-swapfile failed during initial setup
   if [[ -f $RESUME_DROP_IN ]] && grep -q 'resume_offset="$' "$RESUME_DROP_IN" && [[ -f $SWAP_FILE ]]; then
     RESUME_OFFSET=$(sudo btrfs inspect-internal map-swapfile -r "$SWAP_FILE" 2>/dev/null)
     if [[ -n $RESUME_OFFSET ]]; then
-      echo "Fixing empty resume_offset ($RESUME_OFFSET)"
+      fixing_msg=$(printf "$I18N_HIBERNATION_FIXING_OFFSET" "$RESUME_OFFSET")
+      echo "$fixing_msg"
       sudo sed -i "s/resume_offset=\"$/resume_offset=$RESUME_OFFSET\"/" "$RESUME_DROP_IN"
       sudo sed -i "s/resume_offset=\"$/resume_offset=$RESUME_OFFSET\"/" /etc/default/limine
       $NO_REBUILD || sudo limine-mkinitcpio
     fi
   fi
-  echo "Hibernation is already set up"
+  echo "$I18N_HIBERNATION_ALREADY_SETUP"
   exit 0
 fi
 
@@ -60,34 +61,36 @@ SWAP_SUBVOLUME="/swap"
 
 # Create btrfs subvolume for swap
 if ! sudo btrfs subvolume show "$SWAP_SUBVOLUME" &>/dev/null; then
-  echo "Creating Btrfs subvolume"
+  echo "$I18N_HIBERNATION_CREATING_SUBVOLUME"
   sudo btrfs subvolume create "$SWAP_SUBVOLUME"
   sudo chattr +C "$SWAP_SUBVOLUME"
 fi
 
 # Create swapfile
 if ! sudo swaplabel "$SWAP_FILE" &>/dev/null; then
-  echo "Creating swapfile in Btrfs subvolume"
+  echo "$I18N_HIBERNATION_CREATING_SWAPFILE"
   MEM_TOTAL_KB="$(awk '/MemTotal/ {print $2}' /proc/meminfo)k"
   sudo btrfs filesystem mkswapfile -s "$MEM_TOTAL_KB" "$SWAP_FILE"
 fi
 
 # Add swapfile to fstab
 if ! grep -Fq "$SWAP_FILE" /etc/fstab; then
-  echo "Adding swapfile to /etc/fstab"
+  echo "$I18N_HIBERNATION_ADDING_FSTAB"
   sudo cp -a /etc/fstab "/etc/fstab.$(date +%Y%m%d%H%M%S).back"
   printf "\n# Btrfs swapfile for system hibernation\n%s none swap defaults,pri=0 0 0\n" "$SWAP_FILE" | sudo tee -a /etc/fstab >/dev/null
 fi
 
 # Enable swap
 if ! swapon --show | grep -q "$SWAP_FILE"; then
-  echo "Enabling swap on $SWAP_FILE"
+  enabling_swap_msg=$(printf "$I18N_HIBERNATION_ENABLING_SWAP" "$SWAP_FILE")
+  echo "$enabling_swap_msg"
   sudo swapon -p 0 "$SWAP_FILE"
 fi
 
 # Add resume hook to mkinitcpio
 sudo mkdir -p /etc/mkinitcpio.conf.d
-echo "Adding resume hook to $MKINITCPIO_CONF"
+adding_hook_msg=$(printf "$I18N_HIBERNATION_ADDING_HOOK" "$MKINITCPIO_CONF")
+echo "$adding_hook_msg"
 echo "HOOKS+=(resume)" | sudo tee "$MKINITCPIO_CONF" >/dev/null
 
 # Ensure keyboard backlight doesn't prevent sleep
@@ -96,7 +99,7 @@ sudo cp -p "$OMYBUNTU_PATH/default/systemd/system-sleep/keyboard-backlight" /usr
 # Add resume= kernel parameters so the initramfs resume hook knows where to find the
 # hibernation image. Without these, resume happens late (after GPU drivers load) and fails.
 if [[ ! -f $RESUME_DROP_IN ]]; then
-  echo "Adding resume kernel parameters"
+  echo "$I18N_HIBERNATION_ADDING_PARAMS"
   sudo swapon -p 0 "$SWAP_FILE" 2>/dev/null
   RESUME_DEVICE=$(findmnt -no SOURCE -T "$SWAP_FILE" | sed 's/\[.*\]//')
   RESUME_OFFSET=$(sudo btrfs inspect-internal map-swapfile -r "$SWAP_FILE")
@@ -105,7 +108,8 @@ if [[ ! -f $RESUME_DROP_IN ]]; then
     echo "KERNEL_CMDLINE[default]+=\" resume=$RESUME_DEVICE resume_offset=$RESUME_OFFSET\"" | sudo tee "$RESUME_DROP_IN" >/dev/null
     sudo tee -a /etc/default/limine < "$RESUME_DROP_IN" >/dev/null
   else
-    echo "Warning: Could not determine resume offset for $SWAP_FILE" >&2
+    offset_err_msg=$(printf "$I18N_HIBERNATION_ERR_OFFSET" "$SWAP_FILE")
+    echo "$offset_err_msg" >&2
   fi
 fi
 
@@ -113,7 +117,7 @@ fi
 if grep -q "\[s2idle\]" /sys/power/mem_sleep 2>/dev/null; then
   LIMINE_DROP_IN="/etc/limine-entry-tool.d/rtc-alarm.conf"
   if [[ ! -f $LIMINE_DROP_IN ]]; then
-    echo "Enabling ACPI RTC alarm for s2idle suspend"
+    echo "$I18N_HIBERNATION_ENABLING_RTC"
     sudo mkdir -p /etc/limine-entry-tool.d
     echo 'KERNEL_CMDLINE[default]+=" rtc_cmos.use_acpi_alarm=1"' | sudo tee "$LIMINE_DROP_IN" >/dev/null
     sudo tee -a /etc/default/limine < "$LIMINE_DROP_IN" >/dev/null
@@ -125,7 +129,7 @@ if ! $NO_REBUILD; then
   # /boot/limine.conf entries via limine-entry-tool. The limine bootloader
   # binary on the ESP doesn't change here, so we don't need limine-update
   # (which would also re-deploy the binary and rebuild a second time).
-  echo "Regenerating initramfs..."
+  echo "$I18N_HIBERNATION_REGENERATING"
   sudo limine-mkinitcpio
   echo
 fi

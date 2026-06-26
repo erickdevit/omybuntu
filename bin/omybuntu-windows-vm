@@ -143,6 +143,13 @@ EOF
     PASSWORD_DISPLAY="(user-defined)"
   fi
 
+  local ram_str cores_str disk_str user_str pass_str
+  ram_str=$(printf "$I18N_WIN_RAM" "$SELECTED_RAM")
+  cores_str=$(printf "$I18N_WIN_CORES" "$SELECTED_CORES")
+  disk_str=$(printf "$I18N_WIN_DISK" "$SELECTED_DISK")
+  user_str=$(printf "$I18N_WIN_USER" "$USERNAME")
+  pass_str=$(printf "$I18N_WIN_PASS" "$PASSWORD_DISPLAY")
+
   # Display configuration summary
   gum style \
     --border normal \
@@ -152,16 +159,16 @@ EOF
     --bold \
     "$I18N_WIN_CONFIG_TITLE" \
     "" \
-    "RAM:       $SELECTED_RAM" \
-    "CPU:       $SELECTED_CORES cores" \
-    "Disk:      $SELECTED_DISK" \
-    "Username:  $USERNAME" \
-    "Password:  $PASSWORD_DISPLAY"
+    "$ram_str" \
+    "$cores_str" \
+    "$disk_str" \
+    "$user_str" \
+    "$pass_str"
 
   # Ask for confirmation
   echo ""
   if ! gum confirm "$I18N_WIN_CONFIRM_PROCEED"; then
-    echo "Installation cancelled by user"
+    echo "$I18N_WIN_CANCELLED"
     exit 1
   fi
 
@@ -283,13 +290,13 @@ launch_windows() {
     echo "Starting Windows VM..."
 
     # Send desktop notification
-    notify-send "    Starting Windows VM" "      This can take 15-30 seconds" -t 15000
+    omybuntu-notification-send -g "" "$I18N_WIN_STARTING_MSG" "$I18N_WIN_STARTING_BODY" -t 15000
 
     if ! docker-compose -f "$COMPOSE_FILE" up -d 2>&1; then
       echo "❌ Failed to start Windows VM!"
       echo "   Try checking: omybuntu-windows-vm status"
       echo "   View logs: docker logs omybuntu-windows"
-      notify-send -u critical "Windows VM" "Failed to start Windows VM"
+      omybuntu-notification-send -g "" "Windows VM" "$I18N_WIN_START_FAILED" -u critical
       exit 1
     fi
 
@@ -341,55 +348,57 @@ launch_windows() {
   # After RDP closes, stop the container unless --keep-alive was specified
   if [[ $KEEP_ALIVE = "false" ]]; then
     echo ""
-    echo "RDP session closed. Stopping Windows VM..."
+    echo "$I18N_WIN_RDP_CLOSED_STOPPING"
     docker-compose -f "$COMPOSE_FILE" down
-    echo "Windows VM stopped."
+    echo "$I18N_WIN_STOPPED"
   else
     echo ""
-    echo "RDP session closed. Windows VM is still running."
-    echo "To stop it: omybuntu-windows-vm stop"
+    echo "$I18N_WIN_RDP_CLOSED_KEEP"
+    echo "$I18N_WIN_STOP_INSTRUCTION"
   fi
 }
 
 stop_windows() {
   if [[ ! -f $COMPOSE_FILE ]]; then
-    echo "Windows VM not configured."
+    echo "$I18N_WIN_NOT_CONFIGURED"
     exit 1
   fi
 
-  echo "Stopping Windows VM..."
+  echo "$I18N_WIN_STOPPING"
   docker-compose -f "$COMPOSE_FILE" down
-  echo "Windows VM stopped."
+  echo "$I18N_WIN_STOPPED"
 }
 
 status_windows() {
   if [[ ! -f $COMPOSE_FILE ]]; then
-    echo "Windows VM not configured."
-    echo "To set up: omybuntu-windows-vm install"
+    echo "$I18N_WIN_NOT_CONFIGURED"
+    echo "$I18N_WIN_START_INSTRUCTION"
     exit 1
   fi
 
   CONTAINER_STATUS=$(docker inspect --format='{{.State.Status}}' omybuntu-windows 2>/dev/null)
 
   if [[ -z $CONTAINER_STATUS ]]; then
-    echo "Windows VM container not found."
-    echo "To start: omybuntu-windows-vm launch"
+    echo "$I18N_WIN_CONTAINER_NOT_FOUND"
+    echo "$I18N_WIN_START_INSTRUCTION"
   elif [[ $CONTAINER_STATUS = "running" ]]; then
     gum style \
       --border normal \
       --padding "1 2" \
       --margin "1" \
       --align left \
-      "Windows VM Status: RUNNING" \
+      "$I18N_WIN_STATUS_RUNNING" \
       "" \
-      "Web interface: http://127.0.0.1:8006" \
-      "RDP available: port 3389" \
+      "$I18N_WIN_WEB_INTERFACE" \
+      "$I18N_WIN_RDP_AVAILABLE" \
       "" \
-      "To connect: omybuntu-windows-vm launch" \
-      "To stop:    omybuntu-windows-vm stop"
+      "$I18N_WIN_CONNECT_INSTRUCTION" \
+      "$I18N_WIN_STOP_INSTRUCTION"
   else
-    echo "Windows VM is stopped (status: $CONTAINER_STATUS)"
-    echo "To start: omybuntu-windows-vm launch"
+    local stopped_status_msg
+    stopped_status_msg=$(printf "$I18N_WIN_STOPPED_STATUS" "$CONTAINER_STATUS")
+    echo "$stopped_status_msg"
+    echo "$I18N_WIN_START_INSTRUCTION"
   fi
 }
 

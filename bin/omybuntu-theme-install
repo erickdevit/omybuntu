@@ -5,9 +5,11 @@
 # omybuntu:examples=omybuntu theme install https://github.com/example/omybuntu-example-theme.git
 # omybuntu:examples=omybuntu theme install git@github.com:example/omybuntu-example-theme.git
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if [[ -z $1 ]]; then
-  echo -e "\e[32mSee https://manuals.omamix.org/2/the-omybuntu-manual/90/extra-themes\n\e[0m"
-  REPO_URL=$(gum input --placeholder="Git repo URL (https or git@host:org/repo.git)" --header="")
+  echo -e "\e[32m$I18N_THEME_INSTALL_INTRO\n\e[0m"
+  REPO_URL=$(gum input --placeholder="$I18N_THEME_INSTALL_PLACEHOLDER" --header="")
 else
   REPO_URL="$1"
 fi
@@ -31,7 +33,7 @@ fi
 
 # Clone the repo directly to ~/.config/omybuntu/themes
 if ! git clone "$REPO_URL" "$THEME_PATH"; then
-  echo "Error: Failed to clone theme repo."
+  echo "$I18N_THEME_INSTALL_ERR_CLONE"
   exit 1
 fi
 

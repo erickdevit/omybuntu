@@ -5,13 +5,13 @@
 
 MKINITCPIO_CONF="/etc/mkinitcpio.conf.d/omybuntu_resume.conf"
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 # Check if hibernation is configured
 if [[ ! -f $MKINITCPIO_CONF ]] || ! grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; then
-  echo "Hibernation is not set up"
+  echo "$I18N_HIBERNATION_NOT_SETUP"
   exit 0
 fi
-
-source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
 if ! gum confirm "$I18N_HIBERNATION_REMOVE_WARN"; then
   exit 0
@@ -22,35 +22,37 @@ SWAP_FILE="$SWAP_SUBVOLUME/swapfile"
 
 # Disable swap if active
 if swapon --show | grep -q "$SWAP_FILE"; then
-  echo "Disabling swap on $SWAP_FILE"
+  disabling_swap_msg=$(printf "$I18N_HIBERNATION_DISABLING_SWAP" "$SWAP_FILE")
+  echo "$disabling_swap_msg"
   sudo swapoff "$SWAP_FILE"
 fi
 
 # Remove swapfile
 if [[ -f $SWAP_FILE ]]; then
-  echo "Removing swapfile"
+  echo "$I18N_HIBERNATION_REMOVING_SWAPFILE"
   sudo rm "$SWAP_FILE"
 fi
 
 # Remove swap subvolume
 if sudo btrfs subvolume show "$SWAP_SUBVOLUME" &>/dev/null; then
-  echo "Removing Btrfs subvolume $SWAP_SUBVOLUME"
+  removing_sub_msg=$(printf "$I18N_HIBERNATION_REMOVING_SUBVOLUME" "$SWAP_SUBVOLUME")
+  echo "$removing_sub_msg"
   sudo btrfs subvolume delete "$SWAP_SUBVOLUME"
 fi
 
 # Remove fstab entry
 if grep -Fq "$SWAP_FILE" /etc/fstab; then
-  echo "Removing swapfile from /etc/fstab"
+  echo "$I18N_HIBERNATION_REMOVING_FSTAB"
   sudo cp -a /etc/fstab "/etc/fstab.$(date +%Y%m%d%H%M%S).back"
   sudo sed -i "\|$SWAP_FILE|d" /etc/fstab
   sudo sed -i '/^# Btrfs swapfile for system hibernation$/d' /etc/fstab
 fi
 
 # Remove mkinitcpio resume hook
-echo "Removing resume hook"
+echo "$I18N_HIBERNATION_REMOVING_HOOK"
 sudo rm "$MKINITCPIO_CONF"
 
-echo "Regenerating initramfs..."
+echo "$I18N_HIBERNATION_REGENERATING"
 sudo limine-mkinitcpio
 
-echo "Hibernation removed"
+echo "$I18N_HIBERNATION_REMOVED"

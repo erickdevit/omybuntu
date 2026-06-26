@@ -7,10 +7,12 @@ set -e
 
 ICON_DIR="$HOME/.local/share/applications/icons"
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (( $# < 3 )); then
-  echo -e "\e[32mLet's create a new web app you can start with the app launcher.\n\e[0m"
-  APP_NAME=$(gum input --prompt "Name> " --placeholder "My favorite web app")
-  APP_URL=$(gum input --prompt "URL> " --placeholder "https://example.com")
+  echo -e "\e[32m$I18N_WEBAPP_CREATE_INTRO\n\e[0m"
+  APP_NAME=$(gum input --prompt "$I18N_WEBAPP_NAME_PROMPT" --placeholder "$I18N_WEBAPP_NAME_PLACEHOLDER")
+  APP_URL=$(gum input --prompt "$I18N_WEBAPP_URL_PROMPT" --placeholder "$I18N_WEBAPP_URL_PLACEHOLDER")
   if [[ ! $APP_URL =~ ^[a-zA-Z][a-zA-Z0-9+.-]*: ]]; then
     APP_URL="https://$APP_URL"
   fi
@@ -21,7 +23,7 @@ if (( $# < 3 )); then
   if curl -fsSL -o "$ICON_DIR/$APP_NAME.png" "$FAVICON_URL" && [[ -s $ICON_DIR/$APP_NAME.png ]]; then
     ICON_REF="$APP_NAME.png"
   else
-    ICON_REF=$(gum input --prompt "Icon URL> " --placeholder "Could not fetch favicon automatically. Enter PNG icon URL (see https://dashboardicons.com)")
+    ICON_REF=$(gum input --prompt "$I18N_TUI_ICON_PROMPT" --placeholder "$I18N_WEBAPP_ICON_PLACEHOLDER_ERR")
   fi
 
   CUSTOM_EXEC=""
@@ -41,7 +43,7 @@ fi
 
 # Ensure valid execution
 if [[ -z $APP_NAME || -z $APP_URL ]]; then
-  echo "You must set app name and app URL!"
+  echo "$I18N_WEBAPP_ERR_FIELDS"
   exit 1
 fi
 
@@ -55,7 +57,7 @@ fi
 if [[ $ICON_REF =~ ^https?:// ]]; then
   ICON_PATH="$ICON_DIR/$APP_NAME.png"
   if ! curl -fsSL -o "$ICON_PATH" "$ICON_REF" || [[ ! -s $ICON_PATH ]]; then
-    echo "Error: Failed to download icon."
+    echo "$I18N_WEBAPP_ERR_DOWNLOAD"
     exit 1
   fi
 else
@@ -88,5 +90,6 @@ fi
 chmod +x "$DESKTOP_FILE"
 
 if [[ $INTERACTIVE_MODE == "true" ]]; then
-  echo -e "You can now find $APP_NAME using the app launcher (SUPER + SPACE)\n"
+  success_msg=$(printf "$I18N_WEBAPP_SUCCESS_LAUNCHER" "$APP_NAME")
+  echo -e "$success_msg\n"
 fi

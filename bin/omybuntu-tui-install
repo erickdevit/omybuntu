@@ -5,12 +5,14 @@
 
 set -e
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (( $# != 4 )); then
-  echo -e "\e[32mLet's create a TUI shortcut you can start with the app launcher.\n\e[0m"
-  APP_NAME=$(gum input --prompt "Name> " --placeholder "My TUI")
-  APP_EXEC=$(gum input --prompt "Launch Command> " --placeholder "lazydocker or bash -c 'dust; read -n 1 -s'")
-  WINDOW_STYLE=$(gum choose --header "Window style" float tile)
-  ICON_URL=$(gum input --prompt "Icon URL> " --placeholder "See https://dashboardicons.com (must use PNG or SVG!)")
+  echo -e "\e[32m$I18N_TUI_CREATE_INTRO\n\e[0m"
+  APP_NAME=$(gum input --prompt "$I18N_TUI_NAME_PROMPT" --placeholder "$I18N_TUI_NAME_PLACEHOLDER")
+  APP_EXEC=$(gum input --prompt "$I18N_TUI_EXEC_PROMPT" --placeholder "$I18N_TUI_EXEC_PLACEHOLDER")
+  WINDOW_STYLE=$(gum choose --header "$I18N_TUI_STYLE_HEADER" float tile)
+  ICON_URL=$(gum input --prompt "$I18N_TUI_ICON_PROMPT" --placeholder "$I18N_TUI_ICON_PLACEHOLDER")
 else
   APP_NAME="$1"
   APP_EXEC="$2"
@@ -19,7 +21,7 @@ else
 fi
 
 if [[ -z $APP_NAME || -z $APP_EXEC || -z $ICON_URL ]]; then
-  echo "You must set app name, app command, and icon URL!"
+  echo "$I18N_TUI_ERR_FIELDS"
   exit 1
 fi
 
@@ -32,7 +34,7 @@ else
   ICON_PATH="$ICON_DIR/$APP_NAME.png"
   mkdir -p "$ICON_DIR"
   if ! curl -sL -o "$ICON_PATH" "$ICON_URL"; then
-    echo "Error: Failed to download icon."
+    echo "$I18N_TUI_ERR_DOWNLOAD"
     exit 1
   fi
 fi
@@ -58,5 +60,6 @@ EOF
 chmod +x "$DESKTOP_FILE"
 
 if (( $# != 4 )); then
-  echo -e "You can now find $APP_NAME using the app launcher (SUPER + SPACE)\n"
+  success_msg=$(printf "$I18N_TUI_SUCCESS_LAUNCHER" "$APP_NAME")
+  echo -e "$success_msg\n"
 fi

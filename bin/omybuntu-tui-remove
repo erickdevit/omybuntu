@@ -5,6 +5,8 @@
 
 set -e
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 ICON_DIR="$HOME/.local/share/applications/icons"
 DESKTOP_DIR="$HOME/.local/share/applications/"
 
@@ -19,14 +21,14 @@ if (( $# == 0 )); then
   if ((${#TUIS[@]})); then
     IFS=$'\n' SORTED_TUIS=($(sort <<<"${TUIS[*]}"))
     unset IFS
-    APP_NAMES_STRING=$(gum choose --no-limit --header "Select TUI to remove..." --selected-prefix="✗ " "${SORTED_TUIS[@]}")
+    APP_NAMES_STRING=$(gum choose --no-limit --header "$I18N_TUI_REMOVE_SELECT" --selected-prefix="✗ " "${SORTED_TUIS[@]}")
     # Convert newline-separated string to array
     APP_NAMES=()
     while IFS= read -r line; do
       [[ -n $line ]] && APP_NAMES+=("$line")
     done <<< "$APP_NAMES_STRING"
   else
-    echo "No TUIs to remove."
+    echo "$I18N_TUI_REMOVE_NONE"
     exit 1
   fi
 else
@@ -35,12 +37,13 @@ else
 fi
 
 if (( ${#APP_NAMES[@]} == 0 )); then
-  echo "You must provide TUI names."
+  echo "$I18N_TUI_REMOVE_ERR_NAME"
   exit 1
 fi
 
 for APP_NAME in "${APP_NAMES[@]}"; do
   rm -f "$DESKTOP_DIR/$APP_NAME.desktop"
   rm -f "$ICON_DIR/$APP_NAME.png"
-  echo "Removed $APP_NAME"
+  remove_msg=$(printf "$I18N_TUI_REMOVE_SUCCESS" "$APP_NAME")
+  echo "$remove_msg"
 done

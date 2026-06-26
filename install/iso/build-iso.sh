@@ -19,7 +19,7 @@ ROOTFS_URL="http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_VERSION}/rel
 echo "Building Omybuntu Live ISO from Ubuntu Base rootfs..."
 
 # Check required tools on host
-for tool in wget tar mksquashfs xorriso grub-mkrescue; do
+for tool in wget tar mksquashfs xorriso grub-mkrescue rsync; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "Error: Required host tool '$tool' is not installed." >&2
     exit 1
@@ -102,10 +102,17 @@ sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get install -y 
   dosfstools \
   gum
 
-# 7. Copy Omybuntu to Chroot and Run Installations
-echo "Copying Omybuntu codebase and running installation..."
+# 7. Copy Omybuntu to Chroot (rsync avoids self-copy of build/ into itself)
+echo "Syncing Omybuntu codebase into chroot..."
 sudo mkdir -p "$CHROOT_DIR/opt/omybuntu"
-sudo cp -r "$WORKSPACE/"* "$CHROOT_DIR/opt/omybuntu/"
+sudo rsync -a \
+  --exclude='build/' \
+  --exclude='.git/' \
+  --exclude='ubuntu-base.tar.gz' \
+  --exclude='*.iso' \
+  --exclude='installer/target/' \
+  "$WORKSPACE/" \
+  "$CHROOT_DIR/opt/omybuntu/"
 
 # 7a. Compile the Ratatui TUI installer inside the chroot
 echo "Installing Rust toolchain and compiling TUI installer..."

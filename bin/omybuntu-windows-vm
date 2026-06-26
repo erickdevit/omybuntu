@@ -42,7 +42,7 @@ install_windows() {
 
   check_prerequisites
 
-  omybuntu-pkg-add freerdp openbsd-netcat gum
+  omybuntu-pkg-add freerdp3-x11 openbsd-netcat gum
 
   mkdir -p "$HOME/.windows"
   mkdir -p "$HOME/.config/windows"

@@ -7,22 +7,25 @@ set -e
 
 echo "Installing lib32 graphics drivers..."
 
+# Ensure i386 architecture is enabled for multiarch packages
+sudo dpkg --add-architecture i386
+sudo apt-get update
+
 PACKAGES=()
 
-declare -A VULKAN_DRIVERS=(
-  [Intel]=lib32-vulkan-intel
-  [AMD]=lib32-vulkan-radeon
-)
-for vendor in "${!VULKAN_DRIVERS[@]}"; do
-  if lspci | grep -iE "(VGA|Display).*$vendor" >/dev/null; then
-    PACKAGES+=("${VULKAN_DRIVERS[$vendor]}")
-  fi
-done
+# Intel/AMD Vulkan 32-bit drivers
+if lspci | grep -iE "(VGA|Display).*(Intel|AMD)" >/dev/null; then
+  PACKAGES+=("mesa-vulkan-drivers:i386")
+fi
 
-if omybuntu-hw-nvidia-gsp; then
-  PACKAGES+=(lib32-nvidia-utils)
-elif omybuntu-hw-nvidia-without-gsp; then
-  PACKAGES+=(lib32-nvidia-580xx-utils)
+# NVIDIA 32-bit driver libraries
+if omybuntu-hw-nvidia-gsp || omybuntu-hw-nvidia-without-gsp || lspci | grep -iq "NVIDIA" || omybuntu-cmd-present nvidia-smi; then
+  nvidia_ver=$(dpkg -l | grep -E '^ii\s+nvidia-driver-[0-9]+' | head -n1 | awk '{print $2}' | grep -oE '[0-9]+$')
+  if [[ -n $nvidia_ver ]]; then
+    PACKAGES+=("libnvidia-gl-${nvidia_ver}:i386")
+  else
+    PACKAGES+=("libgl1-mesa-dri:i386")
+  fi
 fi
 
 [[ ${#PACKAGES[@]} -gt 0 ]] && omybuntu-pkg-add "${PACKAGES[@]}"

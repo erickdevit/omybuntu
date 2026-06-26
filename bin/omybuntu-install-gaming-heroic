@@ -6,7 +6,21 @@
 set -e
 
 echo "Installing Heroic Games Launcher..."
-omybuntu-pkg-add heroic-games-launcher-bin
+local latest_tag
+latest_tag=$(curl -s -I https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/latest | grep -i "^location:" | grep -oP 'releases/tag/\K[^ \r\n]+')
+if [[ -z $latest_tag ]]; then
+  latest_tag="v2.15.2"
+fi
+local ver="${latest_tag#v}"
+local deb_url="https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/releases/download/${latest_tag}/heroic_${ver}_amd64.deb"
+
+if wget -q -O /tmp/heroic.deb "$deb_url"; then
+  sudo apt-get install -y /tmp/heroic.deb
+  rm -f /tmp/heroic.deb
+else
+  omybuntu-pkg-add heroic
+fi
+
 omybuntu-install-gaming-gpu-lib32
 
 setsid gtk-launch heroic >/dev/null 2>&1 &

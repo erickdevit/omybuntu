@@ -12,7 +12,7 @@ if [[ -z $1 ]]; then
 fi
 
 install_php() {
-  omybuntu-pkg-add php composer php-sqlite xdebug
+  omybuntu-pkg-add php php-cli composer php-sqlite3 php-xdebug php-bcmath php-intl php-mysql php-curl php-xml php-mbstring
 
   # Install Path for Composer
   if [[ :$PATH: != *:$HOME/.config/composer/vendor/bin:* ]]; then
@@ -23,26 +23,17 @@ install_php() {
     echo "Composer global bin directory already in PATH."
   fi
 
-  # Enable some extensions
-  local php_ini_path="/etc/php/php.ini"
-  local extensions_to_enable=(
-    "bcmath"
-    "intl"
-    "iconv"
-    "openssl"
-    "pdo_sqlite"
-    "pdo_mysql"
-  )
-
-  # Enable Xdebug
-  sudo sed -i \
-    -e 's/^;zend_extension=xdebug.so/zend_extension=xdebug.so/' \
-    -e 's/^;xdebug.mode=debug/xdebug.mode=debug/' \
-    /etc/php/conf.d/xdebug.ini
-
-  for ext in "${extensions_to_enable[@]}"; do
-    sudo sed -i "s/^;extension=${ext}/extension=${ext}/" "$php_ini_path"
-  done
+  # Configure Xdebug for debugging
+  local php_version
+  php_version=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "8.3")
+  local xdebug_ini="/etc/php/${php_version}/mods-available/xdebug.ini"
+  if [[ -f $xdebug_ini ]]; then
+    if ! grep -q "xdebug.mode" "$xdebug_ini"; then
+      echo "xdebug.mode=debug" | sudo tee -a "$xdebug_ini" >/dev/null
+    else
+      sudo sed -i 's/^;*xdebug.mode.*/xdebug.mode=debug/' "$xdebug_ini"
+    fi
+  fi
 }
 
 install_node() {
@@ -53,7 +44,7 @@ install_node() {
 case "$1" in
 ruby)
   echo -e "Installing Ruby on Rails...\n"
-  omybuntu-pkg-add libyaml
+  omybuntu-pkg-add libyaml-dev
   mise settings add ruby.compile false
   mise settings add idiomatic_version_file_enable_tools ruby
   mise use --global ruby@latest
@@ -90,7 +81,9 @@ laravel)
 symfony)
   echo -e "Installing PHP and Symfony...\n"
   install_php
-  omybuntu-pkg-add symfony-cli
+  curl -sS https://get.symfony.com/cli/installer | bash
+  mkdir -p ~/.local/bin
+  mv -f ~/.symfony5/bin/symfony ~/.local/bin/symfony 2>/dev/null || true
   echo -e "\nYou can now run: symfony new --webapp myproject"
   ;;
 python)

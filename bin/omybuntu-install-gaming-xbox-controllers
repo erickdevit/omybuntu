@@ -7,8 +7,15 @@ set -e
 
 echo "Installing Xbox controller Bluetooth support..."
 
-# Install xpadneo to ensure controllers work out of the box
-omybuntu-pkg-add linux-headers xpadneo-dkms
+# Install dependencies and build xpadneo from source
+omybuntu-pkg-add linux-headers-generic dkms git
+echo "Cloning and installing xpadneo..."
+rm -rf /tmp/xpadneo
+git clone https://github.com/atar-axis/xpadneo.git /tmp/xpadneo
+pushd /tmp/xpadneo >/dev/null
+sudo ./install.sh
+popd >/dev/null
+rm -rf /tmp/xpadneo
 
 # Prevent xpad/xpadneo driver conflict
 echo blacklist xpad | sudo tee /etc/modprobe.d/blacklist-xpad.conf >/dev/null

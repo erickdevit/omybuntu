@@ -72,7 +72,23 @@ install_and_launch() {
 }
 
 install_font() {
-  present_terminal "echo 'Installing $1...'; omybuntu-pkg-add $2 && sleep 2 && omybuntu-font-set '$3'"
+  local font_pkg="$2"
+  local font_family="$3"
+  local zip_name=""
+  case "$font_pkg" in
+    ttf-cascadia-mono-nerd) zip_name="CascadiaMono.tar.xz" ;;
+    ttf-meslo-nerd) zip_name="Meslo.tar.xz" ;;
+    ttf-firacode-nerd) zip_name="FiraCode.tar.xz" ;;
+    ttf-victor-mono-nerd) zip_name="VictorMono.tar.xz" ;;
+    ttf-bitstream-vera-mono-nerd) zip_name="BitstreamVeraSansMono.tar.xz" ;;
+    ttf-iosevka-nerd) zip_name="Iosevka.tar.xz" ;;
+  esac
+
+  if [[ -n $zip_name ]]; then
+    present_terminal "echo 'Installing $1...'; mkdir -p ~/.local/share/fonts && curl -fsSL -o /tmp/$zip_name 'https://github.com/ryanoasis/nerd-fonts/releases/latest/download/$zip_name' && tar -xf /tmp/$zip_name -C ~/.local/share/fonts/ && rm -f /tmp/$zip_name && fc-cache -f && sleep 1 && omybuntu-font-set '$font_family'"
+  else
+    present_terminal "echo 'Font package name not supported'; sleep 2"
+  fi
 }
 
 install_terminal() {
@@ -588,13 +604,12 @@ show_install_browser_menu() {
 }
 
 show_install_service_menu() {
-  case $(menu "$I18N_MENU_INSTALL" "  Dropbox\n  Tailscale\n󱇱  NordVPN [AUR]\n󰏖  ONCE\n☀  Sunshine\n󰟵  Bitwarden\n  Chromium Account") in
+  case $(menu "$I18N_MENU_INSTALL" "  Dropbox\n  Tailscale\n󱇱  NordVPN\n☀  Sunshine\n󰟵  Bitwarden\n  Chromium Account") in
   *Dropbox*) present_terminal omybuntu-install-dropbox ;;
   *Tailscale*) present_terminal omybuntu-install-tailscale ;;
   *NordVPN*) present_terminal omybuntu-install-nordvpn ;;
-  *ONCE*) present_terminal omybuntu-install-once ;;
   *Sunshine*) present_terminal omybuntu-install-service-sunshine ;;
-  *Bitwarden*) install_and_launch "Bitwarden" "bitwarden bitwarden-cli" "bitwarden" ;;
+  *Bitwarden*) install_and_launch "Bitwarden" "bitwarden" "bitwarden" ;;
   *Chromium*) present_terminal omybuntu-install-chromium-google-account ;;
   *) show_install_menu ;;
   esac
@@ -603,12 +618,12 @@ show_install_service_menu() {
 show_install_editor_menu() {
   case $(menu "$I18N_MENU_INSTALL" "  VSCode\n  Cursor\n  Zed\n  Sublime Text\n  Helix\n  Vim\n  Emacs") in
   *VSCode*) present_terminal omybuntu-install-vscode ;;
-  *Cursor*) install_and_launch "Cursor" "cursor-bin" "cursor" ;;
+  *Cursor*) present_terminal "echo 'Installing Cursor...'; mkdir -p ~/.local/bin ~/.local/share/applications && wget -O ~/.local/bin/cursor 'https://downloader.cursor.sh/linux/appimage/x64' && chmod +x ~/.local/bin/cursor && echo -e '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Cursor\nComment=Cursor Editor\nExec='$HOME'/.local/bin/cursor --no-sandbox %F\nIcon=accessories-text-editor\nTerminal=false\nCategories=Development;TextEditor;\nStartupWMClass=Cursor' > ~/.local/share/applications/cursor.desktop && update-desktop-database ~/.local/share/applications/ &>/dev/null && echo 'Cursor installed successfully!' && sleep 2" ;;
   *Zed*) present_terminal omybuntu-install-zed ;;
-  *Sublime*) install_and_launch "Sublime Text" "sublime-text-4" "sublime_text" ;;
+  *Sublime*) install_and_launch "Sublime Text" "sublime-text" "sublime_text" ;;
   *Helix*) present_terminal omybuntu-install-helix ;;
   *Vim*) install "Vim" "vim" ;;
-  *Emacs*) install "Emacs" "emacs-wayland" && systemctl --user enable --now emacs.service ;;
+  *Emacs*) install "Emacs" "emacs" && systemctl --user enable --now emacs.service ;;
   *) show_install_menu ;;
   esac
 }
@@ -624,17 +639,9 @@ show_install_terminal_menu() {
 }
 
 show_install_ai_menu() {
-  ollama_pkg=$(
-    (omybuntu-cmd-present nvidia-smi && echo ollama-cuda) ||
-      (omybuntu-cmd-present rocminfo && echo ollama-rocm) ||
-      echo ollama
-  )
-
-  case $(menu "$I18N_MENU_INSTALL" "$I18N_AI_DICTATION\n󱚤  LM Studio\n󱚤  Ollama\n󱚤  Crush") in
+  case $(menu "$I18N_MENU_INSTALL" "$I18N_AI_DICTATION\n󱚤  Ollama") in
   *"$I18N_AI_DICTATION"*) present_terminal omybuntu-voxtype-install ;;
-  *Studio*) install "LM Studio" "lmstudio-bin" ;;
-  *Ollama*) install "Ollama" $ollama_pkg ;;
-  *Crush*) install "Crush" "crush-bin" ;;
+  *Ollama*) present_terminal "echo 'Installing Ollama...'; curl -fsSL https://ollama.com/install.sh | sh" ;;
   *) show_install_menu ;;
   esac
 }
@@ -644,7 +651,7 @@ show_install_gaming_menu() {
   *Steam*) present_terminal omybuntu-install-gaming-steam ;;
   *"$I18N_GAM_RETRO_LAUNCHER"*) omybuntu-games-retro-install ;;
   *RetroArch*) present_terminal omybuntu-install-gaming-retroarch ;;
-  *Minecraft*) install_and_launch "Minecraft" "minecraft-launcher" "minecraft-launcher" ;;
+  *Minecraft*) present_terminal "echo 'Installing Minecraft...'; wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb && sudo apt-get install -y /tmp/minecraft.deb && rm -f /tmp/minecraft.deb && setsid minecraft-launcher" ;;
   *GeForce*) present_terminal omybuntu-install-gaming-geforce-now ;;
   *"$I18N_GAM_XBOX_CLOUD"*) present_terminal omybuntu-install-gaming-xbox-cloud ;;
   *"$I18N_GAM_XBOX_CONTROLLER"*) present_terminal omybuntu-install-gaming-xbox-controllers ;;

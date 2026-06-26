@@ -3,9 +3,17 @@
 # omybuntu:summary=Install Zed Editor and configure it with the current Omybuntu theme
 
 echo "Installing Zed Editor..."
-omybuntu-pkg-add zed omazed
+curl -f https://zed.dev/install.sh | sh
 
-# Apply Omybuntu theme to Zed
-omazed setup
+# Configure Zed settings
+mkdir -p ~/.config/zed
+if [[ ! -f ~/.config/zed/settings.json ]]; then
+  echo -e '{\n  "theme": "One Dark"\n}' > ~/.config/zed/settings.json
+fi
 
-setsid gtk-launch dev.zed.Zed
+# Launch Zed Editor
+if [[ -f ~/.local/bin/zed ]]; then
+  setsid ~/.local/bin/zed &>/dev/null &
+else
+  setsid zed &>/dev/null &
+fi

@@ -4,7 +4,7 @@
 # omybuntu:requires-sudo=true
 
 echo -e "\nInstalling Tailscale..."
-omybuntu-pkg-add tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
 
 echo -e "\nStarting Tailscale..."
 sudo systemctl enable --now tailscaled.service

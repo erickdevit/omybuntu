@@ -3,7 +3,7 @@
 # omybuntu:summary=Install VS Code and configure Omybuntu defaults for secrets, updates, and theme
 
 echo "Installing VSCode..."
-omybuntu-pkg-add visual-studio-code-bin
+omybuntu-pkg-add code
 
 mkdir -p ~/.vscode ~/.config/Code/User
 

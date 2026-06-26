@@ -75,7 +75,28 @@ enable_hyprland_autostart() {
 }
 
 echo "Installing Sunshine..."
-omybuntu-pkg-add sunshine
+local ubuntu_ver
+ubuntu_ver=$(lsb_release -rs 2>/dev/null || grep -oP 'VERSION_ID="\K[^"]+' /etc/os-release)
+
+local latest_tag
+latest_tag=$(curl -s -I https://github.com/LizardByte/Sunshine/releases/latest | grep -i "^location:" | grep -oP 'releases/tag/\K[^ \r\n]+')
+if [[ -z $latest_tag ]]; then
+  latest_tag="v2024.1105.184318"
+fi
+
+local deb_url="https://github.com/LizardByte/Sunshine/releases/download/${latest_tag}/sunshine-ubuntu-${ubuntu_ver}-amd64.deb"
+if ! curl -s -I -f "$deb_url" &>/dev/null; then
+  deb_url="https://github.com/LizardByte/Sunshine/releases/download/${latest_tag}/sunshine-ubuntu-24.04-amd64.deb"
+fi
+
+if wget -q -O /tmp/sunshine.deb "$deb_url"; then
+  sudo apt-get install -y /tmp/sunshine.deb
+  rm -f /tmp/sunshine.deb
+else
+  echo "Failed to download Sunshine."
+  exit 1
+fi
+
 systemctl --user enable --now sunshine
 
 echo "Opening Sunshine firewall ports..."

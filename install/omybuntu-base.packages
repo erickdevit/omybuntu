@@ -60,6 +60,7 @@ luarocks
 mako-notifier
 man-db
 libmariadb-dev
+mise
 mpv
 nautilus
 python3-nautilus
@@ -69,13 +70,12 @@ fonts-noto-cjk
 fonts-noto-color-emoji
 libnss-mdns
 neovim
-obs-studio
 obsidian
 pamixer
-pinta
 playerctl
 plocate
 plymouth
+pnpm
 policykit-1-gnome
 libpq-dev
 power-profiles-daemon
@@ -113,7 +113,6 @@ fonts-font-awesome
 xdg-desktop-portal-gtk
 xdg-desktop-portal-hyprland
 xmlstarlet
-xournalpp
 yaru-theme-icon
 zoxide
 hyprland-qtutils

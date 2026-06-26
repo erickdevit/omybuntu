@@ -6,6 +6,12 @@ fi
 
 if [[ -n ${OMYBUNTU_ONLINE_INSTALL:-} ]]; then
   sudo add-apt-repository ppa:hyprland-community/ppa -y
+
+  # Add official mise repository
+  sudo install -dm 755 /etc/apt/keyrings
+  curl -fSs https://mise.jdx.dev/gpg-key.pub | sudo tee /etc/apt/keyrings/mise-archive-keyring.pub > /dev/null
+  echo "deb [signed-by=/etc/apt/keyrings/mise-archive-keyring.pub arch=$(dpkg --print-architecture)] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
+
   sudo apt-get update
 fi
 

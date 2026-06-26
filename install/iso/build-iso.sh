@@ -101,6 +101,9 @@ sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get install -y 
   cryptsetup \
   dosfstools \
   software-properties-common \
+  build-essential \
+  pkg-config \
+  libssl-dev \
   gum
 
 # 7. Copy Omybuntu to Chroot (rsync avoids self-copy of build/ into itself)
@@ -118,6 +121,7 @@ sudo rsync -a \
 # 7a. Compile the Ratatui TUI installer inside the chroot
 echo "Installing Rust toolchain and compiling TUI installer..."
 sudo chroot "$CHROOT_DIR" /bin/bash -c "
+  set -e
   export HOME=/root
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
     sh -s -- -y --default-toolchain stable --no-modify-path --quiet

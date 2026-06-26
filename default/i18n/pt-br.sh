@@ -391,4 +391,5 @@ export I18N_FIRST_RUN_UPDATE_BODY_NO_NET="Quando tiver internet, clique para atu
 export I18N_FIRST_RUN_UPDATE_BODY_WITH_NET="Clique para atualizar o sistema."
 export I18N_FIRST_RUN_WIFI_TITLE="󰖩    Clique para configurar Wi-Fi"
 export I18N_FIRST_RUN_WIFI_BODY="Tab para navegar, Espaço para selecionar, ? para ajuda."
+export I18N_REMOVE_GNOME_PROMPT="Deseja remover completamente a interface gráfica padrão do Ubuntu (GNOME Desktop) e o gerenciador de login GDM3?"
 

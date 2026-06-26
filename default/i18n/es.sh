@@ -391,4 +391,5 @@ export I18N_FIRST_RUN_UPDATE_BODY_NO_NET="Cuando tenga conexión a internet, hag
 export I18N_FIRST_RUN_UPDATE_BODY_WITH_NET="Haga clic para actualizar el sistema."
 export I18N_FIRST_RUN_WIFI_TITLE="󰖩    Haga clic para configurar Wi-Fi"
 export I18N_FIRST_RUN_WIFI_BODY="Tab para navegar, Espacio para seleccionar, ? para ayuda."
+export I18N_REMOVE_GNOME_PROMPT="¿Desea eliminar por completo el entorno de escritorio predeterminado de Ubuntu (GNOME Desktop) y el gestor de inicio de sesión GDM3?"
 

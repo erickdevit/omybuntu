@@ -30,6 +30,19 @@ export OMYBUNTU_LANGUAGE="$LANG_VAL"
 # Load translation variables
 source "$OMYBUNTU_PATH/default/i18n/init.sh"
 
+# Determine if we should remove Ubuntu Desktop (GNOME/GDM3)
+mkdir -p "$HOME/.config/omybuntu"
+if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+  # On ISO builds (starts from a clean rootfs), we don't have GNOME to remove
+  echo "false" > "$HOME/.config/omybuntu/remove_ubuntu_desktop"
+else
+  if gum confirm "$I18N_REMOVE_GNOME_PROMPT" --default=false; then
+    echo "true" > "$HOME/.config/omybuntu/remove_ubuntu_desktop"
+  else
+    echo "false" > "$HOME/.config/omybuntu/remove_ubuntu_desktop"
+  fi
+fi
+
 # Install
 source "$OMYBUNTU_INSTALL/preflight/all.sh"
 source "$OMYBUNTU_INSTALL/packaging/all.sh"

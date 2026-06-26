@@ -391,4 +391,5 @@ export I18N_FIRST_RUN_UPDATE_BODY_NO_NET="When you have internet, click to updat
 export I18N_FIRST_RUN_UPDATE_BODY_WITH_NET="Click to update the system."
 export I18N_FIRST_RUN_WIFI_TITLE="󰖩    Click to Setup Wi-Fi"
 export I18N_FIRST_RUN_WIFI_BODY="Tab to navigate, Space to select, ? for help."
+export I18N_REMOVE_GNOME_PROMPT="Do you want to completely remove the default Ubuntu GNOME Desktop Environment and GDM3 display manager?"
 

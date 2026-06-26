@@ -1,3 +1,14 @@
+# Read decision from state file
+REMOVE_DESKTOP="false"
+if [[ -f "$HOME/.config/omybuntu/remove_ubuntu_desktop" ]]; then
+  REMOVE_DESKTOP=$(cat "$HOME/.config/omybuntu/remove_ubuntu_desktop")
+fi
+
+if [[ $REMOVE_DESKTOP != "true" ]]; then
+  echo "Skipping removal of default Ubuntu GNOME Desktop Environment."
+  return 0 2>/dev/null || exit 0
+fi
+
 echo "Cleaning up default Ubuntu desktop environment..."
 
 # List of packages to remove

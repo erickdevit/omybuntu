@@ -19,7 +19,6 @@ intel-lpmd
 intel-media-driver
 libva-intel-driver
 libva-nvidia-driver
-grub-btrfs
 timeshift
 linux
 linux-firmware

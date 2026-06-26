@@ -377,11 +377,29 @@ show_setup_menu() {
 }
 
 show_setup_power_menu() {
-  profile=$(menu "$I18N_SET_POWER" "$(omybuntu-powerprofiles-list)" "" "$(powerprofilesctl get)")
+  local current
+  current=$(powerprofilesctl get)
 
-  if [[ $profile == "CNCLD" || -z $profile ]]; then
+  local options=""
+  local list
+  mapfile -t list < <(omybuntu-powerprofiles-list)
+
+  for p in "${list[@]}"; do
+    if [[ $p == "$current" ]]; then
+      options+="${options:+$'\n'}●  $p"
+    else
+      options+="${options:+$'\n'}○  $p"
+    fi
+  done
+
+  local selected
+  selected=$(menu "$I18N_SET_POWER" "$options" "" "●  $current")
+
+  if [[ $selected == "CNCLD" || -z $selected ]]; then
     back_to show_setup_menu
   else
+    local profile
+    profile="${selected#*  }"
     powerprofilesctl set "$profile"
   fi
 }

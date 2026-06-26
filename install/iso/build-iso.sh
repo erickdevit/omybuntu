@@ -107,7 +107,25 @@ echo "Copying Omybuntu codebase and running installation..."
 sudo mkdir -p "$CHROOT_DIR/opt/omybuntu"
 sudo cp -r "$WORKSPACE/"* "$CHROOT_DIR/opt/omybuntu/"
 
-# Execute the setups
+# 7a. Compile the Ratatui TUI installer inside the chroot
+echo "Installing Rust toolchain and compiling TUI installer..."
+sudo chroot "$CHROOT_DIR" /bin/bash -c "
+  export HOME=/root
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --default-toolchain stable --no-modify-path --quiet
+  export PATH=\"/root/.cargo/bin:\$PATH\"
+  cd /opt/omybuntu/installer
+  cargo build --release --jobs \$(nproc)
+  cp target/release/omybuntu-installer /usr/local/bin/omybuntu-installer
+  chmod +x /usr/local/bin/omybuntu-installer
+  # Remove Rust toolchain to keep squashfs lean (~1 GB saved)
+  rm -rf /root/.cargo /root/.rustup
+  cargo_cache=/opt/omybuntu/installer/target
+  rm -rf \"\$cargo_cache\"
+"
+
+# 7b. Run Omybuntu setup inside the chroot
+echo "Running Omybuntu setup inside chroot..."
 sudo chroot "$CHROOT_DIR" env OMYBUNTU_ONLINE_INSTALL=true OMYBUNTU_ISO_BUILD=true /bin/bash -c "
   cd /opt/omybuntu
   ./install/iso/setup-iso.sh

@@ -1,0 +1,19 @@
+[package]
+name = "omybuntu-installer"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "omybuntu-installer"
+path = "src/main.rs"
+
+[dependencies]
+ratatui   = "0.30"
+crossterm = "0.29"
+color-eyre = "0.6"
+
+[profile.release]
+opt-level     = 3
+strip         = true
+lto           = true
+codegen-units = 1

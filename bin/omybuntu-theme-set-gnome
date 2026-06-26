@@ -6,9 +6,11 @@
 if [[ -f ~/.config/omybuntu/current/theme/light.mode ]]; then
   gsettings set org.gnome.desktop.interface color-scheme "prefer-light"
   gsettings set org.gnome.desktop.interface gtk-theme "Adwaita"
+  CURSOR_THEME="volantes_cursors"
 else
   gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
   gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
+  CURSOR_THEME="volantes_light_cursors"
 fi
 
 # Change gnome icon theme color
@@ -18,3 +20,34 @@ if [[ -f $GNOME_ICONS_THEME ]]; then
 else
   gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue"
 fi
+
+# Set cursor theme in GSettings
+gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
+
+# Set cursor theme in GTK 3.0 and 4.0 settings.ini
+for gtk_version in "gtk-3.0" "gtk-4.0"; do
+  mkdir -p ~/.config/"$gtk_version"
+  settings_file=~/.config/"$gtk_version"/settings.ini
+  if [[ -f $settings_file ]]; then
+    if grep -q "gtk-cursor-theme-name" "$settings_file"; then
+      sed -i "s/gtk-cursor-theme-name=.*/gtk-cursor-theme-name=$CURSOR_THEME/" "$settings_file"
+    else
+      echo "gtk-cursor-theme-name=$CURSOR_THEME" >> "$settings_file"
+    fi
+  else
+    cat > "$settings_file" <<EOF
+[Settings]
+gtk-cursor-theme-name=$CURSOR_THEME
+EOF
+  fi
+done
+
+# Set cursor theme in X11 fallback
+mkdir -p ~/.icons/default
+cat > ~/.icons/default/index.theme <<EOF
+[Icon Theme]
+Inherits=$CURSOR_THEME
+EOF
+
+# Set cursor theme in Hyprland on the fly
+hyprctl setcursor "$CURSOR_THEME" 24 >/dev/null 2>&1 || true

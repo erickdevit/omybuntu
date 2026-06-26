@@ -148,3 +148,13 @@ fi
 - Siga a convenção de **Conventional Commits** (ex: `feat(escopo): descrição`, `fix(escopo): descrição`, `style(escopo): descrição`, `test: descrição`, `chore: descrição`).
 - Agrupe e divida as alterações em commits lógicos separados quando as mudanças forem de naturezas diferentes (por exemplo, separar uma correção de teste de uma nova funcionalidade de instalação).
 
+# Localization (I18n)
+
+- Localization files live under `default/i18n/` (e.g., `en.sh`, `es.sh`, `pt-br.sh`).
+- User-facing scripts must load the translations early using:
+  `source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"`
+- Localize all walker menus, interactive gum prompts/choose dialogs, and desktop notifications (using `omybuntu-notification-send`).
+- Proper nouns, brand abbreviations (such as "Web App" and "TUI"), and hardware-specific CLI parameters (such as haptic options "low", "mid", "high") must remain in English across all translation files.
+- Prioritize user-facing GUI elements and notifications. Non-interactive terminal-only stdout/stderr logs can remain in English unless they are critical setup alerts.
+
+

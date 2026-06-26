@@ -24,7 +24,7 @@ done
 
 # Run autoremove to clean up orphaned dependencies 
 # EXCEPT the ones we explicitly want to keep, which we mark as manually installed just in case.
-sudo apt-mark manual nautilus baobab ubuntu-advantage-tools snapd || true
+sudo apt-mark manual nautilus baobab ubuntu-advantage-tools snapd fwupd gnome-firmware || true
 
 echo "Removing orphaned packages..."
 sudo apt-get autoremove -y --purge

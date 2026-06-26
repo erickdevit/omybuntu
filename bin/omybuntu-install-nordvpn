@@ -4,7 +4,11 @@
 # omybuntu:requires-sudo=true
 
 echo "Installing NordVPN..."
-omybuntu-pkg-aur-add nordvpn-bin
+wget -q -O /tmp/nordvpn-release_1.0.0_all.deb https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/nordvpn-release_1.0.0_all.deb
+sudo dpkg -i /tmp/nordvpn-release_1.0.0_all.deb || sudo apt-get install -f -y
+rm -f /tmp/nordvpn-release_1.0.0_all.deb
+sudo apt-get update
+sudo apt-get install -y nordvpn
 
 echo "Enabling NordVPN daemon..."
 sudo systemctl enable --now nordvpnd

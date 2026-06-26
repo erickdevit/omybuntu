@@ -9,7 +9,6 @@ bat
 bolt
 brightnessctl
 btop
-chromium-browser
 clang
 cups
 cups-browsed
@@ -48,14 +47,12 @@ inetutils-tools
 inxi
 iwd
 jq
-kdenlive
 qt5-style-kvantum
 lazygit
 less
 libsecret-1-0
 libyaml-0-2
 qalc
-libreoffice
 llvm
 localsend
 luarocks
@@ -90,7 +87,6 @@ ripgrep
 ruby
 rustc
 sddm
-signal-desktop
 slurp
 spotify-client
 socat

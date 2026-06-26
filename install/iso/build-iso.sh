@@ -12,7 +12,8 @@ CHROOT_DIR="$BUILD_DIR/chroot"
 IMAGE_DIR="$BUILD_DIR/image"
 ISO_OUT="$WORKSPACE/omybuntu.iso"
 
-UBUNTU_VERSION="24.04"
+UBUNTU_VERSION="26.04"
+UBUNTU_CODENAME="resolute"
 ROOTFS_URL="http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_VERSION}/release/ubuntu-base-${UBUNTU_VERSION}-base-amd64.tar.gz"
 
 echo "Building Omybuntu Live ISO from Ubuntu Base rootfs..."
@@ -56,11 +57,11 @@ sudo cp /etc/resolv.conf "$CHROOT_DIR/etc/resolv.conf"
 
 # 5. Setup APT Sources inside Chroot
 echo "Configuring APT sources..."
-cat <<EOF | sudo tee "$CHROOT_DIR/etc/apt/sources.list" >/dev/null
-deb http://archive.ubuntu.com/ubuntu/ noble main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu/ noble-updates main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu/ noble-backports main restricted universe multiverse
-deb http://security.ubuntu.com/ubuntu/ noble-security main restricted universe multiverse
+cat <<EOF | sudo tee "$CHROOT_DIR/etc/apt/sources.list" > /dev/null
+deb http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME} main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-updates main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-backports main restricted universe multiverse
+deb http://security.ubuntu.com/ubuntu/ ${UBUNTU_CODENAME}-security main restricted universe multiverse
 EOF
 
 # 6. Run System Installations inside Chroot

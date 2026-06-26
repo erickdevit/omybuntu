@@ -107,9 +107,21 @@ else
   echo "Building Omybuntu Live ISO from Ubuntu Base rootfs..."
   sudo rm -rf "$BUILD_DIR"
   mkdir -p "$BUILD_DIR" "$CHROOT_DIR" "$IMAGE_DIR/casper"
+
+  # 1. Download Ubuntu Base Rootfs
+  if [[ ! -f "$WORKSPACE/ubuntu-base.tar.gz" ]]; then
+    echo "Downloading Ubuntu Base rootfs..."
+    wget -O "$WORKSPACE/ubuntu-base.tar.gz" "$ROOTFS_URL"
+  fi
+
+  # 2. Extract Rootfs (creates /dev, /proc, /sys mount points)
+  echo "Extracting rootfs..."
+  sudo tar -xzf "$WORKSPACE/ubuntu-base.tar.gz" -C "$CHROOT_DIR"
 fi
 
 # --- Virtual filesystems & basic chroot setup (always) ----------------------
+# For cache restore: directories were created by mkdir -p above
+# For full build: directories were created by tar extraction
 
 echo "Mounting virtual filesystems..."
 sudo mount --bind /dev "$CHROOT_DIR/dev"
@@ -119,20 +131,10 @@ sudo mount -t sysfs sysfs "$CHROOT_DIR/sys"
 sudo cp /etc/resolv.conf "$CHROOT_DIR/etc/resolv.conf"
 
 # ---------------------------------------------------------------------------
-# FULL BUILD STEPS (only when no cache layer is valid down to base)
+# FULL BUILD: APT + BASE CACHE (only when no cache layer is valid)
 # ---------------------------------------------------------------------------
 
 if [[ -z $RESTORE_FROM ]]; then
-  # 1. Download Ubuntu Base Rootfs
-  if [[ ! -f "$WORKSPACE/ubuntu-base.tar.gz" ]]; then
-    echo "Downloading Ubuntu Base rootfs..."
-    wget -O "$WORKSPACE/ubuntu-base.tar.gz" "$ROOTFS_URL"
-  fi
-
-  # 2. Extract Rootfs
-  echo "Extracting rootfs..."
-  sudo tar -xzf "$WORKSPACE/ubuntu-base.tar.gz" -C "$CHROOT_DIR"
-
   # 5. Setup APT Sources inside Chroot
   echo "Configuring APT sources..."
   cat <<EOF | sudo tee "$CHROOT_DIR/etc/apt/sources.list" > /dev/null

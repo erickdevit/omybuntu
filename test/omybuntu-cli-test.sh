@@ -72,7 +72,7 @@ pass "benchmark command is discoverable in all commands"
 "$CLI" commands --json | jq -e '.commands[] | select(.binary == "omybuntu-pkg-add" and .route == "omybuntu pkg add" and .filename_route == "omybuntu pkg add" and (.routes | index("omybuntu pkg add")))' >/dev/null
 pass "JSON exposes direct pkg add route"
 
-"$CLI" commands --json | jq -e '.commands[] | select(.binary == "omybuntu-refresh-pacman" and .requires_sudo == true)' >/dev/null
+"$CLI" commands --json | jq -e '.commands[] | select(.binary == "omybuntu-update-time" and .requires_sudo == true)' >/dev/null
 pass "sudo metadata marks sudo commands"
 
 output=$("$CLI" theme --help)

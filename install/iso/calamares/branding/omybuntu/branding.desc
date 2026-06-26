@@ -1,0 +1,23 @@
+# branding.desc for Omybuntu
+---
+componentName:  omybuntu
+
+strings:
+    productName:         Omybuntu
+    shortProductName:    Omybuntu
+    versionCode:         1.0
+    version:             1.0
+    productUrl:          https://github.com/erickdevit/omybuntu
+    supportUrl:          https://github.com/erickdevit/omybuntu/issues
+    releaseNotesUrl:     https://github.com/erickdevit/omybuntu
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "logo.png"
+    productWelcome:      "welcome.png"
+
+style:
+   SidebarBackground:    "#1e1e2e"
+   SidebarText:          "#cdd6f4"
+   SidebarTextCurrent:   "#89b4fa"
+   SidebarBackgroundCurrent: "#313244"

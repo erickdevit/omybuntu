@@ -181,6 +181,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
             "--exclude=/proc/*",
             "--exclude=/sys/*",
             "--exclude=/tmp/*",
+            "--exclude=/var/tmp/*",
             "--exclude=/run/*",
             "--exclude=/mnt/*",
             "--exclude=/media/*",
@@ -264,6 +265,10 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
 
     // ── 13. User accounts ─────────────────────────────────────────────────────
     prog(tx, 84, "Creating user account...");
+    // Ensure the 'sudo' group exists (may not be present on Ubuntu Base rootfs)
+    Command::new("chroot")
+        .args(["/mnt", "groupadd", "-f", "sudo"])
+        .status().ok();
     Command::new("chroot")
         .args(["/mnt", "useradd", "-m", "-G", "sudo,audio,video,users", "-s", "/bin/bash", &cfg.username])
         .status().ok(); // Non-fatal: user might already exist in live system

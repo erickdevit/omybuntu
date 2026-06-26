@@ -12,16 +12,20 @@ export PATH="$OMYBUNTU_PATH/bin:$PATH"
 # Sourced helpers (loads gum and logo functions)
 source "$OMYBUNTU_INSTALL/helpers/all.sh"
 
-# Select language
+# Select language (skip in ISO/chroot builds)
 clear_logo
-echo -e "\nChoose Omybuntu language / Selecione o idioma / Seleccione el idioma:"
-CHOSEN_LANG=$(gum choose --height 5 "English" "Português (Brasil)" "Español")
+if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+  LANG_VAL="en"
+else
+  echo -e "\nChoose Omybuntu language / Selecione o idioma / Seleccione el idioma:"
+  CHOSEN_LANG=$(gum choose --height 5 "English" "Português (Brasil)" "Español")
 
-case "$CHOSEN_LANG" in
-  "Português (Brasil)") LANG_VAL="pt-br" ;;
-  "Español") LANG_VAL="es" ;;
-  *) LANG_VAL="en" ;;
-esac
+  case "$CHOSEN_LANG" in
+    "Português (Brasil)") LANG_VAL="pt-br" ;;
+    "Español") LANG_VAL="es" ;;
+    *) LANG_VAL="en" ;;
+  esac
+fi
 
 mkdir -p "$HOME/.config/omybuntu"
 echo "$LANG_VAL" > "$HOME/.config/omybuntu/language"

@@ -24,6 +24,12 @@ if sudo test -f /etc/sudoers.d/99-omybuntu-installer; then
   sudo rm -f /etc/sudoers.d/99-omybuntu-installer &>/dev/null
 fi
 
+# Skip interactive prompt in ISO/chroot builds
+if [[ -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
+  touch /var/tmp/omybuntu-install-completed
+  exit 0
+fi
+
 # Exit gracefully if user chooses not to reboot
 if gum confirm --padding "0 0 0 $((PADDING_LEFT + 32))" --show-help=false --default --affirmative "$I18N_REBOOT_NOW" --negative "" ""; then
   # Clear screen to hide any shutdown messages

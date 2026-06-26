@@ -138,7 +138,7 @@ sudo chroot "$CHROOT_DIR" /bin/bash -c "
 
 # 7b. Run Omybuntu setup inside the chroot
 echo "Running Omybuntu setup inside chroot..."
-sudo chroot "$CHROOT_DIR" env OMYBUNTU_ONLINE_INSTALL=true OMYBUNTU_ISO_BUILD=true /bin/bash -c "
+sudo chroot "$CHROOT_DIR" env OMYBUNTU_ONLINE_INSTALL=true OMYBUNTU_ISO_BUILD=true OMYBUNTU_CHROOT_INSTALL=true /bin/bash -c "
   cd /opt/omybuntu
   ./install/iso/setup-iso.sh
   ./install.sh
@@ -165,6 +165,14 @@ sudo cp "$WORKSPACE/install/iso/grub.cfg" "$IMAGE_DIR/boot/grub/grub.cfg"
 
 # 10. Compress chroot into SquashFS
 echo "Creating filesystem.squashfs (this may take a few minutes)..."
+
+# Generate Casper metadata
+sudo chroot "$CHROOT_DIR" dpkg-query -W --showformat='${Package} ${Version}\n' | sudo tee "$IMAGE_DIR/casper/filesystem.manifest" > /dev/null
+sudo du -sx --block-size=1 "$CHROOT_DIR" | cut -f1 | sudo tee "$IMAGE_DIR/casper/filesystem.size" > /dev/null
+
+# Clean apt cache to reduce squashfs size
+sudo rm -rf "$CHROOT_DIR"/var/cache/apt/archives/*.deb
+
 sudo mksquashfs "$CHROOT_DIR" "$IMAGE_DIR/casper/filesystem.squashfs" -comp xz -e opt/omybuntu/build
 
 # 11. Build bootable ISO with grub-mkrescue

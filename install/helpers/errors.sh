@@ -105,6 +105,11 @@ catch_errors() {
   echo
   gum style "Get help from the community via QR code or at https://discord.gg/AWenBWGka"
 
+  # In ISO/chroot builds, exit immediately on error
+  if [[ -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
+    exit 1
+  fi
+
   # Offer options menu
   while true; do
     options=()

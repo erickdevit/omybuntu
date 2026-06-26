@@ -74,15 +74,15 @@ restore_outputs() {
 
 # Error handler
 catch_errors() {
+  # Capture exit code FIRST before any command modifies $?
+  local exit_code=$?
+
   # Prevent recursive error handling
   if [[ $ERROR_HANDLING == "true" ]]; then
     return
   else
     ERROR_HANDLING=true
   fi
-
-  # Store exit code immediately before it gets overwritten
-  local exit_code=$?
 
   # Ensure translation variables are loaded
   if [[ -z ${I18N_ERR_WHAT_TO_DO:-} ]]; then

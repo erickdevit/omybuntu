@@ -57,3 +57,48 @@ Current=omybuntu
 EOF
 
 echo "Live ISO environment prepared successfully."
+
+# ---------------------------------------------------------------------------
+# Populate /etc/skel/ with root configs so the casper live user 'ubuntu'
+# gets a fully configured Hyprland session on first boot.
+# install.sh runs as root in the chroot, so all configs land in /root/.
+# Casper creates /home/ubuntu/ by copying /etc/skel/ at boot.
+# ---------------------------------------------------------------------------
+echo "Copying configs to /etc/skel/ for the live user..."
+
+# Core config dirs
+sudo mkdir -p /etc/skel/.config /etc/skel/.local/share /etc/skel/.local/state/omybuntu
+
+# Copy all user configs from /root/.config/ to /etc/skel/.config/
+sudo cp -a /root/.config/. /etc/skel/.config/
+
+# Copy user local data (icons, applications, etc.)
+if [[ -d /root/.local/share ]]; then
+  sudo cp -a /root/.local/share/. /etc/skel/.local/share/
+fi
+
+# Copy first-run state marker so live user also gets it
+if [[ -f /root/.local/state/omybuntu/first-run.mode ]]; then
+  sudo mkdir -p /etc/skel/.local/state/omybuntu
+  sudo cp /root/.local/state/omybuntu/first-run.mode /etc/skel/.local/state/omybuntu/first-run.mode
+fi
+
+# Copy .bashrc
+[[ -f /root/.bashrc ]] && sudo cp /root/.bashrc /etc/skel/.bashrc
+
+# Create symlink: ~/.local/share/omybuntu -> /opt/omybuntu
+# The bashrc sources from ~/.local/share/omybuntu; in the ISO the code is at /opt/omybuntu
+sudo mkdir -p /etc/skel/.local/share
+sudo ln -snf /opt/omybuntu /etc/skel/.local/share/omybuntu
+
+# Remove any hardcoded /root paths that leaked into skel configs
+sudo grep -rl "/root/" /etc/skel/.config/ 2>/dev/null | while read -r f; do
+  sudo sed -i 's|/root/|/home/ubuntu/|g' "$f"
+done
+
+# Remove Chromium singleton lock that may have been created during install
+sudo rm -rf /etc/skel/.config/chromium/SingletonLock
+sudo rm -rf /etc/skel/.config/google-chrome/SingletonLock
+
+echo "Skel populated. Live user 'ubuntu' will inherit full Omybuntu configuration."
+

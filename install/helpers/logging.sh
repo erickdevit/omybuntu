@@ -68,25 +68,9 @@ stop_install_log() {
 
   if [[ -n ${OMYBUNTU_INSTALL_LOG_FILE:-} ]]; then
     OMYBUNTU_END_TIME=$(date '+%Y-%m-%d %H:%M:%S')
-    echo "=== Omybuntu Installation Completed: $OMYBUNTU_END_TIME ===" >>"$OMYBUNTU_INSTALL_LOG_FILE"
-    echo "" >>"$OMYBUNTU_INSTALL_LOG_FILE"
-    echo "=== Installation Time Summary ===" >>"$OMYBUNTU_INSTALL_LOG_FILE"
-
-    if [[ -f "/var/log/archinstall/install.log" ]]; then
-      ARCHINSTALL_START=$(grep -m1 '^\[' /var/log/archinstall/install.log 2>/dev/null | sed 's/^\[\([^]]*\)\].*/\1/' || true)
-      ARCHINSTALL_END=$(grep 'Installation completed without any errors' /var/log/archinstall/install.log 2>/dev/null | sed 's/^\[\([^]]*\)\].*/\1/' || true)
-
-      if [[ -n $ARCHINSTALL_START ]] && [[ -n $ARCHINSTALL_END ]]; then
-        ARCH_START_EPOCH=$(date -d "$ARCHINSTALL_START" +%s)
-        ARCH_END_EPOCH=$(date -d "$ARCHINSTALL_END" +%s)
-        ARCH_DURATION=$((ARCH_END_EPOCH - ARCH_START_EPOCH))
-
-        ARCH_MINS=$((ARCH_DURATION / 60))
-        ARCH_SECS=$((ARCH_DURATION % 60))
-
-        echo "Archinstall: ${ARCH_MINS}m ${ARCH_SECS}s" >>"$OMYBUNTU_INSTALL_LOG_FILE"
-      fi
-    fi
+    echo "=== Omybuntu Installation Completed: $OMYBUNTU_END_TIME ===" >> "$OMYBUNTU_INSTALL_LOG_FILE"
+    echo "" >> "$OMYBUNTU_INSTALL_LOG_FILE"
+    echo "=== Installation Time Summary ===" >> "$OMYBUNTU_INSTALL_LOG_FILE"
 
     if [[ -n $OMYBUNTU_START_TIME ]]; then
       OMYBUNTU_START_EPOCH=$(date -d "$OMYBUNTU_START_TIME" +%s)
@@ -96,18 +80,12 @@ stop_install_log() {
       OMYBUNTU_MINS=$((OMYBUNTU_DURATION / 60))
       OMYBUNTU_SECS=$((OMYBUNTU_DURATION % 60))
 
-      echo "Omybuntu:     ${OMYBUNTU_MINS}m ${OMYBUNTU_SECS}s" >>"$OMYBUNTU_INSTALL_LOG_FILE"
-
-      if [[ -n $ARCH_DURATION ]]; then
-        TOTAL_DURATION=$((ARCH_DURATION + OMYBUNTU_DURATION))
-        TOTAL_MINS=$((TOTAL_DURATION / 60))
-        TOTAL_SECS=$((TOTAL_DURATION % 60))
-        echo "Total:       ${TOTAL_MINS}m ${TOTAL_SECS}s" >>"$OMYBUNTU_INSTALL_LOG_FILE"
-      fi
+      echo "Omybuntu:    ${OMYBUNTU_MINS}m ${OMYBUNTU_SECS}s" >> "$OMYBUNTU_INSTALL_LOG_FILE"
+      echo "Total:       ${OMYBUNTU_MINS}m ${OMYBUNTU_SECS}s" >> "$OMYBUNTU_INSTALL_LOG_FILE"
     fi
-    echo "=================================" >>"$OMYBUNTU_INSTALL_LOG_FILE"
+    echo "=================================" >> "$OMYBUNTU_INSTALL_LOG_FILE"
 
-    echo "Rebooting system..." >>"$OMYBUNTU_INSTALL_LOG_FILE"
+    echo "Installation finished." >> "$OMYBUNTU_INSTALL_LOG_FILE"
   fi
 }
 

@@ -8,9 +8,10 @@ cp $OMYBUNTU_PATH/default/walker/walker.desktop ~/.config/autostart/
 mkdir -p ~/.config/systemd/user/app-walker@autostart.service.d/
 cp $OMYBUNTU_PATH/default/walker/restart.conf ~/.config/systemd/user/app-walker@autostart.service.d/restart.conf
 
-# Create pacman hook to restart walker after updates
-sudo mkdir -p /etc/pacman.d/hooks
-sudo tee /etc/pacman.d/hooks/walker-restart.hook > /dev/null << EOF
+# Create pacman hook to restart walker after updates (Arch only)
+if command -v pacman >/dev/null 2>&1; then
+  sudo mkdir -p /etc/pacman.d/hooks
+  sudo tee /etc/pacman.d/hooks/walker-restart.hook > /dev/null << EOF
 [Trigger]
 Type = Package
 Operation = Upgrade
@@ -23,6 +24,7 @@ Description = Restarting Walker services after system update
 When = PostTransaction
 Exec = $OMYBUNTU_PATH/bin/omybuntu-restart-walker
 EOF
+fi
 
 # Link the visual theme menu config
 mkdir -p ~/.config/elephant/menus

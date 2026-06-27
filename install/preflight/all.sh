@@ -4,18 +4,29 @@ if [[ ! -f /etc/os-release ]] || ! grep -qi "ubuntu" /etc/os-release; then
   gum confirm "$I18N_PROCEED_ANYWAY" || exit 1
 fi
 
+source $OMYBUNTU_INSTALL/preflight/begin.sh
+
 if [[ -n ${OMYBUNTU_ONLINE_INSTALL:-} ]]; then
-  sudo add-apt-repository universe -y
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: online preflight" >> "$OMYBUNTU_INSTALL_LOG_FILE"
 
-  # Add official mise repository
-  sudo install -dm 755 /etc/apt/keyrings
-  curl -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor | sudo tee /etc/apt/keyrings/mise.gpg > /dev/null
-  echo "deb [signed-by=/etc/apt/keyrings/mise.gpg arch=$(dpkg --print-architecture)] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
+  {
+    sudo add-apt-repository universe -y
 
-  sudo apt-get update
+    # Add official mise repository
+    sudo install -dm 755 /etc/apt/keyrings
+    curl --connect-timeout 15 --max-time 120 -fsSL https://mise.jdx.dev/gpg-key.pub | gpg --dearmor | sudo tee /etc/apt/keyrings/mise.gpg > /dev/null
+    echo "deb [signed-by=/etc/apt/keyrings/mise.gpg arch=$(dpkg --print-architecture)] https://mise.jdx.dev/deb stable main" | sudo tee /etc/apt/sources.list.d/mise.list
+
+    sudo apt-get \
+      -o Acquire::http::Timeout=30 \
+      -o Acquire::https::Timeout=30 \
+      -o DPkg::Lock::Timeout=60 \
+      update
+  } >> "$OMYBUNTU_INSTALL_LOG_FILE" 2>&1
+
+  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Completed: online preflight" >> "$OMYBUNTU_INSTALL_LOG_FILE"
 fi
 
-source $OMYBUNTU_INSTALL/preflight/begin.sh
 run_logged $OMYBUNTU_INSTALL/preflight/show-env.sh
 run_logged $OMYBUNTU_INSTALL/preflight/migrations.sh
 run_logged $OMYBUNTU_INSTALL/preflight/first-run-mode.sh

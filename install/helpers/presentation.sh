@@ -26,6 +26,9 @@ export LOGO_WIDTH=$(awk '{ if (length > max) max = length } END { print max+0 }'
 export LOGO_HEIGHT=$(wc -l <"$LOGO_PATH" 2>/dev/null || echo 0)
 
 export PADDING_LEFT=$(((TERM_WIDTH - LOGO_WIDTH) / 2))
+if (( PADDING_LEFT < 0 )); then
+  export PADDING_LEFT=0
+fi
 export PADDING_LEFT_SPACES=$(printf "%*s" $PADDING_LEFT "")
 
 # Tokyo Night theme for gum confirm
@@ -43,6 +46,11 @@ export GUM_TABLE_PADDING="$PADDING"
 export GUM_CONFIRM_PADDING="$PADDING"
 
 clear_logo() {
+  if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+    echo "Starting Omybuntu installer..."
+    return 0
+  fi
+
   printf "\033[H\033[2J" # Clear screen and move cursor to top-left
   gum style --foreground 2 --padding "1 0 0 $PADDING_LEFT" "$(<"$LOGO_PATH")"
 }

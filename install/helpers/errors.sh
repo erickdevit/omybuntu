@@ -92,6 +92,13 @@ catch_errors() {
   stop_log_output
   restore_outputs
 
+  # In ISO/chroot builds, bail out immediately without interactive UI
+  if [[ -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
+    clear_logo
+    echo "Omybuntu installation failed with exit code $exit_code." >&2
+    exit 1
+  fi
+
   clear_logo
   show_cursor
 
@@ -104,11 +111,6 @@ catch_errors() {
   gum style "$QR_CODE"
   echo
   gum style "Get help from the community via QR code or at https://discord.gg/AWenBWGka"
-
-  # In ISO/chroot builds, exit immediately on error
-  if [[ -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
-    exit 1
-  fi
 
   # Offer options menu
   while true; do

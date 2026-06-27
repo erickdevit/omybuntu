@@ -1,4 +1,5 @@
 run_logged $OMYBUNTU_INSTALL/packaging/base.sh
+run_logged $OMYBUNTU_INSTALL/packaging/ghostty.sh
 run_logged $OMYBUNTU_INSTALL/packaging/chrome.sh
 run_logged $OMYBUNTU_INSTALL/packaging/grub-btrfs.sh
 run_logged $OMYBUNTU_INSTALL/packaging/fonts.sh

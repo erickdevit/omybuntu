@@ -77,9 +77,10 @@ fi
 
 # --- Pre-build cleanup & extraction -----------------------------------------
 
-for tool in wget tar mksquashfs xorriso grub-mkrescue rsync; do
+for tool in wget tar mksquashfs xorriso grub-mkrescue mformat rsync; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "Error: Required host tool '$tool' is not installed." >&2
+    echo "       Install missing tools with: sudo apt install mtools xorriso grub-pc-bin grub-efi-amd64-bin squashfs-tools" >&2
     exit 1
   fi
 done
@@ -241,8 +242,8 @@ if [[ $RESTORE_FROM != "installed" ]]; then
     OMYBUNTU_CHROOT_INSTALL=true \
     /bin/bash -c "
       cd /opt/omybuntu
-      ./install/iso/setup-iso.sh
       ./install.sh
+      ./install/iso/setup-iso.sh
     "
 
   # --- Save installed cache (after install.sh completes) ----------------------

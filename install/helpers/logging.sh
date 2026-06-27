@@ -1,4 +1,10 @@
 start_log_output() {
+  # When building the ISO from the host, the host-side tail -f handles progress display.
+  # The in-chroot cursor monitor would produce garbled ANSI codes through the chroot pipe.
+  if [[ -n ${OMYBUNTU_ISO_HOST_PROGRESS:-} ]]; then
+    return
+  fi
+
   local ANSI_SAVE_CURSOR="\033[s"
   local ANSI_RESTORE_CURSOR="\033[u"
   local ANSI_CLEAR_LINE="\033[2K"

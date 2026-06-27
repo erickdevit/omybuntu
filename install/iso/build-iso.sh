@@ -236,15 +236,26 @@ if [[ $RESTORE_FROM != "installed" ]]; then
 
   # 7b. Run Omybuntu setup inside the chroot
   echo "Running Omybuntu setup inside chroot..."
+  # Start tailing the install log from the host so progress is visible
+  sudo touch "$CHROOT_DIR/var/log/omybuntu-install.log"
+  sudo tail -f "$CHROOT_DIR/var/log/omybuntu-install.log" 2>/dev/null &
+  tail_pid=$!
+  # Give tail a moment to start before the chroot overwrites the log
+  sleep 0.5
+
   sudo chroot "$CHROOT_DIR" env \
     OMYBUNTU_ONLINE_INSTALL=true \
     OMYBUNTU_ISO_BUILD=true \
     OMYBUNTU_CHROOT_INSTALL=true \
+    OMYBUNTU_ISO_HOST_PROGRESS=true \
     /bin/bash -c "
       cd /opt/omybuntu
       ./install.sh
       ./install/iso/setup-iso.sh
     "
+
+  kill "$tail_pid" 2>/dev/null || true
+  wait "$tail_pid" 2>/dev/null || true
 
   # --- Save installed cache (after install.sh completes) ----------------------
   echo "Saving post-install chroot cache..."

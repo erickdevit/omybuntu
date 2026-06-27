@@ -77,6 +77,14 @@ if [[ -d /root/.local/share ]]; then
   sudo cp -a /root/.local/share/. /etc/skel/.local/share/
 fi
 
+# Copy local binaries (elephant, walker, TUI apps) to skel
+if [[ -d /root/.local/bin ]]; then
+  sudo cp -a /root/.local/bin/. /etc/skel/.local/bin/
+fi
+
+# Create toggles directory so hyprland.conf source doesn't error
+sudo mkdir -p /etc/skel/.local/state/omybuntu/toggles/hypr
+
 # Copy first-run state marker so live user also gets it
 if [[ -f /root/.local/state/omybuntu/first-run.mode ]]; then
   sudo mkdir -p /etc/skel/.local/state/omybuntu
@@ -92,8 +100,12 @@ sudo mkdir -p /etc/skel/.local/share
 sudo ln -snf /opt/omybuntu /etc/skel/.local/share/omybuntu
 
 # Remove any hardcoded /root paths that leaked into skel configs
-sudo grep -rl "/root/" /etc/skel/.config/ 2>/dev/null | while read -r f; do
-  sudo sed -i 's|/root/|/home/ubuntu/|g' "$f"
+for dir in /etc/skel/.config /etc/skel/.local/share /etc/skel/.local/bin; do
+  if [[ -d $dir ]]; then
+    sudo grep -rl "/root/" "$dir" 2>/dev/null | while read -r f; do
+      sudo sed -i 's|/root/|/home/ubuntu/|g' "$f"
+    done
+  fi
 done
 
 # Remove Chromium singleton lock that may have been created during install

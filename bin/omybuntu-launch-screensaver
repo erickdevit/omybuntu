@@ -34,7 +34,7 @@ hypr_exec() {
   local command="$1"
   local res
   if ! res=$(hyprctl dispatch "hl.dsp.exec_cmd([[$command]])" 2>&1) || [[ $res == *"Invalid dispatcher"* ]]; then
-    hyprctl dispatch exec -- bash -lc "$command" >/dev/null
+    setsid uwsm-app -- bash -c "$command" >/dev/null 2>&1 &
   fi
 }
 

@@ -82,13 +82,10 @@ if [[ -d /root/.local/bin ]]; then
   sudo cp -a /root/.local/bin/. /etc/skel/.local/bin/
 fi
 
-# Create toggles directory so hyprland.conf source doesn't error
-sudo mkdir -p /etc/skel/.local/state/omybuntu/toggles/hypr
-
-# Copy first-run state marker so live user also gets it
-if [[ -f /root/.local/state/omybuntu/first-run.mode ]]; then
-  sudo mkdir -p /etc/skel/.local/state/omybuntu
-  sudo cp /root/.local/state/omybuntu/first-run.mode /etc/skel/.local/state/omybuntu/first-run.mode
+# Copy state files (toggles, first-run marker, etc.)
+if [[ -d /root/.local/state/omybuntu ]]; then
+  sudo mkdir -p /etc/skel/.local/state
+  sudo cp -a /root/.local/state/omybuntu /etc/skel/.local/state/omybuntu
 fi
 
 # Copy .bashrc

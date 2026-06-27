@@ -294,6 +294,37 @@ sudo cp "$INITRD_IMG" "$IMAGE_DIR/casper/initrd"
 sudo mkdir -p "$IMAGE_DIR/boot/grub"
 sudo cp "$WORKSPACE/install/iso/grub.cfg" "$IMAGE_DIR/boot/grub/grub.cfg"
 
+# Generate GRUB theme assets for the ISO boot menu
+# This uses the host system's magick to create the theme in IMAGE_DIR
+echo "Generating GRUB theme for ISO boot menu..."
+THEME_DIR="$IMAGE_DIR/boot/grub/themes/omybuntu"
+mkdir -p "$THEME_DIR"
+
+# Solid Omybuntu dark brown background with subtle vignette
+magick -size 1920x1080 \
+  -define gradient:center=50%,50% \
+  radial-gradient:'#2a1a10'-'#140a05' \
+  -fill '#140a05' -opacity 30% -composite \
+  "$THEME_DIR/background.png"
+
+# Select indicators (subtle rounded amber rectangles)
+for w in 200 400 600; do
+  magick -size ${w}x28 xc:none \
+    -fill '#f59e0b' -opacity 15% \
+    -draw "roundrectangle 4,2 $((w-4)),26 14,14" \
+    "$THEME_DIR/select_${w}.png"
+done
+
+# Scrollbar thumb
+magick -size 6x30 xc:none \
+  -fill '#5c4033' -opacity 60% \
+  -draw "roundrectangle 0,0 6,30 3,3" \
+  "$THEME_DIR/scrollbar_thumb.png"
+
+# Copy theme.txt and font
+cp "$WORKSPACE/default/grub/theme.txt" "$THEME_DIR/theme.txt"
+cp /usr/share/grub/unicode.pf2 "$THEME_DIR/unicode.pf2" 2>/dev/null || true
+
 # 10. Compress chroot into SquashFS
 echo "Creating filesystem.squashfs (this may take a few minutes)..."
 

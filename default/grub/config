@@ -1,0 +1,32 @@
+# Omybuntu default GRUB configuration
+# This file is copied to /etc/default/grub by the install script.
+# After editing, run: sudo update-grub
+
+GRUB_DEFAULT=0
+GRUB_TIMEOUT=3
+GRUB_TIMEOUT_STYLE=menu
+
+# Theme
+GRUB_THEME="/boot/grub/themes/omybuntu/theme.txt"
+
+# Boot parameters
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
+
+# Uncomment to enable GRUB terminal output for debugging
+# GRUB_TERMINAL=console
+
+# Background image for terminals that don't support the theme
+GRUB_BACKGROUND=""
+
+# Preload modules for theme support
+GRUB_PRELOAD_MODULES="part_gpt part_msdos fat ext2 ntfs iso9660 udf"
+
+# GFX Mode
+GRUB_GFXMODE=auto
+GRUB_GFXPAYLOAD_LINUX=keep
+
+# Disable os-prober unless you dual-boot (uncomment to enable)
+# GRUB_DISABLE_OS_PROBER=false
+
+# Memory test
+GRUB_MEMTEST_CMD=""

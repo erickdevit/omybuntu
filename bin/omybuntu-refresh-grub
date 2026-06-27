@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# omybuntu:summary=Regenerate the Omybuntu GRUB theme and run update-grub
+# omybuntu:requires-sudo=true
+
+if ! command -v update-grub >/dev/null 2>&1; then
+  echo "update-grub not found; GRUB may not be installed." >&2
+  exit 1
+fi
+
+# Regenerate theme assets
+source "$OMYBUNTU_PATH/install/packaging/grub-theme.sh"
+
+# Reapply default GRUB config
+sudo cp "$OMYBUNTU_PATH/default/grub/config" /etc/default/grub
+
+# Update GRUB
+sudo update-grub
+
+echo "GRUB theme refreshed successfully."

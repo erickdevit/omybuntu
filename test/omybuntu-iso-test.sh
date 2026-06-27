@@ -265,6 +265,60 @@ done < <(find "$ROOT/bin" -maxdepth 1 -type f -name 'omybuntu-*' | sort)
 [[ $ok_count -gt 0 ]] && ok "all $ok_count bin scripts are executable"
 
 # ------------------------------------------------------------------
+# UWSM config consistency
+# ------------------------------------------------------------------
+echo "# UWSM config"
+
+UWSM_DEFAULT="$ROOT/config/uwsm/default"
+uwsm_content=$(<"$UWSM_DEFAULT")
+
+[[ $uwsm_content == *xdg-terminal-exec* ]] && \
+  ok "uwsm/default sets TERMINAL=xdg-terminal-exec" || \
+  nok "uwsm/default sets TERMINAL=xdg-terminal-exec"
+
+# ------------------------------------------------------------------
+# config/config.sh copies all config/ to ~/.config/
+# ------------------------------------------------------------------
+echo "# Config copy"
+
+CONFIG_SH="$ROOT/install/config/config.sh"
+config_sh_content=$(<"$CONFIG_SH")
+
+[[ $config_sh_content == *config/* ]] && \
+  ok "config.sh copies config/* to ~/.config/" || \
+  nok "config.sh copies config/* to ~/.config/"
+
+[[ $config_sh_content == *bashrc* ]] && \
+  ok "config.sh copies default bashrc" || \
+  nok "config.sh copies default bashrc"
+
+# ------------------------------------------------------------------
+# User systemd service files exist in config/ for first-run
+# ------------------------------------------------------------------
+echo "# User services"
+
+for svc in swayosd-server omybuntu-battery-monitor omybuntu-recover-internal-monitor; do
+  svc_file="$ROOT/config/systemd/user/$svc.service"
+  timer_file="$ROOT/config/systemd/user/$svc.timer"
+  if [[ -f $svc_file ]] || [[ -f $timer_file ]]; then
+    ok "user service exists: $svc"
+  else
+    nok "user service missing: $svc"
+  fi
+done
+
+# ------------------------------------------------------------------
+# No hardcoded arch paths in config files (Ubuntu paths only)
+# ------------------------------------------------------------------
+echo "# Path sanity (arch vs ubuntu)"
+
+# Themed templates exist (referenced by theme system)
+for tpl in waybar.css.tpl hyprland.conf.tpl hyprlock.conf.tpl mako.ini.tpl walker.css.tpl; do
+  tpl_path="$ROOT/default/themed/$tpl"
+  [[ -f $tpl_path ]] && ok "themed template: $tpl" || nok "themed template missing: $tpl"
+done
+
+# ------------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------------
 echo

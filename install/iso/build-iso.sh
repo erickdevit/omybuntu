@@ -179,6 +179,7 @@ EOF
     gdisk \
     btrfs-progs \
     cryptsetup \
+    debootstrap \
     dosfstools \
     software-properties-common \
     build-essential \

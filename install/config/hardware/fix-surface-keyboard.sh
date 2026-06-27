@@ -18,6 +18,10 @@ if omybuntu-hw-surface; then
     echo "Detected pinctrl module: $pinctrl_module"
   fi
 
-  echo "MODULES=(${pinctrl_module} surface_aggregator surface_aggregator_registry surface_aggregator_hub surface_hid_core surface_hid surface_kbd intel_lpss_pci 8250_dw)" | sudo tee /etc/mkinitcpio.conf.d/surface_device_modules.conf >/dev/null
+  # Add modules to initramfs (Ubuntu uses initramfs-tools, not mkinitcpio)
+  for mod in ${pinctrl_module} surface_aggregator surface_aggregator_registry surface_aggregator_hub surface_hid_core surface_hid surface_kbd intel_lpss_pci 8250_dw; do
+    [[ -n $mod ]] && grep -qxF "$mod" /etc/initramfs-tools/modules 2>/dev/null || echo "$mod" | sudo tee -a /etc/initramfs-tools/modules > /dev/null
+  done
+  sudo update-initramfs -u
 
 fi

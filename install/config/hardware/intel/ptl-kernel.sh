@@ -5,8 +5,11 @@ if omybuntu-hw-match "XPS" && omybuntu-hw-intel-ptl; then
   echo "Detected Dell XPS Panther Lake, installing PTL kernel..."
 
   omybuntu-pkg-add linux-ptl linux-ptl-headers
-  for pkg in linux linux-headers; do
-    sudo pacman -Rdd --noconfirm "$pkg" 2>/dev/null || true
+  # Remove generic kernel packages that conflict with PTL kernel (Ubuntu equivalent of pacman -Rdd)
+  for pkg in linux-image-generic linux-headers-generic; do
+    if omybuntu-pkg-present "$pkg"; then
+      sudo apt-get remove -y --allow-remove-essential "$pkg" 2>/dev/null || true
+    fi
   done
 
   sudo mkdir -p /etc/limine-entry-tool.d

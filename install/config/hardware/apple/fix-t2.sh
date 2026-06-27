@@ -21,7 +21,11 @@ if lspci -nn | grep -q "106b:180[12]"; then
   echo "apple-bce" | sudo tee /etc/modules-load.d/t2.conf >/dev/null
   echo "hci_bcm4377" | sudo tee -a /etc/modules-load.d/t2.conf >/dev/null
 
-  echo "MODULES+=(apple-bce usbhid hid_apple hid_generic xhci_pci xhci_hcd)" | sudo tee /etc/mkinitcpio.conf.d/apple-t2.conf >/dev/null
+  # Add T2 modules to initramfs (Ubuntu uses initramfs-tools, not mkinitcpio)
+  for mod in apple-bce usbhid hid_apple hid_generic xhci_pci xhci_hcd; do
+    grep -qxF "$mod" /etc/initramfs-tools/modules 2>/dev/null || echo "$mod" | sudo tee -a /etc/initramfs-tools/modules > /dev/null
+  done
+  sudo update-initramfs -u
 
   cat <<EOF | sudo tee /etc/modprobe.d/brcmfmac.conf >/dev/null
 # Fix for T2 MacBook WiFi connectivity issues

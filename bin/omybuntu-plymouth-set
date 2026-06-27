@@ -57,9 +57,9 @@ done
 sudo cp -a "$staging_dir/." "$theme_dir/"
 sudo plymouth-set-default-theme omybuntu
 
-if omybuntu-cmd-present limine-mkinitcpio; then
-  sudo limine-mkinitcpio
-else
+if command -v update-initramfs >/dev/null 2>&1; then
+  sudo update-initramfs -u
+elif command -v mkinitcpio >/dev/null 2>&1; then
   sudo mkinitcpio -P
 fi
 
@@ -68,8 +68,8 @@ sddm_dir="/usr/share/sddm/themes/omybuntu"
 sddm_template="$HOME/.local/share/omybuntu/default/sddm/omybuntu/Main.qml"
 
 sed \
-  -e "s/#1a1b26/#$bg_hex/g" \
-  -e "s/#ffffff/#$text_hex/g" \
+  -e "s/#140a05/#$bg_hex/g" \
+  -e "s/#f5e6d3/#$text_hex/g" \
   "$sddm_template" | sudo tee "$sddm_dir/Main.qml" >/dev/null
 
 sudo cp "$logo_path" "$sddm_dir/logo.png"
@@ -77,7 +77,7 @@ for asset in bullet.png entry.png lock.png; do
   sudo cp "$staging_dir/$asset" "$sddm_dir/$asset"
 done
 for asset in entry lock; do
-  magick "$staging_dir/$asset.png" -channel RGB +level-colors "#f7768e","#f7768e" "$staging_dir/$asset-failed.png"
+  magick "$staging_dir/$asset.png" -channel RGB +level-colors "#ef4444","#ef4444" "$staging_dir/$asset-failed.png"
   sudo cp "$staging_dir/$asset-failed.png" "$sddm_dir/$asset-failed.png"
 done
 sudo rm -f "$sddm_dir/logo.svg"

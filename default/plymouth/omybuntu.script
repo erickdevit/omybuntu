@@ -1,7 +1,7 @@
 # Omybuntu Plymouth Theme Script
 
-Window.SetBackgroundTopColor(0.101, 0.105, 0.149);
-Window.SetBackgroundBottomColor(0.101, 0.105, 0.149);
+Window.SetBackgroundTopColor(0.078, 0.039, 0.020);
+Window.SetBackgroundBottomColor(0.078, 0.039, 0.020);
 
 logo.image = Image("logo.png");
 logo.sprite = Sprite(logo.image);

@@ -5,7 +5,7 @@ Rectangle {
   id: root
   width: 640
   height: 480
-  color: "#1a1b26"
+  color: "#140a05"
 
   property string currentUser: userModel.lastUser
   property bool loginFailed: false

@@ -305,20 +305,21 @@ mkdir -p "$THEME_DIR"
 magick -size 1920x1080 \
   -define gradient:center=50%,50% \
   radial-gradient:'#2a1a10'-'#140a05' \
-  -fill '#140a05' -opacity 30% -composite \
   "$THEME_DIR/background.png"
 
-# Select indicators (subtle rounded amber rectangles)
+# Select indicators (subtle rounded amber rectangles at 15% opacity)
 for w in 200 400 600; do
   magick -size ${w}x28 xc:none \
-    -fill '#f59e0b' -opacity 15% \
-    -draw "roundrectangle 4,2 $((w-4)),26 14,14" \
-    "$THEME_DIR/select_${w}.png"
+  -channel RGBA \
+  -fill 'rgba(245,158,11,0.15)' \
+  -draw "roundrectangle 4,2 $((w-4)),26 14,14" \
+  "$THEME_DIR/select_${w}.png"
 done
 
-# Scrollbar thumb
+# Scrollbar thumb (semi-transparent rounded bar at 60% opacity)
 magick -size 6x30 xc:none \
-  -fill '#5c4033' -opacity 60% \
+  -channel RGBA \
+  -fill 'rgba(92,64,51,0.6)' \
   -draw "roundrectangle 0,0 6,30 3,3" \
   "$THEME_DIR/scrollbar_thumb.png"
 

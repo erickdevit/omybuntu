@@ -28,7 +28,7 @@ hl.config({
       -- natural_scroll = true,
 
       -- Use two-finger clicks for right-click instead of lower-right corner.
-      clickfinger_behavior = true,
+      clickfinger_behavior = false,
 
       -- Control the speed of your scrolling.
       scroll_factor = 0.4,

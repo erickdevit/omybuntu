@@ -17,7 +17,7 @@ clear_logo
 if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
   LANG_VAL="en"
 else
-  echo -e "\nChoose Omybuntu language / Selecione o idioma / Seleccione el idioma:"
+  echo -e "\n${PADDING_LEFT_SPACES}Choose Omybuntu language / Selecione o idioma / Seleccione el idioma:"
   CHOSEN_LANG=$(gum choose --height 5 "English" "Português (Brasil)" "Español")
 
   case "$CHOSEN_LANG" in

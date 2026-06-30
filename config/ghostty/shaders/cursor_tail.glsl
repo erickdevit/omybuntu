@@ -154,6 +154,10 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord){
     fragColor = texture(iChannel0, fragCoord.xy / iResolution.xy);
     #endif
 
+    if (iCursorVisible.x < 0.5) {
+        return;
+    }
+
     vec3 linearCursorColor = sRGBToLinear(iCurrentCursorColor.rgb);
     vec4 TRAIL_COLOR = vec4(linearCursorColor, TRAIL_OPACITY);
 

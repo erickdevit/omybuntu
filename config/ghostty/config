@@ -36,3 +36,6 @@ mouse-scroll-multiplier = 0.95
 
 # Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
 async-backend = epoll
+cursor-opacity = 0
+custom-shader = "~/.config/ghostty/shaders/cursor_tail.glsl"
+custom-shader-animation = always

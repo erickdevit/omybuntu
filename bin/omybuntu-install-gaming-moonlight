@@ -3,9 +3,12 @@
 # omybuntu:summary=Install Moonlight (NVIDIA GameStream / Sunshine client) for streaming games to this PC.
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing Moonlight..."
 omybuntu-pkg-add moonlight-qt
 
 setsid gtk-launch com.moonlight_stream.Moonlight.desktop >/dev/null 2>&1 &
+
+echo "✅ Success: Moonlight installed."

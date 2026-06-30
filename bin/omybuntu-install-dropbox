@@ -2,9 +2,12 @@
 
 # omybuntu:summary=Install and start the Dropbox service. Must then be authenticated via the web.
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 echo "Installing all dependencies..."
 omybuntu-pkg-add nautilus-dropbox libayatana-appindicator3-1
 
 echo "Starting Dropbox..."
-uwsm-app -- dropbox start -i &>/dev/null &
-echo "See Dropbox icon behind  hover tray in top right and right-click for setup."
+  uwsm-app -- dropbox start -i &>/dev/null &
+  echo "✅ Success: Dropbox installed. See Dropbox icon behind  hover tray in top right and right-click for setup."

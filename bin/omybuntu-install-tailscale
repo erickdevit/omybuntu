@@ -3,6 +3,9 @@
 # omybuntu:summary=Install the Tailscale mesh VPN service and a web app for the Tailscale Admin Console.
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 echo -e "\nInstalling Tailscale..."
 curl -fsSL https://tailscale.com/install.sh | sh
 
@@ -11,3 +14,5 @@ sudo systemctl enable --now tailscaled.service
 sudo tailscale up --accept-routes
 
 omybuntu-webapp-install "Tailscale" "https://login.tailscale.com/admin/machines" https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/tailscale-light.png
+
+echo -e "\n✅ Success: Tailscale installed."

@@ -3,6 +3,9 @@
 # omybuntu:summary=Install the NordVPN service with optional GUI.
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 echo "Installing NordVPN..."
 wget -q -O /tmp/nordvpn-release_1.0.0_all.deb https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/nordvpn-release_1.0.0_all.deb
 sudo dpkg -i /tmp/nordvpn-release_1.0.0_all.deb || sudo apt-get install -f -y
@@ -16,7 +19,7 @@ sudo systemctl enable --now nordvpnd
 echo "Adding user to nordvpn group..."
 sudo usermod -aG nordvpn "$USER"
 
-echo -e "\nNordVPN installed! After reboot, run 'nordvpn login' to authenticate."
+echo -e "\n✅ Success: NordVPN installed! After reboot, run 'nordvpn login' to authenticate."
 
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 

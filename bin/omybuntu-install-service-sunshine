@@ -3,7 +3,8 @@
 # omybuntu:summary=Install Sunshine and open Moonlight streaming ports for LAN and Tailscale.
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 TCP_PORTS=(47984 47989 48010)
 UDP_PORTS=(5353 47998 47999 48000 48002 48010)
@@ -109,5 +110,4 @@ $SUNSHINE_ADMIN_EXEC >/dev/null 2>&1 &
 echo "Enabling Sunshine autostart..."
 enable_hyprland_autostart
 
-echo ""
-echo "Sunshine has been installed and its Moonlight streaming ports are open for private LANs and Tailscale."
+echo "✅ Success: Sunshine has been installed and its Moonlight streaming ports are open for private LANs and Tailscale."

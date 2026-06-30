@@ -3,11 +3,14 @@
 # omybuntu:summary=Install the ONCE service, enable its background service, and launch the TUI.
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 echo "Installing ONCE..."
 omybuntu-pkg-add once-bin
 
 echo "Enabling ONCE background service..."
 sudo systemctl enable --now once-background.service
 
-echo -e "\nLaunching ONCE..."
+echo -e "\n✅ Success: ONCE installed.\nLaunching ONCE..."
 once

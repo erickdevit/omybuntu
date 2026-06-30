@@ -3,7 +3,8 @@
 # omybuntu:summary=Install support for using Xbox controllers with Steam/RetroArch/etc.
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing Xbox controller Bluetooth support..."
 
@@ -43,4 +44,4 @@ fi
 sudo modprobe hid_xpadneo
 
 echo ""
-echo "Now you can pair your Xbox controller with Bluetooth using Super + Ctrl + B."
+echo "✅ Success: Xbox controller Bluetooth support installed. Now you can pair your Xbox controller with Bluetooth using Super + Ctrl + B."

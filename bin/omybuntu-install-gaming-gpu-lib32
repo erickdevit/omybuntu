@@ -3,7 +3,8 @@
 # omybuntu:summary=Install lib32 graphics drivers (Vulkan + NVIDIA) for any detected GPUs.
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing lib32 graphics drivers..."
 
@@ -29,3 +30,5 @@ if omybuntu-hw-nvidia-gsp || omybuntu-hw-nvidia-without-gsp || lspci | grep -iq 
 fi
 
 [[ ${#PACKAGES[@]} -gt 0 ]] && omybuntu-pkg-add "${PACKAGES[@]}"
+
+echo "✅ Success: lib32 graphics drivers installed."

@@ -6,6 +6,9 @@
 # omybuntu:examples=omybuntu install dev-env ruby | omybuntu install dev-env node
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 if [[ -z $1 ]]; then
   echo "Usage: omybuntu-install-dev-env <ruby|node|bun|deno|go|laravel|symfony|php|python|elixir|phoenix|rust|java|zig|ocaml|dotnet|clojure|scala>" >&2
   exit 1
@@ -50,33 +53,38 @@ ruby)
   mise use --global ruby@latest
   echo "gem: --no-document" >~/.gemrc
   mise x ruby -- gem install rails --no-document
-  echo -e "\nYou can now run: rails new myproject"
+  echo -e "\n✅ Success: Ruby on Rails installed. You can now run: rails new myproject"
   ;;
 node)
   install_node
+  echo -e "\n✅ Success: Node.js installed."
   ;;
 bun)
   echo -e "Installing Bun...\n"
   mise use -g bun@latest
+  echo -e "\n✅ Success: Bun installed."
   ;;
 deno)
   echo -e "Installing Deno...\n"
   mise use -g deno@latest
+  echo -e "\n✅ Success: Deno installed."
   ;;
 go)
   echo -e "Installing Go...\n"
   mise use --global go@latest
+  echo -e "\n✅ Success: Go installed."
   ;;
 php)
   echo -e "Installing PHP...\n"
   install_php
+  echo -e "\n✅ Success: PHP installed."
   ;;
 laravel)
   echo -e "Installing PHP and Laravel...\n"
   install_php
   install_node
   composer global require laravel/installer
-  echo -e "\nYou can now run: laravel new myproject"
+  echo -e "\n✅ Success: Laravel installed. You can now run: laravel new myproject"
   ;;
 symfony)
   echo -e "Installing PHP and Symfony...\n"
@@ -84,19 +92,21 @@ symfony)
   curl -sS https://get.symfony.com/cli/installer | bash
   mkdir -p ~/.local/bin
   mv -f ~/.symfony5/bin/symfony ~/.local/bin/symfony 2>/dev/null || true
-  echo -e "\nYou can now run: symfony new --webapp myproject"
+  echo -e "\n✅ Success: Symfony installed. You can now run: symfony new --webapp myproject"
   ;;
 python)
   echo -e "Installing Python...\n"
   mise use --global python@latest
   echo -e "\nInstalling uv...\n"
   curl -fsSL https://astral.sh/uv/install.sh | sh
+  echo -e "\n✅ Success: Python and uv installed."
   ;;
 elixir)
   echo -e "Installing Elixir...\n"
   mise use --global erlang@latest
   mise use --global elixir@latest
   mise x elixir -- mix local.hex --force
+  echo -e "\n✅ Success: Elixir installed."
   ;;
 phoenix)
   echo -e "Installing Phoenix Framework...\n"
@@ -108,20 +118,23 @@ phoenix)
   mise x elixir -- mix local.rebar --force
   # Phoenix project (phx_new)
   mise x elixir -- mix archive.install hex phx_new --force
-  echo -e "\nYou can now run: mix phx.new my_app"
+  echo -e "\n✅ Success: Phoenix installed. You can now run: mix phx.new my_app"
   ;;
 rust)
   echo -e "Installing Rust...\n"
   bash -c "$(curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs)" -- -y
+  echo -e "\n✅ Success: Rust installed."
   ;;
 java)
   echo -e "Installing Java...\n"
   mise use --global java@latest
+  echo -e "\n✅ Success: Java installed."
   ;;
 zig)
   echo -e "Installing Zig...\n"
   mise use --global zig@latest
   mise use -g zls@latest
+  echo -e "\n✅ Success: Zig installed."
   ;;
 ocaml)
   echo -e "Installing OCaml...\n"
@@ -129,20 +142,24 @@ ocaml)
   opam init --yes
   eval "$(opam env)"
   opam install ocaml-lsp-server odoc ocamlformat utop --yes
+  echo -e "\n✅ Success: OCaml installed."
   ;;
 dotnet)
   echo -e "Installing .NET...\n"
   mise use --global dotnet@latest
+  echo -e "\n✅ Success: .NET installed."
   ;;
 clojure)
   echo -e "Installing Clojure...\n"
   omybuntu-pkg-add rlwrap
   mise use --global clojure@latest
+  echo -e "\n✅ Success: Clojure installed."
   ;;
 scala)
   echo -e "Installing Scala...\n"
   mise use --global java@latest
   mise use --global scala@latest
   mise use --global scala-cli@latest
+  echo -e "\n✅ Success: Scala installed."
   ;;
 esac

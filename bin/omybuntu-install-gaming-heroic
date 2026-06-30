@@ -3,7 +3,8 @@
 # omybuntu:summary=Install Heroic Games Launcher (Epic, GOG, Amazon Prime Gaming) with graphics drivers.
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing Heroic Games Launcher..."
 local latest_tag
@@ -24,3 +25,5 @@ fi
 omybuntu-install-gaming-gpu-lib32
 
 setsid gtk-launch heroic >/dev/null 2>&1 &
+
+echo "✅ Success: Heroic Games Launcher installed."

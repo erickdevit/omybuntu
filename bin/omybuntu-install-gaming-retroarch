@@ -2,7 +2,8 @@
 
 # omybuntu:summary=Install RetroArch with PPA and configure a ~/Games ROM directory.
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing RetroArch PPA..."
 sudo add-apt-repository -y ppa:libretro/stable
@@ -39,3 +40,5 @@ echo "Use the RetroArch Online Updater to download cores, assets, databases, and
 echo "Put your ROMs and BIOS files in ~/Games. Then start RetroArch from the app launcher (Super + Space)."
 
 setsid nautilus "$HOME/Games" >/dev/null 2>&1 &
+
+echo "✅ Success: RetroArch installed."

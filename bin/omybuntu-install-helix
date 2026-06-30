@@ -2,6 +2,9 @@
 
 # omybuntu:summary=Install Helix and configure it to use the current Omybuntu theme
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 echo "Installing Helix..."
 omybuntu-pkg-add helix
 
@@ -26,3 +29,5 @@ fi
 if ! grep -q '^alias hx="helix"' ~/.bashrc 2>/dev/null; then
   echo 'alias hx="helix"' >>~/.bashrc
 fi
+
+echo "✅ Success: Helix installed."

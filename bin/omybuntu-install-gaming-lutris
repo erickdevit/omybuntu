@@ -3,7 +3,8 @@
 # omybuntu:summary=Install Lutris with Wine + DXVK for running Windows games (Battle.net, EA, Ubisoft Connect, etc.)
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing Lutris..."
 omybuntu-pkg-add lutris wine winetricks python3-protobuf
@@ -21,3 +22,5 @@ Lutris will open and auto-fetch its DXVK and VKD3D runtimes in the background
 EOF
 
 setsid lutris >/dev/null 2>&1 &
+
+echo "✅ Success: Lutris installed."

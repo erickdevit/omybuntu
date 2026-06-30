@@ -4,6 +4,9 @@
 # omybuntu:args=<alacritty|foot|ghostty|kitty>
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 if (($# == 0)); then
   echo "Usage: omybuntu-install-terminal [alacritty|foot|ghostty|kitty]"
   exit 1
@@ -34,27 +37,27 @@ if [[ $package == "ghostty" ]]; then
   fi
 fi
 
-if omybuntu-pkg-add $package; then
-  # Copy custom desktop entries with X-TerminalArg* keys
-  if [[ $package == "alacritty" ]]; then
-    mkdir -p ~/.local/share/applications
-    cp "$OMYBUNTU_PATH/default/alacritty/$desktop_id" ~/.local/share/applications/
-  elif [[ $package == "foot" ]]; then
-    mkdir -p ~/.local/share/applications
-    cp "$OMYBUNTU_PATH/applications/$desktop_id" ~/.local/share/applications/
-  fi
+omybuntu-pkg-add "$package"
 
-  # Copy default config for optional terminals when missing
-  if [[ ! -e ~/.config/$package ]]; then
-    cp -Rpf "$OMYBUNTU_PATH/config/$package" ~/.config/
-  fi
+# Copy custom desktop entries with X-TerminalArg* keys
+if [[ $package == "alacritty" ]]; then
+  mkdir -p ~/.local/share/applications
+  cp "$OMYBUNTU_PATH/default/alacritty/$desktop_id" ~/.local/share/applications/
+elif [[ $package == "foot" ]]; then
+  mkdir -p ~/.local/share/applications
+  cp "$OMYBUNTU_PATH/applications/$desktop_id" ~/.local/share/applications/
+fi
 
-  # Update xdg-terminals.list to prioritize the proper terminal
-  cat >~/.config/xdg-terminals.list <<EOF
+# Copy default config for optional terminals when missing
+if [[ ! -e ~/.config/$package ]]; then
+  cp -Rpf "$OMYBUNTU_PATH/config/$package" ~/.config/
+fi
+
+# Update xdg-terminals.list to prioritize the proper terminal
+cat >~/.config/xdg-terminals.list <<EOF
 # Terminal emulator preference order for xdg-terminal-exec
 # The first found and valid terminal will be used
 $desktop_id
 EOF
-else
-  echo "Failed to install $package"
-fi
+
+echo "✅ Success: $package installed."

@@ -2,6 +2,9 @@
 
 # omybuntu:summary=Install VS Code and configure Omybuntu defaults for secrets, updates, and theme
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 echo "Installing VSCode..."
 omybuntu-pkg-add code
 
@@ -26,4 +29,5 @@ printf '{\n  "update.mode": "none"\n}\n' > ~/.config/Code/User/settings.json
 # Apply Omybuntu theme to VSCode
 omybuntu-theme-set-vscode
 
+echo "✅ Success: VSCode installed."
 setsid gtk-launch code

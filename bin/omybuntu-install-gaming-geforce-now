@@ -2,7 +2,8 @@
 
 # omybuntu:summary=Install and launch Geforce Now.
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing GeForce NOW..."
 omybuntu-pkg-add flatpak
@@ -16,3 +17,5 @@ chmod +x GeForceNOWSetup.bin
 # Ensure a separate browser process not started by GFN is available.
 # If not, it seems like GFN has a tendency to hang on login.
 setsid omybuntu-launch-browser
+
+echo "✅ Success: GeForce NOW installed."

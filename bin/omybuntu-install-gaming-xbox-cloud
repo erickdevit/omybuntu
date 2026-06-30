@@ -2,9 +2,12 @@
 
 # omybuntu:summary=Install Xbox Cloud Gaming as a web app and launch it.
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 echo "Installing Xbox Cloud Gaming..."
 omybuntu-webapp-install "Xbox Cloud Gaming" "https://www.xbox.com/en-US/play" "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/xbox.png"
 
 setsid omybuntu-launch-webapp "https://www.xbox.com/en-US/play" >/dev/null 2>&1 &
+
+echo "✅ Success: Xbox Cloud Gaming webapp installed."

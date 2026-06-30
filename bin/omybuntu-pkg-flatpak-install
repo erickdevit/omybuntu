@@ -3,6 +3,9 @@
 # omybuntu:summary=Show a fuzzy-finder TUI for picking new Flatpak packages to install.
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 fzf_args=(
   --multi
   --preview 'flatpak remote-info flathub {1} 2>/dev/null || echo "No preview available"'
@@ -15,11 +18,12 @@ fzf_args=(
   --color 'pointer:green,marker:green'
 )
 
-pkg_names=$(flatpak remote-ls flathub --app --columns=application 2>/dev/null | sort | fzf "${fzf_args[@]}")
+pkg_names=$(flatpak remote-ls flathub --app --columns=application 2>/dev/null | sort | fzf "${fzf_args[@]}" || true)
 
 if [[ -n $pkg_names ]]; then
   source omybuntu-sudo-keepalive
 
   echo "$pkg_names" | xargs -n1 sudo flatpak install -y flathub
   omybuntu-show-done
+  echo "✅ Success: Flatpak packages installed."
 fi

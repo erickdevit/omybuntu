@@ -3,7 +3,8 @@
 # omybuntu:summary=Create a desktop launcher for a web app
 # omybuntu:args=[name url icon [custom-exec] [mime-types]]
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 ICON_DIR="$HOME/.local/share/applications/icons"
 
@@ -91,5 +92,5 @@ chmod +x "$DESKTOP_FILE"
 
 if [[ $INTERACTIVE_MODE == "true" ]]; then
   success_msg=$(printf "$I18N_WEBAPP_SUCCESS_LAUNCHER" "$APP_NAME")
-  echo -e "$success_msg\n"
+  echo -e "✅ Success: $success_msg\n"
 fi

@@ -618,7 +618,7 @@ show_install_service_menu() {
 show_install_editor_menu() {
   case $(menu "$I18N_MENU_INSTALL" "  VSCode\n  Cursor\n  Zed\n  Sublime Text\n  Helix\n  Vim\n  Emacs") in
   *VSCode*) present_terminal omybuntu-install-vscode ;;
-  *Cursor*) present_terminal "echo 'Installing Cursor...'; mkdir -p ~/.local/bin ~/.local/share/applications && wget -O ~/.local/bin/cursor 'https://downloader.cursor.sh/linux/appimage/x64' && chmod +x ~/.local/bin/cursor && echo -e '[Desktop Entry]\nVersion=1.0\nType=Application\nName=Cursor\nComment=Cursor Editor\nExec='$HOME'/.local/bin/cursor --no-sandbox %F\nIcon=accessories-text-editor\nTerminal=false\nCategories=Development;TextEditor;\nStartupWMClass=Cursor' > ~/.local/share/applications/cursor.desktop && update-desktop-database ~/.local/share/applications/ &>/dev/null && echo 'Cursor installed successfully!' && sleep 2" ;;
+  *Cursor*) present_terminal omybuntu-install-editor-cursor ;;
   *Zed*) present_terminal omybuntu-install-zed ;;
   *Sublime*) install_and_launch "Sublime Text" "sublime-text" "sublime_text" ;;
   *Helix*) present_terminal omybuntu-install-helix ;;
@@ -641,7 +641,7 @@ show_install_terminal_menu() {
 show_install_ai_menu() {
   case $(menu "$I18N_MENU_INSTALL" "$I18N_AI_DICTATION\n󱚤  Ollama") in
   *"$I18N_AI_DICTATION"*) present_terminal omybuntu-voxtype-install ;;
-  *Ollama*) present_terminal "echo 'Installing Ollama...'; curl -fsSL https://ollama.com/install.sh | sh" ;;
+  *Ollama*) present_terminal omybuntu-install-ai-ollama ;;
   *) show_install_menu ;;
   esac
 }
@@ -651,7 +651,7 @@ show_install_gaming_menu() {
   *Steam*) present_terminal omybuntu-install-gaming-steam ;;
   *"$I18N_GAM_RETRO_LAUNCHER"*) omybuntu-games-retro-install ;;
   *RetroArch*) present_terminal omybuntu-install-gaming-retroarch ;;
-  *Minecraft*) present_terminal "echo 'Installing Minecraft...'; wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb && sudo apt-get install -y /tmp/minecraft.deb && rm -f /tmp/minecraft.deb && setsid minecraft-launcher" ;;
+  *Minecraft*) present_terminal omybuntu-install-gaming-minecraft ;;
   *GeForce*) present_terminal omybuntu-install-gaming-geforce-now ;;
   *"$I18N_GAM_XBOX_CLOUD"*) present_terminal omybuntu-install-gaming-xbox-cloud ;;
   *"$I18N_GAM_XBOX_CONTROLLER"*) present_terminal omybuntu-install-gaming-xbox-controllers ;;

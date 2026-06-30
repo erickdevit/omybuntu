@@ -3,6 +3,9 @@
 # omybuntu:summary=Show a fuzzy-finder TUI for picking new Snap packages to install.
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 RELOAD="snap find {q} 2>/dev/null | awk 'NR>1 {print \$1}'"
 
 fzf_args=(
@@ -20,11 +23,12 @@ fzf_args=(
   --header "Type to search for snaps..."
 )
 
-pkg_names=$(echo "" | fzf "${fzf_args[@]}")
+pkg_names=$(echo "" | fzf "${fzf_args[@]}" || true)
 
 if [[ -n $pkg_names ]]; then
   source omybuntu-sudo-keepalive
 
   echo "$pkg_names" | xargs -n1 sudo snap install
   omybuntu-show-done
+  echo "✅ Success: Snap packages installed."
 fi

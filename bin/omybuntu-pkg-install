@@ -3,6 +3,9 @@
 # omybuntu:summary=Show a fuzzy-finder TUI for picking new Apt packages to install.
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 fzf_args=(
   --multi
   --preview 'apt-cache show {1} 2>/dev/null || echo "No preview available"'
@@ -15,7 +18,7 @@ fzf_args=(
   --color 'pointer:green,marker:green'
 )
 
-pkg_names=$(apt-cache pkgnames | sort | fzf "${fzf_args[@]}")
+pkg_names=$(apt-cache pkgnames | sort | fzf "${fzf_args[@]}" || true)
 
 if [[ -n $pkg_names ]]; then
   source omybuntu-sudo-keepalive
@@ -23,4 +26,5 @@ if [[ -n $pkg_names ]]; then
   # Pass selections to omybuntu-pkg-add
   echo "$pkg_names" | xargs omybuntu-pkg-add
   omybuntu-show-done
+  echo "✅ Success: Packages installed."
 fi

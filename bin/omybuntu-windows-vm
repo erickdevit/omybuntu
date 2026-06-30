@@ -4,6 +4,9 @@
 # omybuntu:args=<install|remove|launch|stop|status> [options]
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 COMPOSE_FILE="$HOME/.config/windows/docker-compose.yml"
 
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
@@ -233,7 +236,7 @@ EOF
   xdg-open "http://127.0.0.1:8006"
 
   echo ""
-  echo "Installation is running in the background."
+  echo "✅ Success: Installation is running in the background."
   echo "You can monitor progress at: http://127.0.0.1:8006"
   echo ""
   echo "Once finished, launch 'Windows' via Super + Space"

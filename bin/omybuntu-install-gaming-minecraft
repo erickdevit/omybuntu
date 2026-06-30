@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Minecraft
+# omybuntu:requires-sudo=true
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing Minecraft..."
+wget -O /tmp/minecraft.deb https://launcher.mojang.com/download/Minecraft.deb
+sudo apt-get install -y /tmp/minecraft.deb
+rm -f /tmp/minecraft.deb
+
+echo "✅ Success: Minecraft installed successfully!"
+setsid minecraft-launcher &>/dev/null &

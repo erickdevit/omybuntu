@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Cursor Editor
+# omybuntu:requires-sudo=false
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing Cursor..."
+mkdir -p ~/.local/bin ~/.local/share/applications
+
+wget -O ~/.local/bin/cursor 'https://downloader.cursor.sh/linux/appimage/x64'
+chmod +x ~/.local/bin/cursor
+
+cat > ~/.local/share/applications/cursor.desktop << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Cursor
+Comment=Cursor Editor
+Exec=$HOME/.local/bin/cursor --no-sandbox %F
+Icon=accessories-text-editor
+Terminal=false
+Categories=Development;TextEditor;
+StartupWMClass=Cursor
+EOF
+
+update-desktop-database ~/.local/share/applications/ &>/dev/null || true
+
+echo "✅ Success: Cursor installed successfully!"

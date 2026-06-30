@@ -3,7 +3,8 @@
 # omybuntu:summary=Install and configure Voxtype dictation
 # omybuntu:requires-sudo=true
 
-set -e
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 # Install voxtype and configure it for use.
 
@@ -25,4 +26,5 @@ if gum confirm "$I18N_VOXTYPE_WARN"; then
   omybuntu-hyprland-toggle voxtype on
   omybuntu-restart-waybar
   omybuntu-notification-send -g  "$I18N_VOXTYPE_READY" "$I18N_VOXTYPE_READY_MSG"
+  echo "✅ Success: Voxtype installed."
 fi

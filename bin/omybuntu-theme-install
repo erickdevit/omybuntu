@@ -5,6 +5,9 @@
 # omybuntu:examples=omybuntu theme install https://github.com/example/omybuntu-example-theme.git
 # omybuntu:examples=omybuntu theme install git@github.com:example/omybuntu-example-theme.git
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
 if [[ -z $1 ]]; then
@@ -39,3 +42,4 @@ fi
 
 # Apply the new theme with omybuntu-theme-set
 omybuntu-theme-set $THEME_NAME
+echo "✅ Success: Theme installed."

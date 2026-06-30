@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Ollama
+# omybuntu:requires-sudo=true
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing Ollama..."
+curl -fsSL https://ollama.com/install.sh | sh
+
+echo "✅ Success: Ollama installed successfully!"

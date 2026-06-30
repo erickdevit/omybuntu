@@ -10,6 +10,7 @@ case "$CURRENT_LAYOUT" in
   *) NEW_LAYOUT=dwindle ;;
 esac
 
-hyprctl eval "hl.workspace_rule({ workspace = \"$ACTIVE_WORKSPACE\", layout = \"$NEW_LAYOUT\" })" >/dev/null 2>&1 || \
+if hyprctl eval "hl.workspace_rule({ workspace = \"$ACTIVE_WORKSPACE\", layout = \"$NEW_LAYOUT\" })" 2>&1 | grep -q "unknown request"; then
   hyprctl keyword workspace "$ACTIVE_WORKSPACE, layout:$NEW_LAYOUT"
+fi
 notify-send -u low "󱂬    Workspace layout set to $NEW_LAYOUT"

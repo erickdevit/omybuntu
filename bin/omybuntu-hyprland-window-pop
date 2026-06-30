@@ -17,7 +17,9 @@ hypr_dispatch() {
   local lua="$1"
   shift
 
-  hyprctl dispatch "$lua" >/dev/null 2>&1 || hyprctl dispatch "$1" "$2" >/dev/null
+  if hyprctl dispatch "$lua" 2>&1 | grep -q "Invalid dispatcher"; then
+    hyprctl dispatch "$1" "$2" >/dev/null
+  fi
 }
 
 if [[ $pinned == "true" ]]; then

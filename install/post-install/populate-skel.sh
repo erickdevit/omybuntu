@@ -31,3 +31,10 @@ ln -snf /opt/omybuntu /etc/skel/.local/share/omybuntu
 # Remove socket/lock files if any
 rm -rf /etc/skel/.config/chromium/SingletonLock
 rm -rf /etc/skel/.config/google-chrome/SingletonLock
+
+# Disable globally enabled systemd user services that we launch manually in Hyprland
+echo "Disabling globally auto-started systemd user services..."
+systemctl --global disable waybar.service || true
+systemctl --global disable mako.service || true
+systemctl --global disable hypridle.service || true
+

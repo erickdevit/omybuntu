@@ -9,6 +9,8 @@ run_logged $OMYBUNTU_INSTALL/packaging/webapps.sh
 run_logged $OMYBUNTU_INSTALL/packaging/tuis.sh
 run_logged $OMYBUNTU_INSTALL/packaging/npm.sh
 run_logged $OMYBUNTU_INSTALL/ubuntu-tuis-and-walker.sh
+run_logged $OMYBUNTU_INSTALL/build-quickshell.sh
+run_logged $OMYBUNTU_INSTALL/packaging/third-party.sh
 run_logged $OMYBUNTU_INSTALL/packaging/asus-rog.sh
 run_logged $OMYBUNTU_INSTALL/packaging/framework16.sh
 run_logged $OMYBUNTU_INSTALL/packaging/dell-xps-touchpad-haptics.sh

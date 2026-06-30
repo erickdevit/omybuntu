@@ -1,4 +1,4 @@
-[colors-dark]
+[colors]
 foreground={{ foreground_strip }}
 background={{ background_strip }}
 selection-foreground={{ selection_foreground_strip }}

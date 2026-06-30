@@ -140,6 +140,100 @@ fn unmount_virtual_fs(target: &str) {
   }
 }
 
+fn clean_disk_mounts(disk: &str) -> Result<(), String> {
+  // 1. Run swapoff on any partition of the disk
+  if let Ok(file) = std::fs::File::open("/proc/swaps") {
+    let reader = BufReader::new(file);
+    for line in reader.lines().map_while(Result::ok) {
+      let parts: Vec<&str> = line.split_whitespace().collect();
+      if !parts.is_empty() && (parts[0].starts_with(disk) || parts[0] == disk) {
+        let _ = Command::new("swapoff").arg(parts[0]).status();
+      }
+    }
+  }
+
+  // 2. Find and unmount any mounted partitions of the disk from /proc/mounts
+  let mut mounts = Vec::new();
+  if let Ok(file) = std::fs::File::open("/proc/mounts") {
+    let reader = BufReader::new(file);
+    for line in reader.lines().map_while(Result::ok) {
+      let parts: Vec<&str> = line.split_whitespace().collect();
+      if parts.len() >= 2 && (parts[0].starts_with(disk) || parts[0] == disk) {
+        mounts.push((parts[0].to_string(), parts[1].to_string()));
+      }
+    }
+  }
+  // Sort mounts by mount point path length descending to unmount nested mounts first
+  mounts.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+  for (_, mp) in &mounts {
+    let _ = Command::new("umount").args(["-lf", mp]).status();
+  }
+
+  // 3. Check for any holder device mapper (LUKS) mappings.
+  if let Ok(entries) = std::fs::read_dir("/sys/class/block") {
+    for entry in entries.map_while(Result::ok) {
+      let name = entry.file_name().to_string_lossy().into_owned();
+      let disk_leaf = disk.trim_start_matches("/dev/");
+      if name.starts_with(disk_leaf) {
+        let holders_path = format!("/sys/class/block/{}/holders", name);
+        if let Ok(holders) = std::fs::read_dir(&holders_path) {
+          for holder in holders.map_while(Result::ok) {
+            let dm_name = holder.file_name().to_string_lossy().into_owned();
+            let crypt_name_path = format!("/sys/class/block/{}/dm/name", dm_name);
+            if let Ok(crypt_name) = std::fs::read_to_string(&crypt_name_path) {
+              let crypt_name = crypt_name.trim();
+              if !crypt_name.is_empty() {
+                let _ = Command::new("cryptsetup").args(["close", crypt_name]).status();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  Ok(())
+}
+
+fn run_diagnostic_commands(disk: &str) -> Result<(), String> {
+  eprintln!("=== INSTALLER DIAGNOSTICS ===");
+  eprintln!("Disk: {}", disk);
+  
+  let lsblk_out = Command::new("lsblk").args(["-o", "NAME,FSTYPE,SIZE,MOUNTPOINTS", disk]).output();
+  match lsblk_out {
+    Ok(out) => {
+      eprintln!("lsblk output:\n{}", String::from_utf8_lossy(&out.stdout));
+      eprintln!("lsblk stderr:\n{}", String::from_utf8_lossy(&out.stderr));
+    }
+    Err(e) => eprintln!("Failed to run lsblk: {}", e),
+  }
+
+  let findmnt_out = Command::new("findmnt").output();
+  match findmnt_out {
+    Ok(out) => {
+      eprintln!("findmnt output (filtered for disk):\n{}", 
+        String::from_utf8_lossy(&out.stdout)
+          .lines()
+          .filter(|l| l.contains(disk) || l.contains("mapper"))
+          .collect::<Vec<_>>()
+          .join("\n")
+      );
+    }
+    Err(e) => eprintln!("Failed to run findmnt: {}", e),
+  }
+
+  let dm_out = Command::new("dmsetup").arg("ls").output();
+  match dm_out {
+    Ok(out) => {
+      eprintln!("dmsetup ls output:\n{}", String::from_utf8_lossy(&out.stdout));
+    }
+    Err(e) => eprintln!("Failed to run dmsetup ls: {}", e),
+  }
+
+  eprintln!("=============================");
+  Ok(())
+}
+
 // ─── Installation ─────────────────────────────────────────────────────────────
 
 fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), String> {
@@ -151,7 +245,36 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
 
   // ── 1. Partition ──────────────────────────────────────────────────────────
   prog(tx, 5, "Partitioning disk...");
-  cmd(&["sgdisk", "--zap-all", &cfg.disk])?;
+  if let Err(e) = clean_disk_mounts(&cfg.disk) {
+    eprintln!("Warning while cleaning disk mounts: {}", e);
+  }
+
+  // Attempt to zap-all, with fallback and logging
+  if let Err(e) = cmd(&["sgdisk", "--zap-all", &cfg.disk]) {
+    eprintln!("Initial sgdisk --zap-all failed: {}. Running diagnostics...", e);
+    let _ = run_diagnostic_commands(&cfg.disk);
+
+    // Try a quick dd fallback to wipe the partition headers (first 10MB)
+    eprintln!("Trying to wipe partition headers with dd...");
+    let dd_res = Command::new("dd")
+      .args(["if=/dev/zero", &format!("of={}", cfg.disk), "bs=1M", "count=10", "oflag=direct"])
+      .status();
+    if let Err(ref dd_err) = dd_res {
+      eprintln!("dd fallback failed: {}", dd_err);
+    }
+    
+    // Rerun partprobe
+    let _ = Command::new("partprobe").arg(&cfg.disk).status();
+    std::thread::sleep(std::time::Duration::from_millis(500));
+
+    // Try sgdisk --zap-all again
+    eprintln!("Retrying sgdisk --zap-all after dd...");
+    if let Err(retry_err) = cmd(&["sgdisk", "--zap-all", &cfg.disk]) {
+      eprintln!("sgdisk --zap-all failed again: {}. Trying parted label creation as a fallback...", retry_err);
+      cmd(&["parted", "-s", &cfg.disk, "mklabel", "gpt"])
+        .map_err(|final_err| format!("Partitioning failed. sgdisk and parted both failed. Parted error: {}", final_err))?;
+    }
+  }
   cmd(&[
     "sgdisk",
     "-n", "1:0:+512M", "-t", "1:ef00",

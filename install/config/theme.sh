@@ -15,13 +15,13 @@ rm -rf ~/.config/chromium/SingletonLock ~/.config/google-chrome/SingletonLock
 
 # Set specific app links for current theme
 mkdir -p ~/.config/btop/themes
-ln -snf ~/.config/omybuntu/current/theme/btop.theme ~/.config/btop/themes/current.theme
+ln -snf ../../omybuntu/current/theme/btop.theme ~/.config/btop/themes/current.theme
 
 mkdir -p ~/.config/mako
-ln -snf ~/.config/omybuntu/current/theme/mako.ini ~/.config/mako/config
+ln -snf ../omybuntu/current/theme/mako.ini ~/.config/mako/config
 
 mkdir -p ~/.config/cava
-ln -snf ~/.config/omybuntu/current/theme/cava.ini ~/.config/cava/config
+ln -snf ../omybuntu/current/theme/cava.ini ~/.config/cava/config
 
 # Default Chromium to follow system appearance ("device") instead of dark
 sudo mkdir -p /usr/lib/chromium

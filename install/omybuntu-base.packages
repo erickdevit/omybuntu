@@ -9,7 +9,7 @@ bat
 bolt
 brightnessctl
 btop
-bitwarden
+
 clang
 cups
 cups-browsed
@@ -19,7 +19,7 @@ docker.io
 docker-buildx
 docker-compose
 dosfstools
-dotnet-runtime-9.0
+
 evince
 exfatprogs
 eza
@@ -56,7 +56,7 @@ libsecret-1-0
 libyaml-0-2
 qalc
 llvm
-localsend
+
 luarocks
 mako-notifier
 man-db
@@ -71,12 +71,12 @@ fonts-noto-cjk
 fonts-noto-color-emoji
 libnss-mdns
 neovim
-obsidian
+
 pamixer
 playerctl
 plocate
 plymouth
-pnpm
+
 policykit-1-gnome
 libpq-dev
 power-profiles-daemon
@@ -90,7 +90,7 @@ ruby
 rustc
 sddm
 slurp
-spotify-client
+
 socat
 starship
 gnome-sushi
@@ -100,7 +100,7 @@ swayosd
 system-config-printer
 tesseract-ocr
 tesseract-ocr-eng
-tldr
+
 tree-sitter-cli
 tmux
 ufw

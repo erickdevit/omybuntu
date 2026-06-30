@@ -1,3 +1,5 @@
 echo "Install quickshell for the image selector"
 
-omybuntu-pkg-add quickshell
+if omybuntu-cmd-missing quickshell; then
+  bash "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/install/build-quickshell.sh"
+fi

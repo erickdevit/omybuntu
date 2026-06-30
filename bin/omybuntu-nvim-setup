@@ -18,3 +18,11 @@ if [[ -f "$CURRENT_THEME_DIR/neovim.lua" ]]; then
   mkdir -p "$USER_NVIM_DIR/lua/plugins"
   cp -f "$CURRENT_THEME_DIR/neovim.lua" "$USER_NVIM_DIR/lua/plugins/theme.lua"
 fi
+
+# Pre-bootstrap LazyVim plugins during chroot/ISO build
+if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+  echo "Pre-downloading and caching Neovim plugins..."
+  export HOME=/root
+  nvim --headless "+Lazy! sync" +qa || true
+fi
+

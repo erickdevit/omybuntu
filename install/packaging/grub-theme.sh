@@ -41,8 +41,11 @@ sudo magick -size 6x30 xc:none \
 # --- Copy theme.txt ---
 sudo cp "$THEME_DIR/theme.txt" "$OUT_DIR/theme.txt"
 
-# --- Copy font (symlink to system unicode font) ---
-sudo ln -sf /usr/share/grub/unicode.pf2 "$OUT_DIR/unicode.pf2" 2>/dev/null || \
-  sudo cp /usr/share/grub/unicode.pf2 "$OUT_DIR/unicode.pf2" 2>/dev/null || true
+# --- Copy font (copy as real file; GRUB cannot resolve absolute symlinks at boot) ---
+if [[ -f /usr/share/grub/unicode.pf2 ]]; then
+  sudo cp -f /usr/share/grub/unicode.pf2 "$OUT_DIR/unicode.pf2"
+elif [[ -f /boot/grub/unicode.pf2 ]]; then
+  sudo cp -f /boot/grub/unicode.pf2 "$OUT_DIR/unicode.pf2"
+fi
 
 echo "GRUB theme assets generated successfully at $OUT_DIR"

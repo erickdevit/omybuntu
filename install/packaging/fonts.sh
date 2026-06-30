@@ -1,4 +1,4 @@
-FONT_DIR="$HOME/.local/share/fonts"
+FONT_DIR="/usr/local/share/fonts/truetype/omybuntu"
 mkdir -p "$FONT_DIR"
 
 # Omybuntu logo in a font for Waybar use

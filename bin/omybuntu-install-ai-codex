@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omybuntu:summary=Install OpenAI Codex
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing Codex..."
+omybuntu-npm-install @openai/codex codex
+
+echo "✅ Success: Codex installed successfully!"

@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# omybuntu:summary=Update system packages with pacman
+# omybuntu:summary=Update system packages with apt
 # omybuntu:requires-sudo=true
 
 set -e
 
 echo -e "\e[32m\nUpdate system packages\e[0m"
-sudo pacman -Syyu --noconfirm
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y

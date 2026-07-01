@@ -13,7 +13,6 @@ omybuntu-update-keyring
 omybuntu-update-available-reset
 omybuntu-update-system-pkgs
 omybuntu-migrate
-omybuntu-update-aur-pkgs
 omybuntu-update-orphan-pkgs
 omybuntu-hook post-update
 

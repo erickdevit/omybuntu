@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omybuntu:summary=Install OpenCode AI
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing OpenCode..."
+omybuntu-npm-install opencode-ai opencode
+
+echo "✅ Success: OpenCode installed successfully!"

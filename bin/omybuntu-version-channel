@@ -1,29 +1,22 @@
 #!/bin/bash
 
-# omybuntu:summary=Print the active Omybuntu mirror and package channel
+# omybuntu:summary=Print the active Omybuntu package channel
 
-if grep -q "https://stable-mirror.omybuntu.org/" /etc/pacman.d/mirrorlist; then
-  mirror="stable"
-elif grep -q "https://rc-mirror.omybuntu.org/" /etc/pacman.d/mirrorlist; then
-  mirror="rc"
-elif grep -q "https://mirror.omybuntu.org/" /etc/pacman.d/mirrorlist; then
-  mirror="edge"
+STATE_FILE="$HOME/.local/state/omybuntu/channel"
+if [[ -f $STATE_FILE ]]; then
+  channel=$(cat "$STATE_FILE")
 else
-  mirror="unknown"
+  # Fallback to current Git branch
+  current_branch=$(git -C "$OMYBUNTU_PATH" branch --show-current 2>/dev/null || true)
+  if [[ $current_branch == "main" || $current_branch == "master" ]]; then
+    channel="stable"
+  elif [[ $current_branch == "rc" ]]; then
+    channel="rc"
+  elif [[ $current_branch == "dev" ]]; then
+    channel="dev"
+  else
+    channel="unknown"
+  fi
 fi
 
-if grep -q "https://pkgs.omybuntu.org/stable/" /etc/pacman.conf; then
-  pkgs="stable"
-elif grep -q "https://pkgs.omybuntu.org/edge/" /etc/pacman.conf; then
-  pkgs="edge"
-elif grep -q "https://pkgs.omybuntu.org/rc/" /etc/pacman.conf; then
-  pkgs="rc"
-else
-  pkgs="unknown"
-fi
-
-if [[ $mirror == $pkgs ]]; then
-  echo $mirror
-else
-  echo "$mirror / $pkgs"
-fi
+echo "$channel"

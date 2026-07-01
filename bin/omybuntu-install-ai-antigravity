@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Antigravity CLI
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing Antigravity CLI..."
+omybuntu-npm-install @google/antigravity antigravity 2>/dev/null || omybuntu-npm-install antigravitty-cli antigravity
+
+echo "✅ Success: Antigravity CLI installed successfully!"

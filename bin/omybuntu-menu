@@ -639,9 +639,13 @@ show_install_terminal_menu() {
 }
 
 show_install_ai_menu() {
-  case $(menu "$I18N_MENU_INSTALL" "$I18N_AI_DICTATION\n󱚤  Ollama") in
+  case $(menu "$I18N_MENU_INSTALL" "$I18N_AI_DICTATION\n󱚤  Ollama\n󰚩  OpenCode\n󰚩  Antigravitty\n󰚩  Claude Code\n󰚩  Codex") in
   *"$I18N_AI_DICTATION"*) present_terminal omybuntu-voxtype-install ;;
   *Ollama*) present_terminal omybuntu-install-ai-ollama ;;
+  *OpenCode*) present_terminal omybuntu-install-ai-opencode ;;
+  *Antigravitty*) present_terminal omybuntu-install-ai-antigravity ;;
+  *Claude*) present_terminal omybuntu-install-ai-claude ;;
+  *Codex*) present_terminal omybuntu-install-ai-codex ;;
   *) show_install_menu ;;
   esac
 }

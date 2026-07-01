@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# omybuntu:summary=Install Claude Code
+
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+
+echo "Installing Claude Code..."
+omybuntu-npm-install @anthropic-ai/claude-code claude
+
+echo "✅ Success: Claude Code installed successfully!"

@@ -6,6 +6,7 @@
 
 set -euo pipefail
 trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+trap 'echo -e "\n❌ Cancelled by user." >&2; exit 130' INT
 
 setup_policy_directory() {
   sudo mkdir -p "$1"

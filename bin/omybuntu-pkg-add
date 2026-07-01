@@ -5,12 +5,22 @@
 # omybuntu:examples=omybuntu pkg add jq ripgrep
 # omybuntu:requires-sudo=true
 
+set -euo pipefail
+trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
+trap 'echo -e "\n❌ Cancelled by user." >&2; exit 130' INT
+
 for pkg in "$@"; do
   if omybuntu-pkg-missing "$pkg"; then
     echo "Installing $pkg..."
     if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg" 2>/dev/null; then
+      ret=$?
+      if (( ret == 130 )); then exit 130; fi
       if ! sudo snap install "$pkg" 2>/dev/null; then
+        ret=$?
+        if (( ret == 130 )); then exit 130; fi
         if ! sudo snap install "$pkg" --classic 2>/dev/null; then
+          ret=$?
+          if (( ret == 130 )); then exit 130; fi
           echo -e "\033[33mWarning: Package '$pkg' could not be installed via apt or snap. Skipping.\033[0m" >&2
           continue
         fi

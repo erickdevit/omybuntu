@@ -102,9 +102,18 @@ zen)
     sudo mv /opt/zen /opt/zen-browser
   fi
   sudo ln -sf /opt/zen-browser/zen /usr/local/bin/zen-browser
-  sudo cp /opt/zen-browser/zen.desktop /usr/share/applications/zen.desktop
-  sudo sed -i 's|Exec=zen|Exec=/opt/zen-browser/zen|g' /usr/share/applications/zen.desktop
-  sudo sed -i 's|Icon=zen|Icon=/opt/zen-browser/browser/chrome/icons/default/default128.png|g' /usr/share/applications/zen.desktop
+  
+  cat << 'EOF' | sudo tee /usr/share/applications/zen.desktop > /dev/null
+[Desktop Entry]
+Name=Zen Browser
+Exec=/opt/zen-browser/zen %u
+Icon=/opt/zen-browser/browser/chrome/icons/default/default128.png
+Type=Application
+Categories=Network;WebBrowser;
+Terminal=false
+StartupNotify=true
+EOF
+
   rm -f /tmp/zen.tar.xz
 
   test -f /usr/local/bin/zen-browser

@@ -8,6 +8,7 @@ export I18N_REBOOT_NOW="Reiniciar Agora"
 export I18N_REBOOT_CONFIRM="Reinicialização necessária para concluir a configuração. Reiniciar agora?"
 export I18N_CANCEL="Cancelar"
 export I18N_DONE_PRESS_KEY="Concluído! Pressione qualquer tecla para fechar..."
+export I18N_ERROR_PRESS_KEY="Erro! Pressione qualquer tecla para fechar..."
 
 # Go / Main Menu
 export I18N_MENU_GO="Ir para"

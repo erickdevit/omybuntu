@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omybuntu:summary=Display an "Error!" message with a spinner and wait for user to press any key.
+
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+echo
+gum spin --spinner "globe" --title "$I18N_ERROR_PRESS_KEY" -- bash -c 'read -n 1 -s'

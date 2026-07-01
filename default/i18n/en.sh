@@ -8,6 +8,7 @@ export I18N_REBOOT_NOW="Reboot Now"
 export I18N_REBOOT_CONFIRM="Reboot needed to finish setup. Reboot now?"
 export I18N_CANCEL="Cancel"
 export I18N_DONE_PRESS_KEY="Done! Press any key to close..."
+export I18N_ERROR_PRESS_KEY="Error! Press any key to close..."
 
 # Go / Main Menu
 export I18N_MENU_GO="Go"

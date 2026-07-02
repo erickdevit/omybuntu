@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # omybuntu:summary=Install Cursor Editor
-# omybuntu:requires-sudo=false
 
 set -euo pipefail
 trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR

@@ -40,7 +40,17 @@ export I18N_TRIG_CAPTURE="  Capturas"
 export I18N_TRIG_TRANSCODE="󰧸  Transcodificar"
 export I18N_TRIG_SHARE="  Compartilhar"
 export I18N_TRIG_TOGGLE="󰔎  Alternar"
+export I18N_TRIG_MONITORS_TUI="󰍹  Gestão de Monitores (TUI)"
+export I18N_TRIG_PROJECT="󰍹  Projetar"
 export I18N_TRIG_HARDWARE="  Hardware"
+
+# Project Menu
+export I18N_MENU_PROJECT="Projetar"
+export I18N_PROJECT_MIRROR="󰍹  Espelhar"
+export I18N_PROJECT_EXTEND="󰍹  Estender"
+export I18N_PROJECT_SCREEN1="󰍹  Tela 1 apenas"
+export I18N_PROJECT_SCREEN2="󰍹  Tela 2 apenas"
+
 
 # Reminder Menu
 export I18N_MENU_REMINDER="Lembretes"
@@ -383,6 +393,23 @@ export I18N_SUDO_WARN_7="Execute este comando novamente para desativá-lo mais c
 export I18N_SUDO_ENABLED="O sudo sem senha foi ATIVADO. Será desativado automaticamente em %d minutos."
 export I18N_SUDO_RESTART_NOTE="Nota: se reiniciar antes disso, execute omybuntu-sudo-passwordless novamente para desativá-lo."
 export I18N_SUDO_ABORTED="Abortado. Nenhuma alteração feita."
+
+# Monitor TUI
+export I18N_TUI_MONITORS_TITLE="GESTOR DE MONITORES (TUI)"
+export I18N_TUI_MONITORS_SELECT="Selecione uma ação:"
+export I18N_TUI_MONITORS_CONF="Configurar Monitor %d (%s)"
+export I18N_TUI_MONITORS_ACTIVE="ATIVO"
+export I18N_TUI_MONITORS_FOCUSED="FOCADO"
+export I18N_TUI_MONITORS_DISABLED="DESATIVADO"
+export I18N_TUI_MONITORS_MIRRORING="ESPELHANDO %s"
+export I18N_TUI_MONITORS_RESOLUTION="Alterar Resolução"
+export I18N_TUI_MONITORS_SCALE="Alterar Escala"
+export I18N_TUI_MONITORS_POSITION="Alterar Posição"
+export I18N_TUI_MONITORS_ROTATION="Alterar Rotação"
+export I18N_TUI_MONITORS_ENABLE="Ativar Monitor"
+export I18N_TUI_MONITORS_DISABLE="Desativar Monitor"
+export I18N_TUI_MONITORS_BACK="Voltar ao Menu Principal"
+
 
 # First Run
 export I18N_FIRST_RUN_WELCOME_TITLE="    Aprender Atalhos de Teclado"

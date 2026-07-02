@@ -40,7 +40,17 @@ export I18N_TRIG_CAPTURE="  Capture"
 export I18N_TRIG_TRANSCODE="󰧸  Transcode"
 export I18N_TRIG_SHARE="  Share"
 export I18N_TRIG_TOGGLE="󰔎  Toggle"
+export I18N_TRIG_MONITORS_TUI="󰍹  Monitor Management (TUI)"
+export I18N_TRIG_PROJECT="󰍹  Project"
 export I18N_TRIG_HARDWARE="  Hardware"
+
+# Project Menu
+export I18N_MENU_PROJECT="Project"
+export I18N_PROJECT_MIRROR="󰍹  Mirror"
+export I18N_PROJECT_EXTEND="󰍹  Extend"
+export I18N_PROJECT_SCREEN1="󰍹  Screen 1 only"
+export I18N_PROJECT_SCREEN2="󰍹  Screen 2 only"
+
 
 # Reminder Menu
 export I18N_MENU_REMINDER="Reminder"
@@ -383,6 +393,23 @@ export I18N_SUDO_WARN_7="Run this command again to disable it early."
 export I18N_SUDO_ENABLED="Passwordless sudo has been ENABLED. It will automatically disable in %d minutes."
 export I18N_SUDO_RESTART_NOTE="Note: if you restart before then, run omybuntu-sudo-passwordless again to disable it."
 export I18N_SUDO_ABORTED="Aborted. No changes made."
+
+# Monitor TUI
+export I18N_TUI_MONITORS_TITLE="MONITOR MANAGEMENT (TUI)"
+export I18N_TUI_MONITORS_SELECT="Select action:"
+export I18N_TUI_MONITORS_CONF="Configure Monitor %d (%s)"
+export I18N_TUI_MONITORS_ACTIVE="ACTIVE"
+export I18N_TUI_MONITORS_FOCUSED="FOCUSED"
+export I18N_TUI_MONITORS_DISABLED="DISABLED"
+export I18N_TUI_MONITORS_MIRRORING="MIRRORING %s"
+export I18N_TUI_MONITORS_RESOLUTION="Change Resolution"
+export I18N_TUI_MONITORS_SCALE="Change Scale"
+export I18N_TUI_MONITORS_POSITION="Change Position"
+export I18N_TUI_MONITORS_ROTATION="Change Rotation"
+export I18N_TUI_MONITORS_ENABLE="Enable Monitor"
+export I18N_TUI_MONITORS_DISABLE="Disable Monitor"
+export I18N_TUI_MONITORS_BACK="Back to Main Menu"
+
 
 # First Run
 export I18N_FIRST_RUN_WELCOME_TITLE="    Learn Keybindings"

@@ -1,0 +1,323 @@
+#!/bin/bash
+
+# omybuntu:summary=Clean and complete TUI for monitor management
+
+set -euo pipefail
+
+# Load i18n
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+# Detect language value (init.sh sets LANG_VAL, fallback to en)
+LANG_VAL="${LANG_VAL:-en}"
+
+# Inline TUI translations
+case "$LANG_VAL" in
+  pt-br)
+    lbl_select_res="Selecione uma resolução:"
+    lbl_select_scale="Selecione uma escala:"
+    lbl_select_pos="Selecione uma posição:"
+    lbl_select_rot="Selecione uma rotação:"
+    lbl_left_of="Esquerda de"
+    lbl_right_of="Direita de"
+    lbl_above="Acima de"
+    lbl_below="Abaixo de"
+    lbl_normal="Normal (0)"
+    lbl_90="90° (1)"
+    lbl_180="180° (2)"
+    lbl_270="270° (3)"
+    ;;
+  es)
+    lbl_select_res="Seleccione una resolución:"
+    lbl_select_scale="Seleccione una escala:"
+    lbl_select_pos="Seleccione una posición:"
+    lbl_select_rot="Seleccione una rotación:"
+    lbl_left_of="Izquierda de"
+    lbl_right_of="Derecha de"
+    lbl_above="Encima de"
+    lbl_below="Debajo de"
+    lbl_normal="Normal (0)"
+    lbl_90="90° (1)"
+    lbl_180="180° (2)"
+    lbl_270="270° (3)"
+    ;;
+  *)
+    lbl_select_res="Select a resolution:"
+    lbl_select_scale="Select a scale:"
+    lbl_select_pos="Select a position:"
+    lbl_select_rot="Select a rotation:"
+    lbl_left_of="Left of"
+    lbl_right_of="Right of"
+    lbl_above="Above"
+    lbl_below="Below"
+    lbl_normal="Normal (0)"
+    lbl_90="90° (1)"
+    lbl_180="180° (2)"
+    lbl_270="270° (3)"
+    ;;
+esac
+
+configure_monitor() {
+  local idx="$1"
+  local name="$2"
+  
+  while true; do
+    # Fetch monitors status dynamically inside loop
+    local monitors_json
+    monitors_json=$(hyprctl monitors all -j)
+    
+    local mon_info
+    mon_info=$(echo "$monitors_json" | jq -r ".[$idx]")
+    
+    local width height refresh scale focused disabled mirrorOf transform
+    width=$(echo "$mon_info" | jq -r '.width')
+    height=$(echo "$mon_info" | jq -r '.height')
+    refresh=$(echo "$mon_info" | jq -r '.refreshRate | tonumber | round')
+    scale=$(echo "$mon_info" | jq -r '.scale')
+    focused=$(echo "$mon_info" | jq -r '.focused')
+    disabled=$(echo "$mon_info" | jq -r '.disabled')
+    mirrorOf=$(echo "$mon_info" | jq -r '.mirrorOf')
+    transform=$(echo "$mon_info" | jq -r '.transform')
+    
+    local status_desc=""
+    if [[ $disabled == "true" ]]; then
+      status_desc="[$I18N_TUI_MONITORS_DISABLED]"
+    elif [[ -n $mirrorOf && $mirrorOf != "none" ]]; then
+      status_desc="[$(printf "$I18N_TUI_MONITORS_MIRRORING" "$mirrorOf")]"
+    else
+      status_desc="[${width}x${height}@${refresh}Hz, Scale: ${scale}x]"
+    fi
+    
+    local menu_opts=()
+    if [[ $disabled == "true" ]]; then
+      menu_opts+=("$I18N_TUI_MONITORS_ENABLE")
+    else
+      menu_opts+=("$I18N_TUI_MONITORS_RESOLUTION")
+      menu_opts+=("$I18N_TUI_MONITORS_SCALE")
+      menu_opts+=("$I18N_TUI_MONITORS_POSITION")
+      menu_opts+=("$I18N_TUI_MONITORS_ROTATION")
+      menu_opts+=("$I18N_TUI_MONITORS_DISABLE")
+    fi
+    menu_opts+=("$I18N_TUI_MONITORS_BACK")
+    
+    local action
+    action=$(printf "%s\n" "${menu_opts[@]}" | gum choose --header="Configure $name $status_desc:")
+    
+    if [[ -z $action || $action == "$I18N_TUI_MONITORS_BACK" ]]; then
+      break
+    fi
+    
+    if [[ $action == "$I18N_TUI_MONITORS_ENABLE" ]]; then
+      omybuntu-hyprland-monitor-helper set "$name" preferred auto 1.0 0
+    elif [[ $action == "$I18N_TUI_MONITORS_DISABLE" ]]; then
+      omybuntu-hyprland-monitor-helper set "$name" disable auto 1.0 0
+    elif [[ $action == "$I18N_TUI_MONITORS_RESOLUTION" ]]; then
+      # Extract available modes
+      local modes
+      modes=$(echo "$mon_info" | jq -r '.availableModes[]')
+      # Add preferred/auto
+      modes=$(printf "preferred\nauto\n%s" "$modes")
+      
+      local selected_mode
+      selected_mode=$(printf "%s\n" "$modes" | gum choose --header="$lbl_select_res")
+      if [[ -n $selected_mode ]]; then
+        # Keep other settings, reset position/transform if auto mode
+        local cur_pos
+        cur_pos=$(echo "$mon_info" | jq -r '"\(.x)x\(.y)"')
+        omybuntu-hyprland-monitor-helper set "$name" "$selected_mode" "$cur_pos" "$scale" "$transform"
+      fi
+    elif [[ $action == "$I18N_TUI_MONITORS_SCALE" ]]; then
+      local scales=("1" "1.25" "1.5" "1.6" "2" "3" "4")
+      local selected_scale
+      selected_scale=$(printf "%s\n" "${scales[@]}" | gum choose --header="$lbl_select_scale")
+      if [[ -n $selected_scale ]]; then
+        local cur_mode="${width}x${height}@${refresh}"
+        [[ $width == "0" ]] && cur_mode="preferred"
+        local cur_pos
+        cur_pos=$(echo "$mon_info" | jq -r '"\(.x)x\(.y)"')
+        omybuntu-hyprland-monitor-helper set "$name" "$cur_mode" "$cur_pos" "$selected_scale" "$transform"
+      fi
+    elif [[ $action == "$I18N_TUI_MONITORS_POSITION" ]]; then
+      # Available positions relative to other connected monitors
+      local pos_opts=("auto")
+      local count
+      count=$(echo "$monitors_json" | jq '. | length')
+      for ((j=0; j<count; j++)); do
+        local other_name
+        other_name=$(echo "$monitors_json" | jq -r ".[$j].name")
+        if [[ $other_name != "$name" ]]; then
+          pos_opts+=("left_of:$other_name ($lbl_left_of $other_name)")
+          pos_opts+=("right_of:$other_name ($lbl_right_of $other_name)")
+          pos_opts+=("above:$other_name ($lbl_above $other_name)")
+          pos_opts+=("below:$other_name ($lbl_below $other_name)")
+        fi
+      done
+      
+      local selected_pos_line
+      selected_pos_line=$(printf "%s\n" "${pos_opts[@]}" | gum choose --header="$lbl_select_pos")
+      if [[ -n $selected_pos_line ]]; then
+        local selected_pos
+        selected_pos=$(echo "$selected_pos_line" | awk '{print $1}')
+        local cur_mode="${width}x${height}@${refresh}"
+        [[ $width == "0" ]] && cur_mode="preferred"
+        omybuntu-hyprland-monitor-helper set "$name" "$cur_mode" "$selected_pos" "$scale" "$transform"
+      fi
+    elif [[ $action == "$I18N_TUI_MONITORS_ROTATION" ]]; then
+      local rot_opts=(
+        "0 ($lbl_normal)"
+        "1 ($lbl_90)"
+        "2 ($lbl_180)"
+        "3 ($lbl_270)"
+      )
+      local selected_rot_line
+      selected_rot_line=$(printf "%s\n" "${rot_opts[@]}" | gum choose --header="$lbl_select_rot")
+      if [[ -n $selected_rot_line ]]; then
+        local selected_rot
+        selected_rot=$(echo "$selected_rot_line" | awk '{print $1}')
+        local cur_mode="${width}x${height}@${refresh}"
+        [[ $width == "0" ]] && cur_mode="preferred"
+        local cur_pos
+        cur_pos=$(echo "$mon_info" | jq -r '"\(.x)x\(.y)"')
+        omybuntu-hyprland-monitor-helper set "$name" "$cur_mode" "$cur_pos" "$scale" "$selected_rot"
+      fi
+    fi
+  done
+}
+
+while true; do
+  # Get monitors info
+  monitors_json=$(hyprctl monitors all -j)
+  count=$(echo "$monitors_json" | jq '. | length')
+  
+  if ((count == 0)); then
+    echo "No monitors detected from Hyprland."
+    exit 1
+  fi
+  
+  # Build boxes
+  declare -A box_lines
+  for ((i=0; i<count; i++)); do
+    local mon_info
+    mon_info=$(echo "$monitors_json" | jq -r ".[$i]")
+    
+    local name description width height refresh scale focused disabled mirrorOf
+    name=$(echo "$mon_info" | jq -r '.name')
+    description=$(echo "$mon_info" | jq -r '.description')
+    width=$(echo "$mon_info" | jq -r '.width')
+    height=$(echo "$mon_info" | jq -r '.height')
+    refresh=$(echo "$mon_info" | jq -r '.refreshRate | tonumber | round')
+    scale=$(echo "$mon_info" | jq -r '.scale')
+    focused=$(echo "$mon_info" | jq -r '.focused')
+    disabled=$(echo "$mon_info" | jq -r '.disabled')
+    mirrorOf=$(echo "$mon_info" | jq -r '.mirrorOf')
+    
+    local type="Other"
+    if [[ $name == *"eDP"* ]]; then
+      type="Laptop"
+    elif [[ $name == *"HDMI"* ]]; then
+      type="HDMI"
+    elif [[ $name == *"DP"* ]]; then
+      type="DisplayPort"
+    fi
+    
+    local hdr
+    hdr=$(printf "  Monitor [%d]: %s (%s)  " "$((i+1))" "$name" "$type")
+    local hdr_padded
+    hdr_padded=$(printf "| %-33s |" "$hdr")
+    
+    local line1 line2 line3 line4
+    if [[ $disabled == "true" ]]; then
+      line1=$(printf "| %-33s |" "  Status: $I18N_TUI_MONITORS_DISABLED")
+      line2=$(printf "| %-33s |" "  (Use settings to enable)")
+      line3=$(printf "| %-33s |" "")
+      line4=$(printf "| %-33s |" "")
+    else
+      if [[ -n $mirrorOf && $mirrorOf != "none" ]]; then
+        local mirr_lbl
+        mirr_lbl=$(printf "$I18N_TUI_MONITORS_MIRRORING" "$mirrorOf")
+        line1=$(printf "| %-33s |" "  Status: $mirr_lbl")
+      else
+        line1=$(printf "| %-33s |" "  Res: ${width}x${height} @ ${refresh}Hz")
+      fi
+      line2=$(printf "| %-33s |" "  Scale: ${scale}x")
+      
+      local status_str="  * $I18N_TUI_MONITORS_ACTIVE *"
+      if [[ $focused == "true" ]]; then
+        status_str="$status_str  * $I18N_TUI_MONITORS_FOCUSED *"
+      fi
+      line3=$(printf "| %-33s |" "$status_str")
+      line4=$(printf "| %-33s |" "")
+    fi
+    
+    box_lines[$i,0]="+-----------------------------------+"
+    box_lines[$i,1]="$hdr_padded"
+    box_lines[$i,2]="$line1"
+    box_lines[$i,3]="$line2"
+    box_lines[$i,4]="$line3"
+    box_lines[$i,5]="$line4"
+    box_lines[$i,6]="+-----------------------------------+"
+  done
+  
+  clear
+  echo "=========================================================================="
+  echo "                    $I18N_TUI_MONITORS_TITLE"
+  echo "=========================================================================="
+  echo ""
+  
+  # Print boxes side by side
+  for ((line=0; line<7; line++)); do
+    row=""
+    for ((i=0; i<count; i++)); do
+      row="$row${box_lines[$i,$line]}    "
+    done
+    echo "$row"
+  done
+  echo ""
+  
+  # Main TUI choices
+  local menu_opts=()
+  for ((i=0; i<count; i++)); do
+    local name
+    name=$(echo "$monitors_json" | jq -r ".[$i].name")
+    local conf_lbl
+    conf_lbl=$(printf "$I18N_TUI_MONITORS_CONF" "$((i+1))" "$name")
+    menu_opts+=("$conf_lbl")
+  done
+  menu_opts+=(
+    "$I18N_PROJECT_MIRROR"
+    "$I18N_PROJECT_EXTEND"
+    "$I18N_PROJECT_SCREEN1"
+    "$I18N_PROJECT_SCREEN2"
+    "$I18N_TUI_MONITORS_BACK"
+  )
+  
+  local selection
+  selection=$(printf "%s\n" "${menu_opts[@]}" | gum choose --header="$I18N_TUI_MONITORS_SELECT")
+  
+  if [[ -z $selection || $selection == "$I18N_TUI_MONITORS_BACK" ]]; then
+    break
+  fi
+  
+  # Match selection
+  if [[ $selection == "$I18N_PROJECT_MIRROR" ]]; then
+    omybuntu-hyprland-monitor-helper project mirror
+  elif [[ $selection == "$I18N_PROJECT_EXTEND" ]]; then
+    omybuntu-hyprland-monitor-helper project extend
+  elif [[ $selection == "$I18N_PROJECT_SCREEN1" ]]; then
+    omybuntu-hyprland-monitor-helper project screen1
+  elif [[ $selection == "$I18N_PROJECT_SCREEN2" ]]; then
+    omybuntu-hyprland-monitor-helper project screen2
+  else
+    # Must be configure monitor
+    # Find which monitor matches the selection
+    for ((i=0; i<count; i++)); do
+      local name
+      name=$(echo "$monitors_json" | jq -r ".[$i].name")
+      local conf_lbl
+      conf_lbl=$(printf "$I18N_TUI_MONITORS_CONF" "$((i+1))" "$name")
+      if [[ $selection == "$conf_lbl" ]]; then
+        configure_monitor "$i" "$name"
+        break
+      fi
+    done
+  fi
+done

@@ -117,14 +117,26 @@ show_learn_menu() {
 }
 
 show_trigger_menu() {
-  case $(menu "$I18N_MENU_TRIGGER" "$I18N_TRIG_REMINDER\n$I18N_TRIG_CAPTURE\n$I18N_TRIG_TRANSCODE\n$I18N_TRIG_SHARE\n$I18N_TRIG_TOGGLE\n$I18N_TRIG_HARDWARE") in
+  case $(menu "$I18N_MENU_TRIGGER" "$I18N_TRIG_REMINDER\n$I18N_TRIG_CAPTURE\n$I18N_TRIG_TRANSCODE\n$I18N_TRIG_SHARE\n$I18N_TRIG_TOGGLE\n$I18N_TRIG_MONITORS_TUI\n$I18N_TRIG_PROJECT\n$I18N_TRIG_HARDWARE") in
   *"$I18N_TRIG_REMINDER"*) show_reminder_menu ;;
   *"$I18N_TRIG_CAPTURE"*) show_capture_menu ;;
   *"$I18N_TRIG_TRANSCODE"*) omybuntu-transcode || back_to show_trigger_menu ;;
   *"$I18N_TRIG_SHARE"*) show_share_menu ;;
   *"$I18N_TRIG_TOGGLE"*) show_toggle_menu ;;
+  *"$I18N_TRIG_MONITORS_TUI"*) omybuntu-launch-tui omybuntu-tui-monitors ;;
+  *"$I18N_TRIG_PROJECT"*) show_project_menu ;;
   *"$I18N_TRIG_HARDWARE"*) show_hardware_menu ;;
   *) show_main_menu ;;
+  esac
+}
+
+show_project_menu() {
+  case $(menu "$I18N_MENU_PROJECT" "$I18N_PROJECT_MIRROR\n$I18N_PROJECT_EXTEND\n$I18N_PROJECT_SCREEN1\n$I18N_PROJECT_SCREEN2") in
+  *"$I18N_PROJECT_MIRROR"*) omybuntu-hyprland-monitor-helper project mirror || back_to show_project_menu ;;
+  *"$I18N_PROJECT_EXTEND"*) omybuntu-hyprland-monitor-helper project extend || back_to show_project_menu ;;
+  *"$I18N_PROJECT_SCREEN1"*) omybuntu-hyprland-monitor-helper project screen1 || back_to show_project_menu ;;
+  *"$I18N_PROJECT_SCREEN2"*) omybuntu-hyprland-monitor-helper project screen2 || back_to show_project_menu ;;
+  *) back_to show_trigger_menu ;;
   esac
 }
 

@@ -1,0 +1,302 @@
+#!/usr/bin/env python3
+# omybuntu:summary=Helper script to manage monitors config files and handle project presets
+
+import sys
+import os
+import re
+import json
+import subprocess
+
+
+def get_gdk_scale(scale):
+    try:
+        s = float(scale)
+        if abs(s - 1.6) < 0.05:
+            return 1.75
+        if abs(s - 1.25) < 0.05:
+            return 1.25
+        return int(s) if s.is_integer() else s
+    except ValueError:
+        return 1.0
+
+def get_connected_monitors():
+    try:
+        res = subprocess.run(["hyprctl", "monitors", "all", "-j"], capture_output=True, text=True, check=True)
+        monitors = json.loads(res.stdout)
+    except Exception:
+        monitors = []
+        
+    if not monitors:
+        return [], None, None
+        
+    internal = [m for m in monitors if "eDP" in m["name"]]
+    external = [m for m in monitors if "eDP" not in m["name"]]
+    
+    sorted_monitors = []
+    if internal:
+        sorted_monitors.append(internal[0])
+        sorted_monitors.extend(external)
+        sorted_monitors.extend(internal[1:])
+    else:
+        sorted_monitors = sorted(monitors, key=lambda x: x.get("id", 0))
+        
+    monitor1 = sorted_monitors[0]["name"] if len(sorted_monitors) >= 1 else None
+    monitor2 = sorted_monitors[1]["name"] if len(sorted_monitors) >= 2 else None
+    
+    return sorted_monitors, monitor1, monitor2
+
+def update_monitors_conf(filepath, output, mode, position, scale, transform=None):
+    if not os.path.exists(filepath):
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, "w") as f:
+            f.write("# See https://wiki.hypr.land/Configuring/Basics/Monitors/\n\n")
+            
+    with open(filepath, "r") as f:
+        lines = f.readlines()
+        
+    updated = False
+    if mode == "disable":
+        new_line = f"monitor={output},disable\n"
+    else:
+        new_line = f"monitor={output},{mode},{position},{scale}"
+        if transform and transform != "0":
+            new_line += f",transform,{transform}"
+        new_line += "\n"
+    
+    for i, line in enumerate(lines):
+        match = re.match(r'^\s*monitor\s*=\s*' + re.escape(output) + r'\s*,', line)
+        if match:
+            lines[i] = new_line
+            updated = True
+            break
+            
+    if not updated:
+        lines.append(new_line)
+        
+    # Update GDK_SCALE
+    gdk_scale = get_gdk_scale(scale)
+    gdk_line = f"env = GDK_SCALE,{gdk_scale}\n"
+    gdk_updated = False
+    for i, line in enumerate(lines):
+        if re.match(r'^\s*env\s*=\s*GDK_SCALE\s*,', line):
+            lines[i] = gdk_line
+            gdk_updated = True
+            break
+    if not gdk_updated:
+        lines.append(gdk_line)
+        
+    # Comment out default wildcard line if specific monitor is set
+    for i, line in enumerate(lines):
+        if re.match(r'^\s*monitor\s*=\s*,', line):
+            lines[i] = "# " + line.lstrip()
+            
+    with open(filepath, "w") as f:
+        f.writelines(lines)
+
+def update_monitors_lua(filepath, output, mode, position, scale, transform=None):
+    if not os.path.exists(filepath):
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, "w") as f:
+            f.write("-- Monitor settings\n\n")
+            
+    with open(filepath, "r") as f:
+        lines = f.readlines()
+        
+    updated = False
+    if mode == "disable":
+        new_line = f'hl.monitor({{ output = "{output}", disabled = true }})\n'
+    else:
+        lua_scale = scale
+        try:
+            lua_scale = float(scale)
+            if lua_scale.is_integer():
+                lua_scale = int(lua_scale)
+        except ValueError:
+            lua_scale = f'"{scale}"'
+            
+        new_line = f'hl.monitor({{ output = "{output}", mode = "{mode}", position = "{position}", scale = {lua_scale}'
+        if transform and transform != "0":
+            new_line += f', transform = {transform}'
+        new_line += ' })\n'
+    
+    for i, line in enumerate(lines):
+        if re.search(r'hl\.monitor\(\{\s*output\s*=\s*["\']' + re.escape(output) + r'["\']', line):
+            lines[i] = new_line
+            updated = True
+            break
+            
+    if not updated:
+        lines.append(new_line)
+        
+    # Update GDK_SCALE
+    gdk_scale = get_gdk_scale(scale)
+    gdk_line = f'hl.env("GDK_SCALE", "{gdk_scale}")\n'
+    gdk_updated = False
+    for i, line in enumerate(lines):
+        if re.search(r'hl\.env\(\s*["\']GDK_SCALE["\']', line):
+            lines[i] = gdk_line
+            gdk_updated = True
+            break
+    if not gdk_updated:
+        lines.append(gdk_line)
+        
+    # Comment out default wildcard line
+    for i, line in enumerate(lines):
+        if re.search(r'hl\.monitor\(\{\s*output\s*=\s*["\']["\']', line):
+            lines[i] = "-- " + line.lstrip()
+            
+    with open(filepath, "w") as f:
+        f.writelines(lines)
+
+def handle_project(preset):
+    _, m1, m2 = get_connected_monitors()
+    
+    toggle_conf = os.path.expanduser("~/.local/state/omybuntu/toggles/hypr/monitor-project.conf")
+    toggle_lua = os.path.expanduser("~/.local/state/omybuntu/toggles/hypr/monitor-project.lua")
+    
+    if preset == "extend":
+        for path in [toggle_conf, toggle_lua]:
+            if os.path.exists(path):
+                os.remove(path)
+        legacy_files = [
+            "~/.local/state/omybuntu/toggles/hypr/internal-monitor-disable.lua",
+            "~/.local/state/omybuntu/toggles/hypr/internal-monitor-mirror.lua"
+        ]
+        for lf in legacy_files:
+            path = os.path.expanduser(lf)
+            if os.path.exists(path):
+                os.remove(path)
+        print("Extended mode restored.")
+        
+    elif preset == "mirror":
+        if not m1 or not m2:
+            print("Error: Two monitors are required to mirror.", file=sys.stderr)
+            sys.exit(1)
+        os.makedirs(os.path.dirname(toggle_conf), exist_ok=True)
+        with open(toggle_conf, "w") as f:
+            f.write(f"monitor={m2},preferred,auto,1,mirror,{m1}\n")
+        with open(toggle_lua, "w") as f:
+            f.write(f'hl.monitor({{ output = "{m2}", mode = "preferred", position = "auto", scale = 1, mirror = "{m1}" }})\n')
+        print(f"Mirroring {m2} to {m1} enabled.")
+        
+    elif preset == "screen1":
+        if not m2:
+            print("Error: Second monitor not found.", file=sys.stderr)
+            sys.exit(1)
+        os.makedirs(os.path.dirname(toggle_conf), exist_ok=True)
+        with open(toggle_conf, "w") as f:
+            f.write(f"monitor={m2},disable\n")
+        with open(toggle_lua, "w") as f:
+            f.write(f'hl.monitor({{ output = "{m2}", disabled = true }})\n')
+        print(f"Monitor {m2} disabled (Screen 1 only).")
+        
+    elif preset == "screen2":
+        if not m1 or not m2:
+            print("Error: Two monitors are required for Screen 2 only.", file=sys.stderr)
+            sys.exit(1)
+        os.makedirs(os.path.dirname(toggle_conf), exist_ok=True)
+        with open(toggle_conf, "w") as f:
+            f.write(f"monitor={m1},disable\n")
+        with open(toggle_lua, "w") as f:
+            f.write(f'hl.monitor({{ output = "{m1}", disabled = true }})\n')
+        print(f"Monitor {m1} disabled (Screen 2 only).")
+        
+    else:
+        print(f"Unknown preset: {preset}", file=sys.stderr)
+        sys.exit(1)
+        
+    subprocess.run(["hyprctl", "reload"], capture_output=True)
+
+def resolve_position(output, position, mode):
+    if not (position.startswith("left_of:") or position.startswith("right_of:") or 
+            position.startswith("above:") or position.startswith("below:")):
+        return position
+        
+    parts = position.split(":")
+    direction = parts[0]
+    other_name = parts[1]
+    
+    monitors, _, _ = get_connected_monitors()
+    this_mon = next((m for m in monitors if m["name"] == output), None)
+    other_mon = next((m for m in monitors if m["name"] == other_name), None)
+    
+    if not this_mon or not other_mon:
+        return "auto"
+        
+    this_w, this_h = 1920, 1080
+    match = re.match(r'^(\d+)x(\d+)', mode)
+    if match:
+        this_w = int(match.group(1))
+        this_h = int(match.group(2))
+    else:
+        this_w = this_mon.get("width", 1920)
+        this_h = this_mon.get("height", 1080)
+        
+    other_x = other_mon.get("x", 0)
+    other_y = other_mon.get("y", 0)
+    other_w = other_mon.get("width", 1920)
+    other_h = other_mon.get("height", 1080)
+    
+    if direction == "left_of":
+        x = other_x - this_w
+        y = other_y
+    elif direction == "right_of":
+        x = other_x + other_w
+        y = other_y
+    elif direction == "above":
+        x = other_x
+        y = other_y - this_h
+    elif direction == "below":
+        x = other_x
+        y = other_y + other_h
+    else:
+        return "auto"
+        
+    return f"{x}x{y}"
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: omybuntu-hyprland-monitor-helper <project|set> [args...]", file=sys.stderr)
+        sys.exit(1)
+        
+    cmd = sys.argv[1]
+    if cmd == "project":
+        if len(sys.argv) < 3:
+            print("Usage: omybuntu-hyprland-monitor-helper project <mirror|extend|screen1|screen2>", file=sys.stderr)
+            sys.exit(1)
+        handle_project(sys.argv[2])
+        
+    elif cmd == "set":
+        if len(sys.argv) < 6:
+            print("Usage: omybuntu-hyprland-monitor-helper set <output> <mode> <position> <scale> [transform]", file=sys.stderr)
+            sys.exit(1)
+        output = sys.argv[2]
+        mode = sys.argv[3]
+        position = sys.argv[4]
+        scale = sys.argv[5]
+        transform = sys.argv[6] if len(sys.argv) > 6 else None
+        
+        resolved_pos = resolve_position(output, position, mode)
+        
+        conf_path = os.path.expanduser("~/.config/hypr/monitors.conf")
+        lua_path = os.path.expanduser("~/.config/hypr/monitors.lua")
+        
+        update_monitors_conf(conf_path, output, mode, resolved_pos, scale, transform)
+        update_monitors_lua(lua_path, output, mode, resolved_pos, scale, transform)
+        
+        # Apply instantly
+        hypr_cmd = f"monitor={output},{mode},{resolved_pos},{scale}"
+        if transform and transform != "0":
+            hypr_cmd += f",transform,{transform}"
+        subprocess.run(["hyprctl", "keyword", "monitor", hypr_cmd], capture_output=True)
+        
+        # Apply GDK_SCALE
+        gdk_scale = get_gdk_scale(scale)
+        subprocess.run(["hyprctl", "keyword", "env", f"GDK_SCALE,{gdk_scale}"], capture_output=True)
+        print(f"Monitor {output} successfully updated.")
+    else:
+        print(f"Unknown command: {cmd}", file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

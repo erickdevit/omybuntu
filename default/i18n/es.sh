@@ -40,7 +40,7 @@ export I18N_TRIG_CAPTURE="  Capturas"
 export I18N_TRIG_TRANSCODE="󰧸  Codificar"
 export I18N_TRIG_SHARE="  Compartir"
 export I18N_TRIG_TOGGLE="󰔎  Alternar"
-export I18N_TRIG_MONITORS_TUI="󰍹  Gestión de Monitores (TUI)"
+export I18N_TRIG_MONITORS_TUI="󰍹  Gestión de Monitores"
 export I18N_TRIG_PROJECT="󰍹  Proyectar"
 export I18N_TRIG_HARDWARE="  Hardware"
 

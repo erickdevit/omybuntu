@@ -69,7 +69,7 @@
   },
   "clock#vertical": {
     "format": "{:%H\n  —\n%M}",
-    "format-alt": "{:L%d %B W%V %Y}",
+    "format-alt": "{:L%d\n%b\n%y}",
     "tooltip": false,
     "on-click-right": "omybuntu-launch-floating-terminal-with-presentation omybuntu-tz-select"
   },

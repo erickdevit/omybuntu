@@ -185,7 +185,7 @@ pub struct App {
     
     // Configs
     pub translations: Translations,
-    lang: String,
+    pub lang: String,
 }
 
 impl App {
@@ -244,14 +244,14 @@ impl App {
         });
         
         self.monitors = monitors;
-        if self.selected_idx >= self.total_main_options() {
+        if self.selected_idx >= self.monitors.len() {
             self.selected_idx = 0;
         }
         Ok(())
     }
     
     pub fn total_main_options(&self) -> usize {
-        self.monitors.len() + 5 // Monitors + Mirror + Extend + Screen 1 + Screen 2 + Exit
+        self.monitors.len()
     }
     
     fn run_helper(&self, args: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
@@ -279,16 +279,20 @@ impl App {
     }
     
     fn handle_key_main(&mut self, key: KeyEvent) -> Result<bool, Box<dyn std::error::Error>> {
-        let total = self.total_main_options();
+        let total = self.monitors.len();
+        if total == 0 {
+            return Ok(false);
+        }
+        
         match key.code {
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up | KeyCode::Left | KeyCode::Char('k') | KeyCode::Char('h') | KeyCode::BackTab => {
                 if self.selected_idx > 0 {
                     self.selected_idx -= 1;
                 } else {
                     self.selected_idx = total - 1;
                 }
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down | KeyCode::Right | KeyCode::Char('j') | KeyCode::Char('l') | KeyCode::Tab => {
                 if self.selected_idx < total - 1 {
                     self.selected_idx += 1;
                 } else {
@@ -296,36 +300,26 @@ impl App {
                 }
             }
             KeyCode::Enter => {
-                if self.selected_idx < self.monitors.len() {
-                    self.current_menu = MenuState::MonitorSelected;
-                    self.selected_sub_idx = 0;
-                } else {
-                    let opt_idx = self.selected_idx - self.monitors.len();
-                    match opt_idx {
-                        0 => {
-                            let _ = self.run_helper(&["project", "mirror"]);
-                            self.refresh_monitors()?;
-                        }
-                        1 => {
-                            let _ = self.run_helper(&["project", "extend"]);
-                            self.refresh_monitors()?;
-                        }
-                        2 => {
-                            let _ = self.run_helper(&["project", "screen1"]);
-                            self.refresh_monitors()?;
-                        }
-                        3 => {
-                            let _ = self.run_helper(&["project", "screen2"]);
-                            self.refresh_monitors()?;
-                        }
-                        _ => {
-                            self.should_quit = true;
-                            return Ok(true);
-                        }
-                    }
-                }
+                self.current_menu = MenuState::MonitorSelected;
+                self.selected_sub_idx = 0;
             }
-            KeyCode::Esc | KeyCode::Char('q') => {
+            KeyCode::Char('m') | KeyCode::Char('M') => {
+                let _ = self.run_helper(&["project", "mirror"]);
+                self.refresh_monitors()?;
+            }
+            KeyCode::Char('x') | KeyCode::Char('X') => {
+                let _ = self.run_helper(&["project", "extend"]);
+                self.refresh_monitors()?;
+            }
+            KeyCode::Char('1') => {
+                let _ = self.run_helper(&["project", "screen1"]);
+                self.refresh_monitors()?;
+            }
+            KeyCode::Char('2') => {
+                let _ = self.run_helper(&["project", "screen2"]);
+                self.refresh_monitors()?;
+            }
+            KeyCode::Esc | KeyCode::Char('q') | KeyCode::Char('Q') => {
                 self.should_quit = true;
                 return Ok(true);
             }

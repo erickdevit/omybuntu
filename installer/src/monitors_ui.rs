@@ -10,13 +10,13 @@ use crate::monitors_app::{App, MenuState, Monitor};
 pub fn draw(f: &mut Frame, app: &mut App) {
     let size = f.area();
 
-    // Split screen: Header (3), Preview (9), Bottom Half (remainder)
+    // Split screen: Header (3), Preview (Min(12)), Help Bar (3)
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),
-            Constraint::Length(9),
-            Constraint::Min(10),
+            Constraint::Min(12),
+            Constraint::Length(3),
         ])
         .split(size);
 
@@ -30,7 +30,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
         ),
         Span::styled(
-            " - omybuntu monitor manager",
+            " - omybuntu",
             Style::default().fg(Color::DarkGray),
         ),
     ]))
@@ -39,7 +39,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
     // 2. Preview block
     let preview_block = Block::default()
-        .title(" [ Connected Screens Preview ] ")
+        .title(" [ Connected Screens Layout ] ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
     
@@ -54,130 +54,72 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         height: preview_area.height.saturating_sub(2),
     };
 
-    // Split preview space into columns dynamically matching the number of monitors
+    // Split preview space into columns dynamically, centering the boxes
     if !app.monitors.is_empty() {
         let cols_count = app.monitors.len();
-        let mut constraints = Vec::new();
-        for _ in 0..cols_count {
-            constraints.push(Constraint::Length(36));
-        }
+        let box_w = 38;
+        let gap = 4;
+        let total_w = cols_count as u16 * box_w + (cols_count - 1) as u16 * gap;
         
+        let padding = if inner_preview.width > total_w {
+            (inner_preview.width - total_w) / 2
+        } else {
+            0
+        };
+
+        let mut constraints = Vec::new();
+        if padding > 0 {
+            constraints.push(Constraint::Length(padding));
+        }
+        for i in 0..cols_count {
+            constraints.push(Constraint::Length(box_w));
+            if i < cols_count - 1 {
+                constraints.push(Constraint::Length(gap));
+            }
+        }
+        constraints.push(Constraint::Min(0));
+
         let preview_cols = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(constraints)
             .split(inner_preview);
 
+        let mut monitor_rects = Vec::new();
+        let mut col_idx = if padding > 0 { 1 } else { 0 };
+        for _ in 0..cols_count {
+            if col_idx < preview_cols.len() {
+                monitor_rects.push(preview_cols[col_idx]);
+            }
+            col_idx += 2;
+        }
+
         for (i, monitor) in app.monitors.iter().enumerate() {
-            if i < preview_cols.len() {
-                draw_monitor_box(f, preview_cols[i], monitor, i, app);
+            if i < monitor_rects.len() {
+                draw_monitor_box(f, monitor_rects[i], monitor, i, app);
             }
         }
     }
 
-    // 3. Bottom half divided horizontally: Left (Selected Details), Right (Actions menu)
-    let bottom_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(chunks[2]);
-
-    // Left: Selected Monitor Details
-    let selected_mon = app.monitors.get(app.selected_idx).or_else(|| app.monitors.first());
-    let details_block = Block::default()
-        .title(" [ Selected Monitor Details ] ")
+    // 3. Help Bar
+    let help_block = Block::default()
+        .title(" [ Keyboard Shortcuts & Navigation ] ")
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
         
-    let details_text = if let Some(m) = selected_mon {
-        let type_str = if m.name.contains("eDP") {
-            "Laptop"
-        } else if m.name.contains("HDMI") {
-            "HDMI"
-        } else if m.name.contains("DP") {
-            "DisplayPort"
-        } else {
-            "Other"
-        };
-        
-        let status = if m.disabled {
-            app.translations.disabled.to_string()
-        } else if !m.mirror_of.is_empty() && m.mirror_of != "none" {
-            format!("Mirroring {}", m.mirror_of)
-        } else {
-            format!("Active ({}x{} @ {}Hz)", m.width, m.height, m.refresh_rate.round())
-        };
-
-        vec![
-            Line::from(vec![
-                Span::styled("Name: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(&m.name, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            ]),
-            Line::from(vec![
-                Span::styled("Make/Model: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(format!("{} {}", m.make, m.model), Style::default().fg(Color::White)),
-            ]),
-            Line::from(vec![
-                Span::styled("Type: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(type_str, Style::default().fg(Color::White)),
-            ]),
-            Line::from(vec![
-                Span::styled("Scale: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(format!("{}x", m.scale), Style::default().fg(Color::White)),
-            ]),
-            Line::from(vec![
-                Span::styled("Position: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(format!("{}x{}", m.x, m.y), Style::default().fg(Color::White)),
-            ]),
-            Line::from(vec![
-                Span::styled("Rotation: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(format!("{}°", m.transform * 90), Style::default().fg(Color::White)),
-            ]),
-            Line::from(vec![
-                Span::styled("Status: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(status, Style::default().fg(if m.disabled { Color::Red } else { Color::Green })),
-            ]),
-        ]
-    } else {
-        vec![Line::from("No monitors selected")]
+    let help_text = match app.lang.as_str() {
+        "pt-br" => "←/→: Navegar | Enter: Configurar | M: Espelhar | X: Estender | 1: Tela 1 | 2: Tela 2 | Esc/Q: Sair",
+        "es" => "←/→: Navegar | Enter: Configurar | M: Duplicar | X: Extender | 1: Pantalla 1 | 2: Pantalla 2 | Esc/Q: Salir",
+        _ => "←/→: Navigate | Enter: Configure | M: Mirror | X: Extend | 1: Screen 1 | 2: Screen 2 | Esc/Q: Exit",
     };
-
-    let details_para = Paragraph::new(details_text).block(details_block);
-    f.render_widget(details_para, bottom_chunks[0]);
-
-    // Right: Actions / Options List
-    let actions_block = Block::default()
-        .title(format!(" [ {} ] ", app.translations.select_action))
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
-
-    let mut actions_items = Vec::new();
-    for (i, m) in app.monitors.iter().enumerate() {
-        let lbl = format!("Configure Monitor {} ({})", i + 1, m.name);
-        actions_items.push(lbl);
-    }
-    actions_items.push(app.translations.preset_mirror.to_string());
-    actions_items.push(app.translations.preset_extend.to_string());
-    actions_items.push(app.translations.preset_screen1.to_string());
-    actions_items.push(app.translations.preset_screen2.to_string());
-    actions_items.push("Exit TUI".to_string());
-
-    let list_items: Vec<ListItem> = actions_items
-        .iter()
-        .enumerate()
-        .map(|(i, item)| {
-            if i == app.selected_idx {
-                ListItem::new(format!("> {}", item)).style(
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                )
-            } else {
-                ListItem::new(format!("  {}", item))
-            }
-        })
-        .collect();
-
-    let list = List::new(list_items).block(actions_block);
-    f.render_widget(list, bottom_chunks[1]);
+    
+    let help_para = Paragraph::new(Line::from(Span::styled(
+        help_text,
+        Style::default().fg(Color::Yellow),
+    )))
+    .block(help_block)
+    .alignment(ratatui::layout::Alignment::Center);
+    
+    f.render_widget(help_para, chunks[2]);
 
     // 4. Overlays / Popups
     match app.current_menu {
@@ -248,6 +190,10 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
             Span::styled(&monitor.name, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::styled(format!(" ({})", type_str), Style::default().fg(Color::DarkGray)),
         ]),
+        Line::from(vec![
+            Span::styled("Model: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{} {}", monitor.make, monitor.model), Style::default().fg(Color::White)),
+        ]),
     ];
 
     if monitor.disabled {
@@ -255,6 +201,8 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
             Span::styled("Status: ", Style::default().fg(Color::DarkGray)),
             Span::styled(app.translations.disabled, Style::default().fg(Color::Red)),
         ]));
+        lines.push(Line::from(""));
+        lines.push(Line::from(""));
         lines.push(Line::from(""));
         lines.push(Line::from(""));
     } else {
@@ -273,15 +221,27 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
             Span::styled("Scale: ", Style::default().fg(Color::DarkGray)),
             Span::styled(format!("{}x", monitor.scale), Style::default().fg(Color::White)),
         ]));
-        
-        let mut status_line = Vec::new();
-        status_line.push(Span::styled(format!("* {} *", app.translations.active), Style::default().fg(Color::Green)));
-        if monitor.focused {
-            status_line.push(Span::styled("  ", Style::default()));
-            status_line.push(Span::styled(format!("* {} *", app.translations.focused), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)));
-        }
-        lines.push(Line::from(status_line));
+        lines.push(Line::from(vec![
+            Span::styled("Pos: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}x{}", monitor.x, monitor.y), Style::default().fg(Color::White)),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled("Rot: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}°", monitor.transform * 90), Style::default().fg(Color::White)),
+        ]));
     }
+
+    let mut status_line = Vec::new();
+    if !monitor.disabled {
+        status_line.push(Span::styled(format!("* {} *", app.translations.active), Style::default().fg(Color::Green)));
+    }
+    if monitor.focused {
+        if !status_line.is_empty() {
+            status_line.push(Span::styled("  ", Style::default()));
+        }
+        status_line.push(Span::styled(format!("* {} *", app.translations.focused), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)));
+    }
+    lines.push(Line::from(status_line));
 
     let para = Paragraph::new(lines).block(block);
     f.render_widget(para, area);

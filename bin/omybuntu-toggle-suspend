@@ -2,7 +2,9 @@
 
 # omybuntu:summary=Toggle suspend availability in the system menu
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 omybuntu-toggle \
-  --enabled-notification "󰒲   Suspend removed from system menu" \
-  --disabled-notification "󰒲   Suspend now available in system menu" \
+  --enabled-notification "󰒲   $I18N_TOG_SUSPEND_OFF" \
+  --disabled-notification "󰒲   $I18N_TOG_SUSPEND_ON" \
   suspend-off

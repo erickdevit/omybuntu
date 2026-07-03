@@ -2,7 +2,9 @@
 
 # omybuntu:summary=Toggle single-window square aspect ratio.
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 case $(omybuntu-hyprland-toggle single-window-aspect-ratio) in
-  on) omybuntu-notification-send -g  "Enable single-window square aspect ratio" ;;
-  off) omybuntu-notification-send -g  "Disable single-window square aspect ratio" ;;
+  on) omybuntu-notification-send -g  "$I18N_WIN_ASPECT_ON" ;;
+  off) omybuntu-notification-send -g  "$I18N_WIN_ASPECT_OFF" ;;
 esac

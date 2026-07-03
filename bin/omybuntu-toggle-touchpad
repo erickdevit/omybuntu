@@ -3,6 +3,8 @@
 # omybuntu:summary=Enable, disable, or toggle the touchpad
 # omybuntu:args=[on|off|toggle]
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 STATE_FILE="$HOME/.local/state/omybuntu/toggles/hypr/touchpad-disabled.lua"
 
 device="$(omybuntu-hw-touchpad)"
@@ -15,14 +17,14 @@ fi
 enable() {
   hyprctl eval "hl.device({ name = \"$device\", enabled = true })" >/dev/null 2>&1 || hyprctl keyword "device:$device:enabled" true >/dev/null
   rm -f "$STATE_FILE"
-  omybuntu-swayosd-client --custom-icon input-touchpad-symbolic --custom-message "Touchpad enabled"
+  omybuntu-swayosd-client --custom-icon input-touchpad-symbolic --custom-message "$I18N_OSD_TOUCHPAD_ON"
 }
 
 disable() {
   hyprctl eval "hl.device({ name = \"$device\", enabled = false })" >/dev/null 2>&1 || hyprctl keyword "device:$device:enabled" false >/dev/null
   mkdir -p "$(dirname "$STATE_FILE")"
   printf 'hl.device({ name = "%s", enabled = false })\n' "$device" >"$STATE_FILE"
-  omybuntu-swayosd-client --custom-icon touchpad-disabled-symbolic --custom-message "Touchpad disabled"
+  omybuntu-swayosd-client --custom-icon touchpad-disabled-symbolic --custom-message "$I18N_OSD_TOUCHPAD_OFF"
 }
 
 case "${1:-toggle}" in

@@ -4,6 +4,8 @@
 # omybuntu:args=[chromium|chrome|brave|brave-origin|edge|firefox|zen]
 # omybuntu:examples=omybuntu default browser firefox | omybuntu default browser brave
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (($# == 0)); then
   case "$(xdg-settings get default-web-browser)" in
   chromium.desktop) echo "chromium" ;;
@@ -37,4 +39,5 @@ xdg-mime default "$desktop_id" x-scheme-handler/http
 xdg-mime default "$desktop_id" x-scheme-handler/https
 xdg-mime default "$desktop_id" text/html
 
-notify-send -u low "$glyph    $name is now the default browser"
+omybuntu-notification-send -g "$glyph" "$(printf "$I18N_BROWSER_DEFAULT_SET" "$name")"
+

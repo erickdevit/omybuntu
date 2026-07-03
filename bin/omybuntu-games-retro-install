@@ -6,20 +6,22 @@
 
 set -e
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (( $# == 0 )); then
   mapfile -t cores < <(omybuntu-games-retro-cores)
 
   if (( ${#cores[@]} == 0 )); then
-    omybuntu-notification-send -g "󰯉" "No RetroArch cores found" "/usr/lib/libretro"
+    omybuntu-notification-send -g "󰯉" "$I18N_GAMES_RETRO_NO_CORES" "/usr/lib/libretro"
     exit 1
   fi
 
-  core=$(omybuntu-menu-select "RetroArch core" "${cores[@]}") || exit 0
+  core=$(omybuntu-menu-select "$I18N_GAMES_RETRO_CORE_PROMPT" "${cores[@]}") || exit 0
   [[ -n $core ]] || exit 0
   core="${core##*(}"
   core="${core%)}"
 
-  game_path=$(omybuntu-menu-file "Retro game" "$HOME/Games/roms" "7z bin ccd chd cue dmg elf fds gb gba gbc iso lha m3u md n64 nds nes pbp sfc smc swc zip z64") || exit 0
+  game_path=$(omybuntu-menu-file "$I18N_GAMES_RETRO_GAME_PROMPT" "$HOME/Games/roms" "7z bin ccd chd cue dmg elf fds gb gba gbc iso lha m3u md n64 nds nes pbp sfc smc swc zip z64") || exit 0
   [[ -n $game_path ]] || exit 0
 elif (( $# == 2 )); then
   core="$1"
@@ -73,4 +75,4 @@ EOF
 chmod +x "$desktop_file"
 update-desktop-database "$desktop_dir" &>/dev/null || true
 
-omybuntu-notification-send -g "󰯉" "$game_name installed" "Start it with Super + Space"
+omybuntu-notification-send -g "󰯉" "$(printf "$I18N_GAMES_RETRO_INSTALLED" "$game_name")" "$I18N_GAMES_RETRO_START_INFO"

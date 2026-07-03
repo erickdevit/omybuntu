@@ -3,6 +3,8 @@
 # omybuntu:summary=Enable, disable, toggle, or recover the internal laptop display
 # omybuntu:args=<on|off|toggle|recover>
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 TOGGLE="internal-monitor-disable"
 TOGGLE_FLAG="$HOME/.local/state/omybuntu/toggles/hypr/$TOGGLE.lua"
 MIRROR_TOGGLE="internal-monitor-mirror"
@@ -13,19 +15,19 @@ INTERNAL=$(hyprctl monitors -j | jq -r '.[] | select(.name | contains("eDP")).na
 on() {
   if omybuntu-hyprland-toggle-enabled $TOGGLE; then
     omybuntu-hyprland-toggle $TOGGLE off
-    omybuntu-notification-send -g 󰍹 "Laptop display enabled"
+    omybuntu-notification-send -g 󰍹 "$I18N_MON_INTERNAL_ENABLED"
   fi
 }
 
 off() {
   if ! omybuntu-hw-external-monitors; then
-    omybuntu-notification-send -g 󰍹 "Can't disable the only active display"
+    omybuntu-notification-send -g 󰍹 "$I18N_MON_INTERNAL_CANT_DISABLE"
     exit 1
   fi
 
   if omybuntu-hyprland-toggle-disabled $TOGGLE && omybuntu-hyprland-toggle-disabled $MIRROR_TOGGLE; then
     printf 'hl.monitor({ output = "%s", disabled = true })\n' "$INTERNAL" >"$TOGGLE_FLAG"
-    omybuntu-notification-send -g 󰍹 "Laptop display disabled"
+    omybuntu-notification-send -g 󰍹 "$I18N_MON_INTERNAL_DISABLED"
     hyprctl reload
   fi
 }

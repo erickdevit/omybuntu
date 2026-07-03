@@ -2,7 +2,9 @@
 
 set -e
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 # Remove this hook after use
 rm -f "$0"
 
-notify-send "    Install Dictation with Voxtype" "Click to install voice dictation for Omybuntu." -u critical
+omybuntu-notification-send -g  -u critical "$I18N_FIRST_RUN_VOXTYPE_TITLE" "$I18N_FIRST_RUN_VOXTYPE_BODY"

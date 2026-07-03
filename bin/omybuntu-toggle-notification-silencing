@@ -4,10 +4,12 @@
 
 makoctl mode -t do-not-disturb
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if makoctl mode | grep -q 'do-not-disturb'; then
-  notify-send -u low "󰂛    Silenced notifications"
+  omybuntu-notification-send -g 󰂛 "$I18N_TOG_NOTIFS_SILENT"
 else
-  notify-send -u low "󰂚    Enabled notifications"
+  omybuntu-notification-send -g 󰂚 "$I18N_TOG_NOTIFS_ENABLED"
 fi
 
 pkill -RTMIN+10 waybar

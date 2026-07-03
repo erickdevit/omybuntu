@@ -19,10 +19,11 @@
 # users can attach a log when reporting capture failures.
 
 [[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 OUTPUT_DIR="${OMYBUNTU_SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos}}"
 
 if [[ ! -d $OUTPUT_DIR ]]; then
-  notify-send "Screen recording directory does not exist: $OUTPUT_DIR" -u critical -t 3000
+  omybuntu-notification-send -g  -u critical "$(printf "$I18N_RECORD_DIR_MISSING" "$OUTPUT_DIR")" -t 3000
   exit 1
 fi
 
@@ -53,7 +54,7 @@ start_webcam_overlay() {
   if [[ -z $WEBCAM_DEVICE ]]; then
     WEBCAM_DEVICE=$(v4l2-ctl --list-devices 2>/dev/null | grep -m1 "^[[:space:]]*/dev/video" | tr -d '\t')
     if [[ -z $WEBCAM_DEVICE ]]; then
-      notify-send "No webcam devices found" -u critical -t 3000
+      omybuntu-notification-send -g  -u critical "$I18N_RECORD_WEBCAM_NONE" -t 3000
       return 1
     fi
   fi
@@ -229,7 +230,7 @@ stop_screenrecording() {
 
   if pgrep -f "^gpu-screen-recorder" >/dev/null; then
     pkill -9 -f "^gpu-screen-recorder"
-    notify-send "Screen recording error" "Recording process had to be force-killed. Video may be corrupted." -u critical -t 5000
+    omybuntu-notification-send -g  -u critical "$I18N_RECORD_ERROR_TITLE" "$I18N_RECORD_ERROR_BODY" -t 5000
   else
     finalize_recording
     local filename=$(cat "$RECORDING_FILE" 2>/dev/null)
@@ -240,7 +241,7 @@ stop_screenrecording() {
     ffmpeg -y -i "$filename" -ss 00:00:00.1 -vframes 1 -q:v 2 "$preview" -loglevel quiet 2>/dev/null
 
     (
-      ACTION=$(notify-send "Screen recording saved" "Open with Super + Alt + , (or click this)" -t 10000 -i "${preview:-$filename}" -A "default=open")
+      ACTION=$(omybuntu-notification-send -g  "$I18N_RECORD_SAVED_TITLE" "$I18N_RECORD_SAVED_BODY" -t 10000 -i "${preview:-$filename}" -A "default=open")
       [[ $ACTION == "default" ]] && mpv "$filename"
       rm -f "$preview"
     ) &

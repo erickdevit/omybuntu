@@ -7,11 +7,12 @@
 # omybuntu:aliases=omybuntu screenshot
 
 [[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 OUTPUT_DIR="${OMYBUNTU_SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}}"
 
 if [[ ! -d $OUTPUT_DIR ]]; then
   mkdir -p "$OUTPUT_DIR"
-  notify-send "Created screenshot directory: $OUTPUT_DIR" -u normal -t 2000
+  omybuntu-notification-send -g  -u normal "$(printf "$I18N_SCREENSHOT_DIR_CREATED" "$OUTPUT_DIR")" -t 2000
 fi
 
 pkill slurp && exit 0
@@ -135,7 +136,7 @@ case "$PROCESSING" in
     wl-copy <"$FILEPATH"
 
     (
-      ACTION=$(notify-send "Screenshot saved to clipboard and file" "Edit with Super + Alt + , (or click this)" -t 10000 -i "$FILEPATH" -A "default=edit")
+      ACTION=$(omybuntu-notification-send -g  "$I18N_SCREENSHOT_SAVED_TITLE" "$I18N_SCREENSHOT_SAVED_BODY" -t 10000 -i "$FILEPATH" -A "default=edit")
       [[ $ACTION == "default" ]] && open_editor "$FILEPATH"
     ) >/dev/null 2>&1 &
     ;;

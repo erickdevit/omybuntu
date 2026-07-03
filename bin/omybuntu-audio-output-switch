@@ -2,11 +2,13 @@
 
 # omybuntu:summary=Switch between audio outputs while preserving the mute status. By default mapped to Super + Mute.
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 sinks=$(pactl -f json list sinks | jq '[.[] | select((.ports | length == 0) or ([.ports[]? | .availability != "not available"] | any))]')
 sinks_count=$(echo "$sinks" | jq '. | length')
 
 if (( sinks_count == 0 )); then
-  omybuntu-swayosd-client --custom-message "No audio devices found"
+  omybuntu-swayosd-client --custom-message "$I18N_OSD_AUDIO_NONE"
   exit 1
 fi
 

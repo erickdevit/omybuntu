@@ -8,6 +8,9 @@
 
 set -euo pipefail
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -166,7 +169,7 @@ main() {
   search_path="${search_path:-$HOME/Pictures:$HOME/Videos}"
 
   if [[ -z $input ]]; then
-    input=$(omybuntu-menu-file "Transcode picture or video" "$search_path" "jpg jpeg png webp gif heic avif mp4 mov m4v mkv webm avi")
+    input=$(omybuntu-menu-file "$I18N_TRANSCODE_PICK_FILE" "$search_path" "jpg jpeg png webp gif heic avif mp4 mov m4v mkv webm avi")
   fi
 
   [[ -n $input ]] || return 1
@@ -176,32 +179,33 @@ main() {
 
   if [[ -z $format ]]; then
     if [[ $type == "picture" ]]; then
-      format=$(omybuntu-menu-select "Select format" jpg png)
+      format=$(omybuntu-menu-select "$I18N_TRANSCODE_SELECT_FORMAT" jpg png)
     else
-      format=$(omybuntu-menu-select "Select format" mp4 gif)
+      format=$(omybuntu-menu-select "$I18N_TRANSCODE_SELECT_FORMAT" mp4 gif)
     fi
   fi
 
   if [[ -z $resolution ]]; then
     if [[ $type == "picture" ]]; then
-      resolution=$(omybuntu-menu-select "Select resolution" high medium low)
+      resolution=$(omybuntu-menu-select "$I18N_TRANSCODE_SELECT_RESOLUTION" high medium low)
     else
-      resolution=$(omybuntu-menu-select "Select resolution" 4k 1080p 720p)
+      resolution=$(omybuntu-menu-select "$I18N_TRANSCODE_SELECT_RESOLUTION" 4k 1080p 720p)
     fi
   fi
 
   output=$(output_path "$input" "$format" "$resolution")
 
   if [[ $type == "video" ]]; then
-    omybuntu-notification-send -g  "Transcoding video…" "$(basename -- "$input") to $format ($resolution)"
+    omybuntu-notification-send -g  "$I18N_TRANSCODE_VIDEO_PROGRESS" "$(basename -- "$input") $I18N_TRANSCODE_TO $format ($resolution)"
     transcode_video "$input" "$format" "$resolution" "$output"
     copy_to_clipboard "$output"
-    omybuntu-notification-send -g  "Transcoded to $resolution $format" "Saved and copied to clipboard."
+    omybuntu-notification-send -g  "$(printf "$I18N_TRANSCODE_SUCCESS" "$resolution" "$format")" "$I18N_TRANSCODE_SUCCESS_MSG"
   else
     transcode_picture "$input" "$format" "$resolution" "$output"
     copy_to_clipboard "$output"
-    omybuntu-notification-send -g  "Transcoded to $resolution $format" "Saved and copied to clipboard."
+    omybuntu-notification-send -g  "$(printf "$I18N_TRANSCODE_SUCCESS" "$resolution" "$format")" "$I18N_TRANSCODE_SUCCESS_MSG"
   fi
+
 }
 
 main "$@"

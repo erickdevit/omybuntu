@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+
 format_remaining() {
   local seconds=$1
   local minutes=$((seconds / 60))
@@ -68,9 +71,9 @@ show_reminders() {
   done < <(systemctl --user list-timers --all --output=json "omybuntu-reminder-*.timer" 2>/dev/null | jq -r '.[] | [.unit, .next] | @tsv')
 
   if [[ -z $body ]]; then
-    omybuntu-notification-send -g 󰔛 "Upcoming reminders" "No outstanding reminders"
+    omybuntu-notification-send -g 󰔛 "$I18N_REM_UPCOMING" "$I18N_REM_NONE"
   else
-    omybuntu-notification-send -g 󰔛 "Upcoming reminders" "${body%$'\n'}"
+    omybuntu-notification-send -g 󰔛 "$I18N_REM_UPCOMING" "${body%$'\n'}"
   fi
 }
 
@@ -85,7 +88,7 @@ clear_reminders() {
   fi
 
   rm -f "$reminder_dir"/omybuntu-reminder-*.message 2>/dev/null || true
-  omybuntu-notification-send -g 󰔛 "All reminders have been cleared"
+  omybuntu-notification-send -g 󰔛 "$I18N_REM_CLEARED_ALL"
 }
 
 case ${1:-} in
@@ -112,7 +115,7 @@ if [[ -z $minutes ]] || [[ ! $minutes =~ ^[0-9]+$ ]] || ((minutes == 0)); then
 fi
 
 if [[ -z $message ]]; then
-  message="Your ${minutes} minutes are up"
+  message=$(printf "$I18N_REM_TIME_UP" "$minutes")
 fi
 
 set_at=$(date +%s)
@@ -120,17 +123,18 @@ remind_at=$(date -d "+${minutes} minutes" +%H:%M)
 unit="omybuntu-reminder-${minutes}m-$set_at"
 reminder_dir="${XDG_RUNTIME_DIR:-/tmp}/omybuntu-reminders"
 message_file="$reminder_dir/$unit.message"
-confirmation="You'll be reminded at $remind_at"
-confirmation_title="Reminder set for ${minutes} minutes"
+confirmation=$(printf "$I18N_REM_CONFIRM" "$remind_at")
+confirmation_title=$(printf "$I18N_REM_SET_FOR" "$minutes")
 
 mkdir -p "$reminder_dir"
 
 if [[ -n $custom_message ]]; then
   printf "%s" "$custom_message" >"$message_file"
-  confirmation_title="$custom_message in ${minutes} minutes"
+  confirmation_title="$custom_message (${minutes}m)"
 fi
 
 systemd-run --user --quiet --collect --on-active="${minutes}m" --unit="$unit" \
-  bash -c 'omybuntu-notification-send -g 󰔛 "Reminder" "$1" -u critical; rm -f "$2"' bash "$message" "$message_file"
+  bash -c 'omybuntu-notification-send -g 󰔛 "$1" "$2" -u critical; rm -f "$3"' bash "$I18N_REM_TITLE" "$message" "$message_file"
 
 omybuntu-notification-send -g 󰔛 "$confirmation_title" "$confirmation"
+

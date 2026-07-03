@@ -4,6 +4,8 @@
 # omybuntu:args=<sharp|round>
 # omybuntu:examples=omybuntu style corners round | omybuntu style corners sharp
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if [[ $1 != "sharp" && $1 != "round" ]]; then
   echo "Usage: omybuntu-style-corners <sharp|round>"
   exit 1
@@ -15,6 +17,6 @@ omybuntu-style-corners-mako "$1"
 omybuntu-style-corners-walker "$1"
 
 case $1 in
-  sharp) omybuntu-notification-send "Sharp corners enabled" -g 󰝣 ;;
-  round) omybuntu-notification-send "Round corners enabled" -g 󰘇 ;;
+  sharp) omybuntu-notification-send "$I18N_STYLE_CORNERS_SHARP" -g 󰝣 ;;
+  round) omybuntu-notification-send "$I18N_STYLE_CORNERS_ROUND" -g 󰘇 ;;
 esac

@@ -2,7 +2,9 @@
 
 # omybuntu:summary=Toggle screensaver availability
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 omybuntu-toggle \
-  --enabled-notification "󱄄   Screensaver disabled" \
-  --disabled-notification "󱄄   Screensaver enabled" \
+  --enabled-notification "󱄄   $I18N_TOG_SCREENSAVER_OFF" \
+  --disabled-notification "󱄄   $I18N_TOG_SCREENSAVER_ON" \
   screensaver-off

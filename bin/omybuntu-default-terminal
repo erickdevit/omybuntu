@@ -4,6 +4,8 @@
 # omybuntu:args=[alacritty|foot|ghostty|kitty]
 # omybuntu:examples=omybuntu default terminal ghostty | omybuntu default terminal kitty
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (($# == 0)); then
   desktop_id=$(grep -vE '^($|#)' ~/.config/xdg-terminals.list 2>/dev/null | head -n 1)
   case "$desktop_id" in
@@ -33,4 +35,5 @@ cat >~/.config/xdg-terminals.list <<EOF
 $desktop_id
 EOF
 
-notify-send -u low "$glyph    $name is now the default terminal"
+omybuntu-notification-send -g "$glyph" "$(printf "$I18N_TERMINAL_DEFAULT_SET" "$name")"
+

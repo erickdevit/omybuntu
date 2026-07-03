@@ -2,6 +2,8 @@
 
 # omybuntu:summary=Toggle the layout on the current active workspace between dwindle and scrolling
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 ACTIVE_WORKSPACE=$(hyprctl activeworkspace -j | jq -r '.id')
 CURRENT_LAYOUT=$(hyprctl activeworkspace -j | jq -r '.tiledLayout')
 
@@ -13,4 +15,5 @@ esac
 if hyprctl eval "hl.workspace_rule({ workspace = \"$ACTIVE_WORKSPACE\", layout = \"$NEW_LAYOUT\" })" 2>&1 | grep -q "unknown request"; then
   hyprctl keyword workspace "$ACTIVE_WORKSPACE, layout:$NEW_LAYOUT"
 fi
-notify-send -u low "󱂬    Workspace layout set to $NEW_LAYOUT"
+omybuntu-notification-send -g 󱂬 "$(printf "$I18N_LAYOUT_SET" "$NEW_LAYOUT")"
+

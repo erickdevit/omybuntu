@@ -421,3 +421,109 @@ export I18N_FIRST_RUN_WIFI_TITLE="󰖩    Click to Setup Wi-Fi"
 export I18N_FIRST_RUN_WIFI_BODY="Tab to navigate, Space to select, ? for help."
 export I18N_REMOVE_GNOME_PROMPT="Do you want to completely remove the default Ubuntu GNOME Desktop Environment and GDM3 display manager?"
 
+# Retro games / RetroArch
+export I18N_GAMES_RETRO_CORE_PROMPT="RetroArch core"
+export I18N_GAMES_RETRO_GAME_PROMPT="Retro game"
+export I18N_GAMES_RETRO_NO_CORES="No RetroArch cores found"
+export I18N_GAMES_RETRO_INSTALLED="%s installed"
+export I18N_GAMES_RETRO_START_INFO="Start it with Super + Space"
+
+# Transcode
+export I18N_TRANSCODE_PICK_FILE="Transcode picture or video"
+export I18N_TRANSCODE_SELECT_FORMAT="Select format"
+export I18N_TRANSCODE_SELECT_RESOLUTION="Select resolution"
+export I18N_TRANSCODE_VIDEO_PROGRESS="Transcoding video…"
+export I18N_TRANSCODE_TO="to"
+export I18N_TRANSCODE_SUCCESS="Transcoded to %s %s"
+export I18N_TRANSCODE_SUCCESS_MSG="Saved and copied to clipboard."
+
+# Menu prompts
+export I18N_MENU_KEYBINDINGS_PROMPT="Keybindings"
+export I18N_MENU_TMUX_KEYBINDINGS_PROMPT="Tmux keybindings"
+export I18N_MENU_LAUNCH_PROMPT="Launch"
+export I18N_MENU_EDITING_CONFIG="Editing config file"
+
+# Reminders
+export I18N_REM_UPCOMING="Upcoming reminders"
+export I18N_REM_NONE="No outstanding reminders"
+export I18N_REM_CLEARED_ALL="All reminders have been cleared"
+export I18N_REM_TIME_UP="Your %d minutes are up"
+export I18N_REM_CONFIRM="You'll be reminded at %s"
+export I18N_REM_SET_FOR="Reminder set for %d minutes"
+export I18N_REM_TITLE="Reminder"
+
+# Laptop Monitor / Screen Mirroring
+export I18N_MON_INTERNAL_ENABLED="Laptop display enabled"
+export I18N_MON_INTERNAL_CANT_DISABLE="Can't disable the only active display"
+export I18N_MON_INTERNAL_DISABLED="Laptop display disabled"
+export I18N_MON_MIRROR_NO_EXTERNAL="No external monitors found for mirror"
+export I18N_MON_MIRROR_NO_INTERNAL="No laptop monitor found to mirror"
+export I18N_MON_MIRROR_ENABLED="Mirroring enabled (%s)"
+export I18N_MON_MIRROR_EXTENDED_RESTORED="Extended mode restored"
+
+# Workspace & Single Window Aspect Ratio
+export I18N_WIN_ASPECT_ON="Enable single-window square aspect ratio"
+export I18N_WIN_ASPECT_OFF="Disable single-window square aspect ratio"
+
+# Styling / Corners / Cursor / BG
+export I18N_STYLE_CORNERS_SHARP="Sharp corners enabled"
+export I18N_STYLE_CORNERS_ROUND="Round corners enabled"
+export I18N_STYLE_CURSOR_NORMAL="Normal cursor enabled"
+export I18N_STYLE_CURSOR_SLANTED="Slanted cursor enabled"
+export I18N_THEME_BG_NOT_FOUND="No background was found for theme"
+
+# Battery Monitor
+export I18N_BATTERY_RECHARGE_TITLE="Time to recharge!"
+export I18N_BATTERY_RECHARGE_BODY="Battery is down to %d%%"
+
+# Screenrecording & Screenshots & Text
+export I18N_RECORD_DIR_MISSING="Screen recording directory does not exist: %s"
+export I18N_RECORD_WEBCAM_NONE="No webcam devices found"
+export I18N_RECORD_ERROR_TITLE="Screen recording error"
+export I18N_RECORD_ERROR_BODY="Recording process had to be force-killed. Video may be corrupted."
+export I18N_RECORD_SAVED_TITLE="Screen recording saved"
+export I18N_RECORD_SAVED_BODY="Open with Super + Alt + , (or click this)"
+export I18N_SCREENSHOT_DIR_CREATED="Created screenshot directory: %s"
+export I18N_SCREENSHOT_SAVED_TITLE="Screenshot saved to clipboard and file"
+export I18N_SCREENSHOT_SAVED_BODY="Edit with Super + Alt + , (or click this)"
+export I18N_TEXT_EXTRACT_COPIED="Copied text from selection to clipboard"
+
+# Defaults (Browser / Editor / Terminal / Font)
+export I18N_BROWSER_DEFAULT_SET="%s is now the default browser"
+export I18N_EDITOR_DEFAULT_SET_TITLE="%s is now the default editor"
+export I18N_EDITOR_DEFAULT_SET_BODY="      Effective after logging out"
+export I18N_TERMINAL_DEFAULT_SET="%s is now the default terminal"
+export I18N_FONT_RESTART_GHOSTTY="You must restart Ghostty to see font change"
+export I18N_FONT_RESTART_FOOT="You must restart Foot to see font change"
+
+# Scaling & Layout
+export I18N_SCALE_SET="Display scaling set to %sx"
+export I18N_LAYOUT_SET="Workspace layout set to %s"
+
+# Screensaver & Toggles
+export I18N_SCREENSAVER_TERM_ONLY="Screensaver only runs in Alacritty, Foot, Ghostty, or Kitty"
+export I18N_TOG_IDLE_STOP="Stop locking computer when idle"
+export I18N_TOG_IDLE_START="Now locking computer when idle"
+export I18N_TOG_NIGHTLIGHT_ON="Nightlight screen temperature"
+export I18N_TOG_NIGHTLIGHT_OFF="Daylight screen temperature"
+export I18N_TOG_NOTIFS_SILENT="Silenced notifications"
+export I18N_TOG_NOTIFS_ENABLED="Enabled notifications"
+
+# SwayOSD Custom Messaging
+export I18N_OSD_TOUCHPAD_ON="Touchpad enabled"
+export I18N_OSD_TOUCHPAD_OFF="Touchpad disabled"
+export I18N_OSD_TOUCHSCREEN_ON="Touchscreen enabled"
+export I18N_OSD_TOUCHSCREEN_OFF="Touchscreen disabled"
+export I18N_OSD_MIC_MUTED="Microphone muted"
+export I18N_OSD_MIC_ON="Microphone on"
+export I18N_OSD_AUDIO_NONE="No audio devices found"
+
+# First Run
+export I18N_FIRST_RUN_VOXTYPE_TITLE="Install Dictation with Voxtype"
+export I18N_FIRST_RUN_VOXTYPE_BODY="Click to install voice dictation for Omybuntu."
+
+# Screensaver & Suspend Toggles
+export I18N_TOG_SCREENSAVER_ON="Screensaver enabled"
+export I18N_TOG_SCREENSAVER_OFF="Screensaver disabled"
+export I18N_TOG_SUSPEND_ON="Suspend now available in system menu"
+export I18N_TOG_SUSPEND_OFF="Suspend removed from system menu"

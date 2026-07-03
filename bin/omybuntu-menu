@@ -54,7 +54,7 @@ present_terminal() {
 }
 
 open_in_editor() {
-  notify-send -u low "Editing config file" "$1"
+  omybuntu-notification-send -u low "$I18N_MENU_EDITING_CONFIG" "$1"
   omybuntu-launch-editor "$1"
 }
 
@@ -956,7 +956,7 @@ show_main_menu() {
 go_to_menu() {
   local val="$1"
   case "$val" in
-  *"$I18N_OPT_APPS"* | *apps*) walker -p "Launch…" ;;
+  *"$I18N_OPT_APPS"* | *apps*) walker -p "$I18N_MENU_LAUNCH_PROMPT" ;;
   *"$I18N_OPT_LEARN"* | *learn*) show_learn_menu ;;
   *"$I18N_OPT_TRIGGER"* | *trigger*) show_trigger_menu ;;
   *"$I18N_OPT_STYLE"* | *style*) show_style_menu ;;

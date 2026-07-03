@@ -421,3 +421,109 @@ export I18N_FIRST_RUN_WIFI_TITLE="󰖩    Clique para configurar Wi-Fi"
 export I18N_FIRST_RUN_WIFI_BODY="Tab para navegar, Espaço para selecionar, ? para ajuda."
 export I18N_REMOVE_GNOME_PROMPT="Deseja remover completamente a interface gráfica padrão do Ubuntu (GNOME Desktop) e o gerenciador de login GDM3?"
 
+# Retro games / RetroArch
+export I18N_GAMES_RETRO_CORE_PROMPT="RetroArch core"
+export I18N_GAMES_RETRO_GAME_PROMPT="Retro game"
+export I18N_GAMES_RETRO_NO_CORES="Nenhum núcleo do RetroArch encontrado"
+export I18N_GAMES_RETRO_INSTALLED="%s instalado"
+export I18N_GAMES_RETRO_START_INFO="Inicie com Super + Espaço"
+
+# Transcode
+export I18N_TRANSCODE_PICK_FILE="Transcodificar imagem ou vídeo"
+export I18N_TRANSCODE_SELECT_FORMAT="Selecionar formato"
+export I18N_TRANSCODE_SELECT_RESOLUTION="Selecionar resolução"
+export I18N_TRANSCODE_VIDEO_PROGRESS="Transcodificando vídeo…"
+export I18N_TRANSCODE_TO="para"
+export I18N_TRANSCODE_SUCCESS="Transcodificado para %s %s"
+export I18N_TRANSCODE_SUCCESS_MSG="Salvo e copiado para a área de transferência."
+
+# Menu prompts
+export I18N_MENU_KEYBINDINGS_PROMPT="Atalhos de teclado"
+export I18N_MENU_TMUX_KEYBINDINGS_PROMPT="Atalhos do Tmux"
+export I18N_MENU_LAUNCH_PROMPT="Iniciar"
+export I18N_MENU_EDITING_CONFIG="Editando arquivo de configuração"
+
+# Reminders
+export I18N_REM_UPCOMING="Próximos lembretes"
+export I18N_REM_NONE="Nenhum lembrete pendente"
+export I18N_REM_CLEARED_ALL="Todos os lembretes foram limpos"
+export I18N_REM_TIME_UP="Seus %d minutos acabaram"
+export I18N_REM_CONFIRM="Você será lembrado às %s"
+export I18N_REM_SET_FOR="Lembrete definido para %d minutos"
+export I18N_REM_TITLE="Lembrete"
+
+# Laptop Monitor / Screen Mirroring
+export I18N_MON_INTERNAL_ENABLED="Tela do laptop ativada"
+export I18N_MON_INTERNAL_CANT_DISABLE="Não é possível desativar a única tela ativa"
+export I18N_MON_INTERNAL_DISABLED="Tela do laptop desativada"
+export I18N_MON_MIRROR_NO_EXTERNAL="Nenhum monitor externo encontrado para espelhar"
+export I18N_MON_MIRROR_NO_INTERNAL="Nenhuma tela de laptop encontrada para espelhar"
+export I18N_MON_MIRROR_ENABLED="Espelhamento ativado (%s)"
+export I18N_MON_MIRROR_EXTENDED_RESTORED="Modo estendido restaurado"
+
+# Workspace & Single Window Aspect Ratio
+export I18N_WIN_ASPECT_ON="Ativar proporção quadrada para janela única"
+export I18N_WIN_ASPECT_OFF="Desativar proporção quadrada para janela única"
+
+# Styling / Corners / Cursor / BG
+export I18N_STYLE_CORNERS_SHARP="Cantos pontiagudos ativados"
+export I18N_STYLE_CORNERS_ROUND="Cantos arredondados ativados"
+export I18N_STYLE_CURSOR_NORMAL="Cursor normal ativado"
+export I18N_STYLE_CURSOR_SLANTED="Cursor inclinado ativado"
+export I18N_THEME_BG_NOT_FOUND="Nenhum plano de fundo encontrado para o tema"
+
+# Battery Monitor
+export I18N_BATTERY_RECHARGE_TITLE="Hora de recarregar!"
+export I18N_BATTERY_RECHARGE_BODY="A bateria caiu para %d%%"
+
+# Screenrecording & Screenshots & Text
+export I18N_RECORD_DIR_MISSING="Diretório de gravação de tela não existe: %s"
+export I18N_RECORD_WEBCAM_NONE="Nenhum dispositivo de webcam encontrado"
+export I18N_RECORD_ERROR_TITLE="Erro na gravação de tela"
+export I18N_RECORD_ERROR_BODY="O processo de gravação teve que ser forçado a encerrar. O vídeo pode estar corrompido."
+export I18N_RECORD_SAVED_TITLE="Gravação de tela salva"
+export I18N_RECORD_SAVED_BODY="Abrir com Super + Alt + , (ou clique aqui)"
+export I18N_SCREENSHOT_DIR_CREATED="Diretório de captura de tela criado: %s"
+export I18N_SCREENSHOT_SAVED_TITLE="Captura de tela salva no arquivo e área de transferência"
+export I18N_SCREENSHOT_SAVED_BODY="Editar com Super + Alt + , (ou clique aqui)"
+export I18N_TEXT_EXTRACT_COPIED="Texto copiado da seleção para a área de transferência"
+
+# Defaults (Browser / Editor / Terminal / Font)
+export I18N_BROWSER_DEFAULT_SET="%s agora é o navegador padrão"
+export I18N_EDITOR_DEFAULT_SET_TITLE="%s agora é o editor padrão"
+export I18N_EDITOR_DEFAULT_SET_BODY="      Efetivo após fazer logout"
+export I18N_TERMINAL_DEFAULT_SET="%s agora é o terminal padrão"
+export I18N_FONT_RESTART_GHOSTTY="Você deve reiniciar o Ghostty para ver a alteração da fonte"
+export I18N_FONT_RESTART_FOOT="Você deve reiniciar o Foot para ver a alteração da fonte"
+
+# Scaling & Layout
+export I18N_SCALE_SET="Escala da tela definida para %sx"
+export I18N_LAYOUT_SET="Layout de espaço de trabalho definido para %s"
+
+# Screensaver & Toggles
+export I18N_SCREENSAVER_TERM_ONLY="Protetor de tela roda apenas no Alacritty, Foot, Ghostty ou Kitty"
+export I18N_TOG_IDLE_STOP="Parar de bloquear o computador quando ocioso"
+export I18N_TOG_IDLE_START="Bloqueando o computador quando ocioso"
+export I18N_TOG_NIGHTLIGHT_ON="Temperatura de cor de luz noturna"
+export I18N_TOG_NIGHTLIGHT_OFF="Temperatura de cor de luz diurna"
+export I18N_TOG_NOTIFS_SILENT="Notificações silenciadas"
+export I18N_TOG_NOTIFS_ENABLED="Notificações ativadas"
+
+# SwayOSD Custom Messaging
+export I18N_OSD_TOUCHPAD_ON="Touchpad ativado"
+export I18N_OSD_TOUCHPAD_OFF="Touchpad desativado"
+export I18N_OSD_TOUCHSCREEN_ON="Tela sensível ao toque ativada"
+export I18N_OSD_TOUCHSCREEN_OFF="Tela sensível ao toque desativada"
+export I18N_OSD_MIC_MUTED="Microphone mutado"
+export I18N_OSD_MIC_ON="Microphone ativado"
+export I18N_OSD_AUDIO_NONE="Nenhum dispositivo de áudio encontrado"
+
+# First Run
+export I18N_FIRST_RUN_VOXTYPE_TITLE="Instalar Ditado com Voxtype"
+export I18N_FIRST_RUN_VOXTYPE_BODY="Clique para instalar o ditado por voz para o Omybuntu."
+
+# Screensaver & Suspend Toggles
+export I18N_TOG_SCREENSAVER_ON="Protetor de tela ativado"
+export I18N_TOG_SCREENSAVER_OFF="Protetor de tela desativado"
+export I18N_TOG_SUSPEND_ON="Suspensão agora disponível no menu do sistema"
+export I18N_TOG_SUSPEND_OFF="Suspensão removida do menu do sistema"

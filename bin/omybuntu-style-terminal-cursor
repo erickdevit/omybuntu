@@ -4,6 +4,8 @@
 # omybuntu:args=<normal|slanted>
 # omybuntu:examples=omybuntu-style-terminal-cursor normal | omybuntu style terminal-cursor slanted
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if [[ $1 != "normal" && $1 != "slanted" ]]; then
   echo "Usage: omybuntu-style-terminal-cursor <normal|slanted>" >&2
   exit 1
@@ -33,6 +35,6 @@ if pgrep -x ghostty >/dev/null; then
 fi
 
 case $1 in
-  normal) omybuntu-notification-send "Normal cursor enabled" -g 󰳽 || true ;;
-  slanted) omybuntu-notification-send "Slanted cursor enabled" -g 󰳽 || true ;;
+  normal) omybuntu-notification-send "$I18N_STYLE_CURSOR_NORMAL" -g 󰳽 || true ;;
+  slanted) omybuntu-notification-send "$I18N_STYLE_CURSOR_SLANTED" -g 󰳽 || true ;;
 esac

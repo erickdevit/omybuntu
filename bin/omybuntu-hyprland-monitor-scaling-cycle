@@ -2,7 +2,10 @@
 
 # omybuntu:summary=Cycle focused Hyprland monitor scaling through 1x, 1.25x, 1.6x, 2x, 3x, and 4x
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 MONITOR_INFO=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true)')
+
 ACTIVE_MONITOR=$(echo "$MONITOR_INFO" | jq -r '.name')
 CURRENT_SCALE=$(echo "$MONITOR_INFO" | jq -r '.scale')
 WIDTH=$(echo "$MONITOR_INFO" | jq -r '.width')
@@ -77,4 +80,4 @@ else
   fi
 fi
 
-notify-send -u low "󰍹    Display scaling set to ${NEW_SCALE}x"
+omybuntu-notification-send -g 󰍹 "$(printf "$I18N_SCALE_SET" "$NEW_SCALE")"

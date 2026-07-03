@@ -3,6 +3,8 @@
 # omybuntu:summary=Cycle to the next background for the current theme
 # omybuntu:examples=omybuntu theme bg next
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 THEME_NAME=$(cat "$HOME/.config/omybuntu/current/theme.name" 2>/dev/null)
 THEME_BACKGROUNDS_PATH="$HOME/.config/omybuntu/current/theme/backgrounds/"
 USER_BACKGROUNDS_PATH="$HOME/.config/omybuntu/backgrounds/$THEME_NAME/"
@@ -16,7 +18,7 @@ mapfile -d '' -t BACKGROUNDS < <(
 TOTAL=${#BACKGROUNDS[@]}
 
 if (( TOTAL == 0 )); then
-  omybuntu-notification-send "No background was found for theme" -t 2000
+  omybuntu-notification-send "$I18N_THEME_BG_NOT_FOUND" -t 2000
 else
   # Get current background from symlink
   if [[ -L $CURRENT_BACKGROUND_LINK ]]; then

@@ -4,6 +4,8 @@
 # omybuntu:args=[code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
 # omybuntu:examples=omybuntu default editor | omybuntu default editor code | omybuntu default editor helix
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 if (($# == 0)); then
   sed -n 's/^export EDITOR=//p' ~/.config/uwsm/default | head -n 1
   exit 0
@@ -27,4 +29,5 @@ esac
 sed -i "s/^export EDITOR=.*/export EDITOR=$editor/" ~/.config/uwsm/default
 
 export EDITOR="$editor"
-notify-send -u low "$glyph    $name is now the default editor" "      Effective after logging out"
+omybuntu-notification-send -g "$glyph" "$(printf "$I18N_EDITOR_DEFAULT_SET_TITLE" "$name")" "$I18N_EDITOR_DEFAULT_SET_BODY"
+

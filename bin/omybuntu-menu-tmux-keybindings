@@ -23,6 +23,9 @@ while (($#)); do
   shift
 done
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+
 if [[ ! -f $config_file ]]; then
   default_config="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/config/tmux/tmux.conf"
 
@@ -245,4 +248,4 @@ if [[ ! $monitor_height =~ ^[0-9]+$ ]] || ((monitor_height <= 0)); then
 fi
 
 menu_height=$((monitor_height * 40 / 100))
-printf '%s\n' "$records" | walker --dmenu -p 'Tmux keybindings' --width 800 --height "$menu_height" >/dev/null
+printf '%s\n' "$records" | walker --dmenu -p "$I18N_MENU_TMUX_KEYBINDINGS_PROMPT" --width 800 --height "$menu_height" >/dev/null

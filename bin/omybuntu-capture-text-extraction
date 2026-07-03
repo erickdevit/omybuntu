@@ -4,6 +4,8 @@
 # omybuntu:group=capture
 # omybuntu:examples=omybuntu capture ocr
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 # Keep hyprpicker alive until after grim captures so the screenshot sees the
 # frozen overlay rather than live content shifting during teardown.
 cleanup_freeze() {
@@ -23,4 +25,4 @@ TEXT=$(grim -g "$SELECTION" - | tesseract stdin stdout --oem 1 --psm 6 -l "${OMY
 [[ -z $TEXT ]] && exit 1
 
 printf "%s" "$TEXT" | wl-copy
-notify-send "󰴑    Copied text from selection to clipboard"
+omybuntu-notification-send -g 󰴑 "$I18N_TEXT_EXTRACT_COPIED"

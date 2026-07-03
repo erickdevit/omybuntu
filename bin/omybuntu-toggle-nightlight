@@ -3,6 +3,8 @@
 # omybuntu:summary=Toggle nightlight screen temperature
 # omybuntu:examples=omybuntu toggle nightlight
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 ON_TEMP=4000
 OFF_TEMP=6000
 
@@ -21,12 +23,12 @@ restart_nightlighted_waybar() {
   fi
 }
 
-if [[ $CURRENT_TEMP == $OFF_TEMP ]]; then
+if [[ -z $CURRENT_TEMP ]] || (( CURRENT_TEMP == OFF_TEMP )); then
   hyprctl hyprsunset temperature $ON_TEMP
-  notify-send -u low "  Nightlight screen temperature"
+  omybuntu-notification-send -g "" -u low "$I18N_TOG_NIGHTLIGHT_ON"
   restart_nightlighted_waybar
 else
   hyprctl hyprsunset temperature $OFF_TEMP
-  notify-send -u low "   Daylight screen temperature"
+  omybuntu-notification-send -g "" -u low "$I18N_TOG_NIGHTLIGHT_OFF"
   restart_nightlighted_waybar
 fi

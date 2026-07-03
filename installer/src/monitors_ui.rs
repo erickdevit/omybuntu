@@ -57,9 +57,23 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     // Split preview space into columns dynamically, centering the boxes
     if !app.monitors.is_empty() {
         let cols_count = app.monitors.len();
-        let box_w = 38;
+        
+        // Calculate box dimensions for each monitor based on aspect ratio
+        let mut box_dims = Vec::new();
+        for m in &app.monitors {
+            let mut box_w = 38; // Default landscape
+            let box_h = 10;
+            if m.width > 0 && m.height > 0 {
+                let ratio = m.width as f32 / m.height as f32;
+                if ratio < 1.0 {
+                    box_w = 26; // Portrait square-ish box
+                }
+            }
+            box_dims.push((box_w, box_h));
+        }
+
         let gap = 4;
-        let total_w = cols_count as u16 * box_w + (cols_count - 1) as u16 * gap;
+        let total_w = box_dims.iter().map(|d| d.0).sum::<u16>() + (cols_count - 1) as u16 * gap;
         
         let padding = if inner_preview.width > total_w {
             (inner_preview.width - total_w) / 2
@@ -71,8 +85,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         if padding > 0 {
             constraints.push(Constraint::Length(padding));
         }
-        for i in 0..cols_count {
-            constraints.push(Constraint::Length(box_w));
+        for (i, dim) in box_dims.iter().enumerate() {
+            constraints.push(Constraint::Length(dim.0));
             if i < cols_count - 1 {
                 constraints.push(Constraint::Length(gap));
             }
@@ -95,7 +109,21 @@ pub fn draw(f: &mut Frame, app: &mut App) {
 
         for (i, monitor) in app.monitors.iter().enumerate() {
             if i < monitor_rects.len() {
-                draw_monitor_box(f, monitor_rects[i], monitor, i, app);
+                let col_rect = monitor_rects[i];
+                let (box_w, box_h) = box_dims[i];
+                
+                // Center the box area inside the column rect
+                let mut box_area = col_rect;
+                if col_rect.height > box_h {
+                    box_area.y += (col_rect.height - box_h) / 2;
+                    box_area.height = box_h;
+                }
+                if col_rect.width > box_w {
+                    box_area.x += (col_rect.width - box_w) / 2;
+                    box_area.width = box_w;
+                }
+                
+                draw_monitor_box(f, box_area, monitor, i, app);
             }
         }
     }
@@ -201,6 +229,7 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
             Span::styled("Status: ", Style::default().fg(Color::DarkGray)),
             Span::styled(app.translations.disabled, Style::default().fg(Color::Red)),
         ]));
+        // Muted lines to preserve height structure cleanly
         lines.push(Line::from(""));
         lines.push(Line::from(""));
         lines.push(Line::from(""));
@@ -248,23 +277,26 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
 }
 
 fn render_popup(f: &mut Frame, area: Rect, title: &str, items: &[String], selected_idx: usize) {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - 50) / 2),
-            Constraint::Percentage(50),
-            Constraint::Percentage((100 - 50) / 2),
-        ])
-        .split(area);
+    // Dynamic popup dimensions based on contents
+    let popup_h = (items.len() + 2) as u16;
+    
+    let mut max_len = 25;
+    for item in items {
+        if item.len() > max_len {
+            max_len = item.len();
+        }
+    }
+    let popup_w = (max_len + 6) as u16;
 
-    let popup_area = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - 60) / 2),
-            Constraint::Percentage(60),
-            Constraint::Percentage((100 - 60) / 2),
-        ])
-        .split(popup_layout[1])[1];
+    let mut popup_area = area;
+    if area.height > popup_h {
+        popup_area.y += (area.height - popup_h) / 2;
+        popup_area.height = popup_h;
+    }
+    if area.width > popup_w {
+        popup_area.x += (area.width - popup_w) / 2;
+        popup_area.width = popup_w;
+    }
 
     f.render_widget(Clear, popup_area);
 

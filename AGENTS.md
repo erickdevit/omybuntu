@@ -146,6 +146,14 @@ fi
 
 - Ao concluir uma rodada de desenvolvimento ou tarefa específica, faça o commit das alterações antes de finalizar o turno.
 - Siga a convenção de **Conventional Commits** (ex: `feat(escopo): descrição`, `fix(escopo): descrição`, `style(escopo): descrição`, `test: descrição`, `chore: descrição`).
+- **Os commits devem ser detalhados e autoexplicativos**:
+  - **Título claro e conciso**: O título (primeira linha) deve resumir de forma clara e objetiva a mudança, utilizando o modo imperativo (ex: `feat(waybar): add monitor toggle button`, e não `added` ou `adds`).
+  - **Corpo descritivo detalhado**: Sempre que a mudança for complexa, envolver decisões de design ou alterar fluxos existentes, inclua um corpo descritivo na mensagem do commit (separado do título por uma linha em branco). Explique detalhadamente:
+    - O contexto/motivo da alteração (o porquê).
+    - As decisões de design tomadas e possíveis alternativas consideradas.
+    - O impacto das alterações no sistema.
+    - Se aplicável, referências a issues, PRs ou discussões anteriores.
+  - **Evite mensagens genéricas**: Mensagens como `fix: bug`, `chore: update` ou `feat: code` são estritamente proibidas. Cada mensagem deve descrever com precisão o que foi alterado.
 - Agrupe e divida as alterações em commits lógicos separados quando as mudanças forem de naturezas diferentes (por exemplo, separar uma correção de teste de uma nova funcionalidade de instalação).
 
 # Localization (I18n)

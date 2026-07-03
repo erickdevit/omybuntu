@@ -25,7 +25,8 @@ Enhancement suggestions are tracked as GitHub issues. When you are creating an e
 * Fill in the required template.
 * Do not include issue numbers in the PR title.
 * Include screenshots and animated GIFs in your pull request whenever possible to demonstrate visual changes.
-* Follow the Bash styleguide and Omybuntu architecture rules defined in `AGENTS.md`.
+* Follow the Bash styleguide, Omybuntu architecture, and detailed commit rules defined in `AGENTS.md`.
+* Write detailed commit messages following the Conventional Commits specification, describing the motivation, design decisions, and what was changed. Avoid generic commit messages.
 * End all files with a newline.
 * Document any new commands with the appropriate `# omybuntu:` metadata tags.
 

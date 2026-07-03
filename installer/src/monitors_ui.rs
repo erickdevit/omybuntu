@@ -134,14 +134,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::DarkGray));
         
-    let help_text = match app.lang.as_str() {
-        "pt-br" => "←/→: Navegar | Enter: Configurar | M: Espelhar | X: Estender | 1: Tela 1 | 2: Tela 2 | Esc/Q: Sair",
-        "es" => "←/→: Navegar | Enter: Configurar | M: Duplicar | X: Extender | 1: Pantalla 1 | 2: Pantalla 2 | Esc/Q: Salir",
-        _ => "←/→: Navigate | Enter: Configure | M: Mirror | X: Extend | 1: Screen 1 | 2: Screen 2 | Esc/Q: Exit",
-    };
-    
     let help_para = Paragraph::new(Line::from(Span::styled(
-        help_text,
+        app.translations.help_text,
         Style::default().fg(Color::Yellow),
     )))
     .block(help_block)
@@ -214,19 +208,19 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
 
     let mut lines = vec![
         Line::from(vec![
-            Span::styled("Port: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}: ", app.translations.label_port), Style::default().fg(Color::DarkGray)),
             Span::styled(&monitor.name, Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
             Span::styled(format!(" ({})", type_str), Style::default().fg(Color::DarkGray)),
         ]),
         Line::from(vec![
-            Span::styled("Model: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}: ", app.translations.label_model), Style::default().fg(Color::DarkGray)),
             Span::styled(format!("{} {}", monitor.make, monitor.model), Style::default().fg(Color::White)),
         ]),
     ];
 
     if monitor.disabled {
         lines.push(Line::from(vec![
-            Span::styled("Status: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}: ", app.translations.label_status), Style::default().fg(Color::DarkGray)),
             Span::styled(app.translations.disabled, Style::default().fg(Color::Red)),
         ]));
         // Muted lines to preserve height structure cleanly
@@ -237,25 +231,25 @@ fn draw_monitor_box(f: &mut Frame, area: Rect, monitor: &Monitor, index: usize, 
     } else {
         if !monitor.mirror_of.is_empty() && monitor.mirror_of != "none" {
             lines.push(Line::from(vec![
-                Span::styled("Status: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(format!("Mirroring {}", monitor.mirror_of), Style::default().fg(Color::Magenta)),
+                Span::styled(format!("{}: ", app.translations.label_status), Style::default().fg(Color::DarkGray)),
+                Span::styled(format!("{} {}", app.translations.label_mirroring, monitor.mirror_of), Style::default().fg(Color::Magenta)),
             ]));
         } else {
             lines.push(Line::from(vec![
-                Span::styled("Res: ", Style::default().fg(Color::DarkGray)),
+                Span::styled(format!("{}: ", app.translations.label_res), Style::default().fg(Color::DarkGray)),
                 Span::styled(format!("{}x{}@{}Hz", monitor.width, monitor.height, monitor.refresh_rate.round()), Style::default().fg(Color::White)),
             ]));
         }
         lines.push(Line::from(vec![
-            Span::styled("Scale: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}: ", app.translations.label_scale), Style::default().fg(Color::DarkGray)),
             Span::styled(format!("{}x", monitor.scale), Style::default().fg(Color::White)),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("Pos: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}: ", app.translations.label_pos), Style::default().fg(Color::DarkGray)),
             Span::styled(format!("{}x{}", monitor.x, monitor.y), Style::default().fg(Color::White)),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("Rot: ", Style::default().fg(Color::DarkGray)),
+            Span::styled(format!("{}: ", app.translations.label_rot), Style::default().fg(Color::DarkGray)),
             Span::styled(format!("{}°", monitor.transform * 90), Style::default().fg(Color::White)),
         ]));
     }

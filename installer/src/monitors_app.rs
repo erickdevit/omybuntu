@@ -65,13 +65,23 @@ pub struct Translations {
     pub rot_90: &'static str,
     pub rot_180: &'static str,
     pub rot_270: &'static str,
+    pub exit: &'static str,
+    pub help_text: &'static str,
+    pub label_port: &'static str,
+    pub label_model: &'static str,
+    pub label_res: &'static str,
+    pub label_scale: &'static str,
+    pub label_pos: &'static str,
+    pub label_rot: &'static str,
+    pub label_status: &'static str,
+    pub label_mirroring: &'static str,
 }
 
 impl Translations {
     pub fn get(lang: &str) -> Self {
-        match lang {
-            "pt-br" => Self {
-                title: "GESTOR DE MONITORES (TUI)",
+        if lang.starts_with("pt") {
+            Self {
+                title: "GESTOR DE MONITORES",
                 select_action: "Selecione uma ação:",
                 conf_monitor: "Configurar Monitor {} ({})",
                 active: "ATIVO",
@@ -101,9 +111,20 @@ impl Translations {
                 rot_90: "90° (1)",
                 rot_180: "180° (2)",
                 rot_270: "270° (3)",
-            },
-            "es" => Self {
-                title: "GESTIÓN DE MONITORES (TUI)",
+                exit: "Sair",
+                help_text: "←/→: Navegar | Enter: Configurar | M: Espelhar | X: Estender | 1: Tela 1 | 2: Tela 2 | Esc/Q: Sair",
+                label_port: "Porta",
+                label_model: "Modelo",
+                label_res: "Res",
+                label_scale: "Escala",
+                label_pos: "Pos",
+                label_rot: "Rot",
+                label_status: "Status",
+                label_mirroring: "Espelhando",
+            }
+        } else if lang.starts_with("es") {
+            Self {
+                title: "GESTIÓN DE MONITORES",
                 select_action: "Seleccione una acción:",
                 conf_monitor: "Configurar Monitor {} ({})",
                 active: "ACTIVO",
@@ -133,9 +154,20 @@ impl Translations {
                 rot_90: "90° (1)",
                 rot_180: "180° (2)",
                 rot_270: "270° (3)",
-            },
-            _ => Self {
-                title: "MONITOR MANAGEMENT (TUI)",
+                exit: "Salir",
+                help_text: "←/→: Navegar | Enter: Configurar | M: Duplicar | X: Extender | 1: Pantalla 1 | 2: Pantalla 2 | Esc/Q: Salir",
+                label_port: "Puerto",
+                label_model: "Modelo",
+                label_res: "Res",
+                label_scale: "Escala",
+                label_pos: "Pos",
+                label_rot: "Rot",
+                label_status: "Estado",
+                label_mirroring: "Duplicando",
+            }
+        } else {
+            Self {
+                title: "MONITOR MANAGEMENT",
                 select_action: "Select action:",
                 conf_monitor: "Configure Monitor {} ({})",
                 active: "ACTIVE",
@@ -165,6 +197,16 @@ impl Translations {
                 rot_90: "90° (1)",
                 rot_180: "180° (2)",
                 rot_270: "270° (3)",
+                exit: "Exit",
+                help_text: "←/→: Navigate | Enter: Configure | M: Mirror | X: Extend | 1: Screen 1 | 2: Screen 2 | Esc/Q: Exit",
+                label_port: "Port",
+                label_model: "Model",
+                label_res: "Res",
+                label_scale: "Scale",
+                label_pos: "Pos",
+                label_rot: "Rot",
+                label_status: "Status",
+                label_mirroring: "Mirroring",
             }
         }
     }

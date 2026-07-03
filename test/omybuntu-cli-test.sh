@@ -263,3 +263,60 @@ assert_output_contains "partial metadata command dispatches" "$output" "partial-
 
 output=$("$TMPDIR/omybuntu" body metadata test)
 assert_output_contains "body metadata command dispatches by filename" "$output" "body-metadata-ok"
+
+# Save HOME
+ORIG_HOME="$HOME"
+
+# Test scaling cycle updates specific monitors when present in monitors.conf
+TEST_DIR=$(mktemp -d)
+mkdir -p "$TEST_DIR/bin" "$TEST_DIR/.config/hypr"
+
+# Mock hyprctl
+cat <<'EOF' > "$TEST_DIR/bin/hyprctl"
+#!/bin/bash
+if [[ $1 == "monitors" && $2 == "-j" ]]; then
+  echo '[{"name":"eDP-1","focused":true,"scale":1.25,"width":1920,"height":1080,"refreshRate":60.0,"x":0,"y":0,"transform":0}]'
+else
+  exit 0
+fi
+EOF
+chmod +x "$TEST_DIR/bin/hyprctl"
+
+# Create mock monitors.conf with specific monitor line
+cat <<'EOF' > "$TEST_DIR/.config/hypr/monitors.conf"
+monitor=eDP-1,1920x1080@60,0x0,1.25
+env = GDK_SCALE,1.25
+EOF
+
+# Create mock monitors.lua
+cat <<'EOF' > "$TEST_DIR/.config/hypr/monitors.lua"
+hl.monitor({ output = "eDP-1", mode = "1920x1080@60", position = "0x0", scale = 1.25 })
+hl.env("GDK_SCALE", "1.25")
+EOF
+
+# Mock notify-send
+cat <<'EOF' > "$TEST_DIR/bin/notify-send"
+#!/bin/bash
+exit 0
+EOF
+chmod +x "$TEST_DIR/bin/notify-send"
+
+# Set PATH to use our mock hyprctl, and override HOME to test directory
+OLD_PATH="$PATH"
+export PATH="$TEST_DIR/bin:$PATH"
+export HOME="$TEST_DIR"
+
+# Run cycle scale (which should change from 1.25 to 1.6)
+"$ROOT/bin/omybuntu-hyprland-monitor-scaling-cycle" >/dev/null 2>&1
+
+# Assert that monitors.conf scale was updated to 1.6
+grep -q "monitor=eDP-1,1920x1080@60,0x0,1.6" "$TEST_DIR/.config/hypr/monitors.conf" || fail "scaling cycle did not update specific monitors.conf scale"
+# Assert that monitors.lua scale was updated to 1.6
+grep -q 'scale = 1.6' "$TEST_DIR/.config/hypr/monitors.lua" || fail "scaling cycle did not update specific monitors.lua scale"
+
+# Clean up
+export PATH="$OLD_PATH"
+export HOME="$ORIG_HOME"
+rm -rf "$TEST_DIR"
+
+pass "display scaling cycle updates specific monitor configurations"

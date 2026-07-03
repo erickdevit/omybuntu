@@ -34,33 +34,47 @@ fi
 NEW_SCALE=${SCALES[$NEW_IDX]}
 NEW_GDK_SCALE=${GDK_SCALES[$NEW_IDX]}
 
-hyprctl eval "hl.monitor({ output = \"$ACTIVE_MONITOR\", mode = \"${WIDTH}x${HEIGHT}@${REFRESH_RATE}\", position = \"auto\", scale = $NEW_SCALE })" >/dev/null 2>&1 || hyprctl keyword monitor "$ACTIVE_MONITOR,preferred,auto,$NEW_SCALE" >/dev/null
-
-# Set GDK scale via hyprctl (for new windows in current session)
-hyprctl keyword env "GDK_SCALE,$NEW_GDK_SCALE" >/dev/null
-
-# Persist to monitors.conf for Omybuntu
+# Check if a specific rule for this monitor exists in monitors.conf or monitors.lua
 MONITOR_CONF="$HOME/.config/hypr/monitors.conf"
-if [[ -f $MONITOR_CONF ]]; then
-  sed -i -E \
-    -e "s|^(monitor=.*,preferred,auto,)([^ ]+)|\1${NEW_SCALE}|" \
-    -e "s|^(env = GDK_SCALE,)(.*)|\1${NEW_GDK_SCALE}|" \
-    "$MONITOR_CONF"
+MONITOR_LUA="$HOME/.config/hypr/monitors.lua"
+
+HAS_SPECIFIC="false"
+if [[ -f $MONITOR_CONF ]] && grep -Eq "^monitor\s*=\s*$ACTIVE_MONITOR\s*," "$MONITOR_CONF"; then
+  HAS_SPECIFIC="true"
+elif [[ -f $MONITOR_LUA ]] && grep -Eq "output\s*=\s*\"$ACTIVE_MONITOR\"" "$MONITOR_LUA"; then
+  HAS_SPECIFIC="true"
 fi
 
-# Persist to monitors.lua if the user still has Omybuntu's generic catch-all
-# defaults, so the scale survives reboots.
-MONITOR_LUA="$HOME/.config/hypr/monitors.lua"
-if [[ -f $MONITOR_LUA ]] && grep -q '^local omybuntu_monitor_scale = ' "$MONITOR_LUA"; then
-  sed -i -E \
-    -e "s|^local omybuntu_monitor_scale = .*|local omybuntu_monitor_scale = ${NEW_SCALE}|" \
-    -e "s|^local omybuntu_gdk_scale = .*|local omybuntu_gdk_scale = ${NEW_GDK_SCALE}|" \
-    "$MONITOR_LUA"
-elif [[ -f $MONITOR_LUA ]] && grep -Eq '^hl\.monitor\(\{ output = "", mode = "preferred", position = "auto", scale = ("auto"|[0-9.]+) \}\)' "$MONITOR_LUA"; then
-  sed -i -E \
-    -e "s|^(hl\.monitor\(\{ output = \"\", mode = \"preferred\", position = \"auto\", scale = )([^ ]+)( \}\))|\\1${NEW_SCALE}\\3|" \
-    -e 's|^hl\.env\("GDK_SCALE", ".*"\)|hl.env("GDK_SCALE", "'"$NEW_GDK_SCALE"'")|' \
-    "$MONITOR_LUA"
+if [[ $HAS_SPECIFIC == "true" ]]; then
+  # Use our helper to update the specific monitor scale
+  CUR_POS=$(echo "$MONITOR_INFO" | jq -r '(.x | tostring) + "x" + (.y | tostring)')
+  CUR_TRANSFORM=$(echo "$MONITOR_INFO" | jq -r '.transform // 0')
+  CUR_MODE=$(echo "$MONITOR_INFO" | jq -r '(.width | tostring) + "x" + (.height | tostring) + "@" + (.refreshRate | round | tostring)')
+  
+  # Run helper to update files and apply scaling
+  omybuntu-hyprland-monitor-helper set "$ACTIVE_MONITOR" "$CUR_MODE" "$CUR_POS" "$NEW_SCALE" "$CUR_TRANSFORM"
+else
+  hyprctl eval "hl.monitor({ output = \"$ACTIVE_MONITOR\", mode = \"${WIDTH}x${HEIGHT}@${REFRESH_RATE}\", position = \"auto\", scale = $NEW_SCALE })" >/dev/null 2>&1 || hyprctl keyword monitor "$ACTIVE_MONITOR,preferred,auto,$NEW_SCALE" >/dev/null
+  hyprctl keyword env "GDK_SCALE,$NEW_GDK_SCALE" >/dev/null
+
+  if [[ -f $MONITOR_CONF ]]; then
+    sed -i -E \
+      -e "s|^(monitor=.*,preferred,auto,)([^ ]+)|\1${NEW_SCALE}|" \
+      -e "s|^(env = GDK_SCALE,)(.*)|\1${NEW_GDK_SCALE}|" \
+      "$MONITOR_CONF"
+  fi
+
+  if [[ -f $MONITOR_LUA ]] && grep -q '^local omybuntu_monitor_scale = ' "$MONITOR_LUA"; then
+    sed -i -E \
+      -e "s|^local omybuntu_monitor_scale = .*|local omybuntu_monitor_scale = ${NEW_SCALE}|" \
+      -e "s|^local omybuntu_gdk_scale = .*|local omybuntu_gdk_scale = ${NEW_GDK_SCALE}|" \
+      "$MONITOR_LUA"
+  elif [[ -f $MONITOR_LUA ]] && grep -Eq '^hl\.monitor\(\{ output = "", mode = "preferred", position = "auto", scale = ("auto"|[0-9.]+) \}\)' "$MONITOR_LUA"; then
+    sed -i -E \
+      -e "s|^(hl\.monitor\(\{ output = \"\", mode = \"preferred\", position = \"auto\", scale = )([^ ]+)( \}\))|\\1${NEW_SCALE}\\3|" \
+      -e 's|^hl\.env\("GDK_SCALE", ".*"\)|hl.env("GDK_SCALE", "'"$NEW_GDK_SCALE"'")|' \
+      "$MONITOR_LUA"
+  fi
 fi
 
 notify-send -u low "󰍹    Display scaling set to ${NEW_SCALE}x"

@@ -16,9 +16,9 @@ if [[ $channel != "stable" && $channel != "rc" && $channel != "edge" && $channel
 fi
 
 case "$channel" in
-"stable") omybuntu-branch-set "main" ;;
+"stable") omybuntu-branch-set "master" ;;
 "rc") omybuntu-branch-set "rc" ;;
-"edge") omybuntu-branch-set "main" ;;
+"edge") omybuntu-branch-set "master" ;;
 "dev") omybuntu-branch-set "dev" ;;
 esac
 

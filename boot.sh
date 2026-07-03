@@ -3,16 +3,14 @@
 # Set install mode to online since boot.sh is used for curl installations
 export OMYBUNTU_ONLINE_INSTALL=true
 
-ansi_art='                 ▄▄▄
- ▄█████▄    ▄███████████▄    ▄███████   ▄███████   ▄███████   ▄█   █▄    ▄█   █▄
-███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
-███   ███  ███   ███   ███  ███   ███  ███   ███  ███   █▀   ███   ███  ███   ███
-███   ███  ███   ███   ███ ▄███▄▄▄███ ▄███▄▄▄██▀  ███       ▄███▄▄▄███▄ ███▄▄▄███
-███   ███  ███   ███   ███ ▀███▀▀▀███ ▀███▀▀▀▀    ███      ▀▀███▀▀▀███  ▀▀▀▀▀▀███
-███   ███  ███   ███   ███  ███   ███ ██████████  ███   █▄   ███   ███  ▄██   ███
-███   ███  ███   ███   ███  ███   ███  ███   ███  ███   ███  ███   ███  ███   ███
- ▀█████▀    ▀█   ███   █▀   ███   █▀   ███   ███  ███████▀   ███   █▀    ▀█████▀
-                                       ███   █▀                                  '
+ansi_art=' ▄██████▄    ▄▄▄▄███▄▄▄▄   ▄██   ▄   ▀█████████▄  ███    █▄  ███▄▄▄▄       ███     ███    █▄ 
+███    ███ ▄██▀▀▀███▀▀▀██▄ ███   ██▄   ███    ███ ███    ███ ███▀▀▀██▄ ▀█████████▄ ███    ███
+███    ███ ███   ███   ███ ███▄▄▄███   ███    ███ ███    ███ ███   ███    ▀███▀▀██ ███    ███
+███    ███ ███   ███   ███ ▀▀▀▀▀▀███  ▄███▄▄▄██▀  ███    ███ ███   ███     ███   ▀ ███    ███
+███    ███ ███   ███   ███ ▄██   ███ ▀▀███▀▀▀██▄  ███    ███ ███   ███     ███     ███    ███
+███    ███ ███   ███   ███ ███   ███   ███    ██▄ ███    ███ ███   ███     ███     ███    ███
+███    ███ ███   ███   ███ ███   ███   ███    ███ ███    ███ ███   ███     ███     ███    ███
+ ▀██████▀   ▀█   ███   █▀   ▀█████▀  ▄█████████▀  ████████▀   ▀█   █▀     ▄████▀   ████████▀'
 
 clear
 echo -e "\n$ansi_art\n"
@@ -31,8 +29,8 @@ fi
 
 sudo apt-get update && sudo apt-get install -y git curl sudo
 
-# Use custom repo if specified, otherwise default to basecamp/omybuntu
-OMYBUNTU_REPO="${OMYBUNTU_REPO:-basecamp/omybuntu}"
+# Use custom repo if specified, otherwise default to erickdevit/omybuntu
+OMYBUNTU_REPO="${OMYBUNTU_REPO:-erickdevit/omybuntu}"
 
 echo -e "\nCloning Omybuntu from: https://github.com/${OMYBUNTU_REPO}.git"
 rm -rf ~/.local/share/omybuntu/

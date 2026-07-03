@@ -13,7 +13,7 @@ description: >
 
 # Omybuntu Skill
 
-Manage [Omybuntu](https://omybuntu.org/) Linux systems - a beautiful, modern, opinionated Arch Linux distribution with Hyprland.
+Manage [Omybuntu](https://omybuntu.org/) Linux systems - a beautiful, modern, opinionated Debian/Ubuntu-based desktop configuration with Hyprland.
 
 This skill is for end-user customization on installed systems.
 It is not for contributing to Omybuntu source code.
@@ -74,7 +74,7 @@ Omybuntu is built on:
 
 | Component | Purpose | Config Location |
 |-----------|---------|-----------------|
-| **Arch Linux** | Base OS | `/etc/`, `~/.config/` |
+| **Debian/Ubuntu** | Base OS | `/etc/`, `~/.config/` |
 | **Hyprland** | Wayland compositor/WM | `~/.config/hypr/` |
 | **Waybar** | Status bar | `~/.config/waybar/` |
 | **Walker** | App launcher | `~/.config/walker/` |
@@ -356,7 +356,7 @@ When user requests system changes:
 2. **Is it a config edit?** Edit in `~/.config/`, never `~/.local/share/omybuntu/`
 3. **Is it a theme customization?** Create a NEW custom theme directory
 4. **Is it automation?** Use hooks in `~/.config/omybuntu/hooks/`
-5. **Is it a package install?** Use `omybuntu pkg add <pkgs...>` (or `omybuntu pkg aur add <pkgs...>` for AUR-only packages)
+5. **Is it a package install?** Use `omybuntu pkg add <pkgs...>` (handles apt and snap automatically)
 6. **Unsure if command exists?** Run `omybuntu commands` (or `omybuntu <group> --help` for one group)
 
 ### Reminder Requests

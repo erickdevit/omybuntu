@@ -6,6 +6,6 @@ set -e
 
 # Reinstall the Omybuntu configuration directory from the git source.
 
-git clone --depth=1 --branch master "https://github.com/basecamp/omybuntu.git" ~/.local/share/omybuntu-new >/dev/null
+git clone --depth=1 --branch master "https://github.com/erickdevit/omybuntu.git" ~/.local/share/omybuntu-new >/dev/null
 mv $OMYBUNTU_PATH ~/.local/share/omybuntu-old
 mv ~/.local/share/omybuntu-new $OMYBUNTU_PATH

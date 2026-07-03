@@ -15,6 +15,13 @@ Omybuntu supports four update channels. Each channel corresponds to a specific G
 | **RC** | `rc` | `vX.Y.Z-rcN` (e.g., `v3.5.0-rc1`) | Pre-release | Release candidates for community validation. |
 | **Dev** | `dev` | `vX.Y.Z-devN` (e.g., `v3.5.0-dev2`) | Experimental | Active development branch. May be unstable. |
 
+### Observação Técnica sobre a Branch `main`
+Embora a tabela acima especifique a branch `main` como o alvo dos canais `Stable` e `Edge` do projeto, o repositório atualmente utiliza a branch **`master`** herdada do projeto base upstream.
+A branch `main` ainda não foi criada no repositório (e não deve ser criada neste momento) pelas seguintes razões técnicas:
+1. **Preservação de Compatibilidade Upstream:** O projeto base upstream (`basecamp/omarchy`) utiliza a branch `master`. Manter temporariamente a branch `master` ativa no Omybuntu facilita o processo de mesclagem (git merge/pull) de atualizações e novas implementações portadas do Omarchy.
+2. **Prevenção de Quebra em Instalações Existentes:** Todos os scripts de atualização instalados em máquinas de usuários buscam atualizações apontando para a branch `master` (ou `dev`). A exclusão ou renomeação imediata dessa branch quebraria as atualizações automáticas (`omybuntu update`) de forma irreversível para esses usuários.
+3. **Migração Planejada:** A criação da branch `main` e a migração de rotas serão executadas de forma coordenada em uma futura versão maior (major release), acompanhada de um script de migração automatizado para atualizar o repositório local dos usuários.
+
 ---
 
 ## 2. Release Promotion Flow

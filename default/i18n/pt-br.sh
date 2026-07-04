@@ -673,3 +673,7 @@ export I18N_KB_PREV_TRACK="Faixa anterior"
 export I18N_KB_SWITCH_AUDIO="Alternar saída de áudio"
 export I18N_KB_COPY_URL="Copiar URL do Web App"
 
+# Hyprlock
+export I18N_HYPRLOCK_PLACEHOLDER="Digite a senha"
+
+

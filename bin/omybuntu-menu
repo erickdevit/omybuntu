@@ -945,6 +945,17 @@ show_language_menu() {
   # Reload translation variables
   source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
+  # Update hyprlock placeholder text immediately
+  if [[ -f ~/.config/hypr/hyprlock.conf ]]; then
+    local placeholder
+    if grep -q "fingerprint:enabled = true" ~/.config/hypr/hyprlock.conf 2>/dev/null; then
+      placeholder="<span> $I18N_HYPRLOCK_PLACEHOLDER 󰈷 </span>"
+    else
+      placeholder="$I18N_HYPRLOCK_PLACEHOLDER"
+    fi
+    sed -i "s/placeholder_text = .*/placeholder_text = ${placeholder//\//\\/}/" ~/.config/hypr/hyprlock.conf
+  fi
+
   # Back to setup menu
   show_setup_menu
 }

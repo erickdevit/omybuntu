@@ -5,6 +5,9 @@
 
 set -e
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+
 
 check_fingerprint_hardware() {
   # Get fingerprint devices for the user
@@ -44,7 +47,7 @@ EOF
 
 add_hyprlock_fingerprint_icon() {
   echo "Adding fingerprint icon to hyprlock placeholder text..."
-  sed -i 's/placeholder_text = .*/placeholder_text = <span> Enter Password 󰈷 <\/span>/' ~/.config/hypr/hyprlock.conf
+  sed -i "s/placeholder_text = .*/placeholder_text = <span> $I18N_HYPRLOCK_PLACEHOLDER 󰈷 <\/span>/" ~/.config/hypr/hyprlock.conf
   sed -i 's/fingerprint:enabled = .*/fingerprint:enabled = true/' ~/.config/hypr/hyprlock.conf
 }
 

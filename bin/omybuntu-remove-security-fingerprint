@@ -5,6 +5,9 @@
 
 set -e
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+
 
 remove_pam_config() {
   # Remove from sudo
@@ -22,7 +25,7 @@ remove_pam_config() {
 
 remove_hyprlock_fingerprint_icon() {
   echo "Removing fingerprint icon from hyprlock placeholder text..."
-  sed -i 's/placeholder_text = .*/placeholder_text = Enter Password/' ~/.config/hypr/hyprlock.conf
+  sed -i "s/placeholder_text = .*/placeholder_text = $I18N_HYPRLOCK_PLACEHOLDER/" ~/.config/hypr/hyprlock.conf
   sed -i 's/fingerprint:enabled = .*/fingerprint:enabled = false/' ~/.config/hypr/hyprlock.conf
 }
 

@@ -2,4 +2,16 @@
 
 # omybuntu:summary=Overwrite the user config for hyprlock with the Omybuntu default.
 
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
 omybuntu-refresh-config hypr/hyprlock.conf
+
+if [[ -f ~/.config/hypr/hyprlock.conf ]]; then
+  local placeholder
+  if grep -q "fingerprint:enabled = true" ~/.config/hypr/hyprlock.conf 2>/dev/null; then
+    placeholder="<span> $I18N_HYPRLOCK_PLACEHOLDER 󰈷 </span>"
+  else
+    placeholder="$I18N_HYPRLOCK_PLACEHOLDER"
+  fi
+  sed -i "s/placeholder_text = .*/placeholder_text = ${placeholder//\//\\/}/" ~/.config/hypr/hyprlock.conf
+fi

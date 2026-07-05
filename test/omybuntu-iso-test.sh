@@ -205,7 +205,7 @@ echo "# ISO package list"
 BUILD_ISO="$ROOT/install/iso/build-iso.sh"
 build_content=$(<"$BUILD_ISO")
 
-for pkg in casper live-boot linux-image-generic grub-efi-amd64 gum; do
+for pkg in casper plymouth linux-image-generic grub-efi-amd64 gum; do
   [[ $build_content == *$pkg* ]] && \
     ok "build-iso.sh installs $pkg" || \
     nok "build-iso.sh installs $pkg"

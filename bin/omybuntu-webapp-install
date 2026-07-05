@@ -37,8 +37,8 @@ else
     APP_URL="https://$APP_URL"
   fi
   ICON_REF="$3"
-  CUSTOM_EXEC="$4" # Optional custom exec command
-  MIME_TYPES="$5"  # Optional mime types
+  CUSTOM_EXEC="${4:-}" # Optional custom exec command
+  MIME_TYPES="${5:-}"  # Optional mime types
   INTERACTIVE_MODE=false
 fi
 

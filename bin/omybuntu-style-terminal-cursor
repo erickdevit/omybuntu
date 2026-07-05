@@ -28,7 +28,6 @@ EOF
 }
 
 set_config "$HOME/.config/ghostty/config" "$1"
-set_config "$OMYBUNTU_PATH/config/ghostty/config" "$1"
 
 if pgrep -x ghostty >/dev/null; then
   pkill -SIGUSR2 ghostty

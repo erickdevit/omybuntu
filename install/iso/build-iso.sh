@@ -122,8 +122,7 @@ EOF
     network-manager \
     dbus \
     casper \
-    live-boot \
-    live-boot-initramfs-tools \
+    plymouth \
     grub-common \
     grub-pc-bin \
     grub-efi-amd64-bin \
@@ -144,7 +143,9 @@ EOF
     pkg-config \
     libssl-dev \
     gum \
-    mtools
+    mtools \
+    parted \
+    lvm2
 fi
 
 # ---------------------------------------------------------------------------
@@ -222,6 +223,9 @@ INITRD_IMG=$(find "$CHROOT_DIR/boot" -name "initrd.img-*" -type f | head -n1)
 
 sudo cp "$KERNEL_IMG" "$IMAGE_DIR/casper/vmlinuz"
 sudo cp "$INITRD_IMG" "$IMAGE_DIR/casper/initrd"
+
+sudo mkdir -p "$IMAGE_DIR/.disk"
+echo "Omybuntu Resolute Live ISO" | sudo tee "$IMAGE_DIR/.disk/info" > /dev/null
 
 sudo mkdir -p "$IMAGE_DIR/boot/grub"
 sudo cp "$WORKSPACE/install/iso/grub.cfg" "$IMAGE_DIR/boot/grub/grub.cfg"

@@ -15,6 +15,8 @@ cat > ~/.config/xdg-terminals.list <<EOF
 # Terminal emulator preference order for xdg-terminal-exec
 # The first found and valid terminal will be used
 com.mitchellh.ghostty.desktop
+foot.desktop
+Alacritty.desktop
 EOF
 
 echo "Ghostty installed and set as default terminal."

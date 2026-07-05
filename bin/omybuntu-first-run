@@ -5,6 +5,12 @@
 
 set -e
 
+# Skip first-run wizard if running in a Live ISO environment
+if [[ -d /cdrom || -f /run/casper-detect || $USER == "ubuntu" ]]; then
+  echo "Live ISO environment detected - skipping first-run setup."
+  exit 0
+fi
+
 FIRST_RUN_MODE=~/.local/state/omybuntu/first-run.mode
 
 if [[ -f $FIRST_RUN_MODE ]]; then

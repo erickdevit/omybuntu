@@ -141,6 +141,9 @@ fn unmount_virtual_fs(target: &str) {
 }
 
 fn clean_disk_mounts(disk: &str) -> Result<(), String> {
+  // 0. Deactivate LVM volume groups to avoid locked partitions
+  let _ = Command::new("vgchange").args(["-an"]).status();
+
   // 1. Run swapoff on any partition of the disk
   if let Ok(file) = std::fs::File::open("/proc/swaps") {
     let reader = BufReader::new(file);

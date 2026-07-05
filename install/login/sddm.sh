@@ -2,8 +2,8 @@
 omybuntu-refresh-sddm
 
 # Setup SDDM login service
-sudo mkdir -p /usr/local/share/wayland-sessions
-sudo cp "$OMYBUNTU_PATH/default/wayland-sessions/omybuntu.desktop" /usr/local/share/wayland-sessions/omybuntu.desktop
+sudo mkdir -p /usr/share/wayland-sessions
+sudo cp "$OMYBUNTU_PATH/default/wayland-sessions/omybuntu.desktop" /usr/share/wayland-sessions/omybuntu.desktop
 sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
 sudo rm -f /usr/share/sddm/hyprland.conf
 

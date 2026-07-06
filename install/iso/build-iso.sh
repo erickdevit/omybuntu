@@ -191,6 +191,12 @@ tail_pid=$!
 # Give tail a moment to start before the chroot overwrites the log
 sleep 0.5
 
+# Allow root to use sudo without a terminal inside the chroot.
+# Many install scripts use sudo even when running as root; without this,
+# sudo fails silently in the headless chroot environment (no tty).
+echo "root ALL=(ALL) NOPASSWD: ALL" | sudo tee "$CHROOT_DIR/etc/sudoers.d/chroot-root" >/dev/null
+sudo chmod 0440 "$CHROOT_DIR/etc/sudoers.d/chroot-root"
+
 sudo chroot "$CHROOT_DIR" env \
   OMYBUNTU_ONLINE_INSTALL=true \
   OMYBUNTU_ISO_BUILD=true \
@@ -201,6 +207,9 @@ sudo chroot "$CHROOT_DIR" env \
     ./install.sh
     ./install/iso/setup-iso.sh
   "
+
+# Clean up the temporary sudoers override
+sudo rm -f "$CHROOT_DIR/etc/sudoers.d/chroot-root"
 
 kill "$tail_pid" 2>/dev/null || true
 wait "$tail_pid" 2>/dev/null || true
@@ -235,13 +244,6 @@ sudo cp "$WORKSPACE/install/iso/grub.cfg" "$IMAGE_DIR/boot/grub/grub.cfg"
 echo "Generating GRUB theme for ISO boot menu..."
 THEME_DIR="$IMAGE_DIR/boot/grub/themes/omybuntu"
 mkdir -p "$THEME_DIR"
-
-# Solid Omybuntu dark brown background with subtle vignette
-magick -size 1920x1080 \
-  -define gradient:center=50%,50% \
-  radial-gradient:'#2a1a10'-'#140a05' \
-  -depth 8 -type TrueColor \
-  "$THEME_DIR/background.png"
 
 # Select indicators (subtle rounded amber rectangles at 15% opacity)
 for w in 200 400 600; do

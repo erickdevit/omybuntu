@@ -6,8 +6,7 @@ title-text: ""
 title-font: "unicode.pf2"
 title-color: "#f5e6d3"
 desktop-color: "#140a05"
-desktop-image: "background.png"
-desktop-image-scale-method: "stretch"
+
 
 # ---- Branding Label ----
 + label {

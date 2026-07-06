@@ -319,6 +319,39 @@ for tpl in waybar.css.tpl hyprland.conf.tpl hyprlock.conf.tpl mako.ini.tpl walke
 done
 
 # ------------------------------------------------------------------
+# SDDM, Waybar, Cursors and Installer sanity checks
+# ------------------------------------------------------------------
+echo "# SDDM, Waybar, Cursors and Installer sanity"
+
+# sddm.sh writes 99-omybuntu.conf
+sddm_content=$(<"$ROOT/install/login/sddm.sh")
+[[ $sddm_content == *99-omybuntu.conf* ]] && ok "sddm.sh configures 99-omybuntu.conf" || nok "sddm.sh does not configure 99-omybuntu.conf"
+
+# icons.sh copies volantes cursors
+icons_content=$(<"$ROOT/install/packaging/icons.sh")
+[[ $icons_content == *volantes_cursors* && $icons_content == *volantes_light_cursors* ]] && \
+  ok "icons.sh copies volantes cursor themes" || \
+  nok "icons.sh does not copy volantes cursor themes"
+
+# setup-iso.sh blocks budgie and breeze themes
+setup_iso_content=$(<"$ROOT/install/iso/setup-iso.sh")
+[[ $setup_iso_content == *sddm-theme-ubuntu-budgie* && $setup_iso_content == *sddm-theme-breeze* ]] && \
+  ok "setup-iso.sh blocks downstream sddm themes" || \
+  nok "setup-iso.sh does not block downstream sddm themes"
+
+# Waybar position is left
+waybar_config_content=$(<"$ROOT/config/waybar/config.jsonc")
+[[ $waybar_config_content == *'"position": "left"'* ]] && \
+  ok "waybar position is left by default" || \
+  nok "waybar position is not left by default"
+
+# omybuntu-tui-monitors is compiled and copied
+build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
+[[ $build_iso_content == *omybuntu-tui-monitors* ]] && \
+  ok "build-iso.sh copies omybuntu-tui-monitors to /usr/local/bin" || \
+  nok "build-iso.sh does not copy omybuntu-tui-monitors to /usr/local/bin"
+
+# ------------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------------
 echo

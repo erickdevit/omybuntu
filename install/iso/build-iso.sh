@@ -166,19 +166,6 @@ sudo rsync -a \
   "$WORKSPACE/" \
   "$CHROOT_DIR/opt/omybuntu/"
 
-# 7aa. Copy custom cursor themes from the host user to the ISO chroot if present
-if [[ -n ${SUDO_USER:-} ]]; then
-  USER_ICONS_DIR="/home/$SUDO_USER/.icons"
-  if [[ -d "$USER_ICONS_DIR" ]]; then
-    echo "Copying custom cursor themes from host user ($SUDO_USER)..."
-    sudo mkdir -p "$CHROOT_DIR/usr/share/icons"
-    for cursor_theme in volantes_cursors volantes_light_cursors; do
-      if [[ -d "$USER_ICONS_DIR/$cursor_theme" ]]; then
-        sudo cp -a "$USER_ICONS_DIR/$cursor_theme" "$CHROOT_DIR/usr/share/icons/"
-      fi
-    done
-  fi
-fi
 
 # 7a. Compile the Ratatui TUI installer inside the chroot
 echo "Installing Rust toolchain and compiling TUI installer..."

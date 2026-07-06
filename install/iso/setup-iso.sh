@@ -1,6 +1,6 @@
 echo "Preparing Omybuntu Live ISO Environment..."
 
-# Block gdm3 and gnome-session from ever being installed as dependencies
+# Block gdm3, gnome-session, and unwanted themes from ever being installed as dependencies
 sudo mkdir -p /etc/apt/preferences.d
 cat <<EOF | sudo tee /etc/apt/preferences.d/no-gnome-session > /dev/null
 # Omybuntu uses Hyprland via SDDM; GNOME session manager is not wanted
@@ -19,10 +19,18 @@ Pin-Priority: -1
 Package: ubuntu-desktop-minimal
 Pin: release *
 Pin-Priority: -1
+
+Package: sddm-theme-ubuntu-budgie
+Pin: release *
+Pin-Priority: -1
+
+Package: sddm-theme-breeze
+Pin: release *
+Pin-Priority: -1
 EOF
 
 # Purge them if they somehow got pulled in as transitive dependencies
-for pkg in gdm3 gnome-session ubuntu-desktop ubuntu-desktop-minimal; do
+for pkg in gdm3 gnome-session ubuntu-desktop ubuntu-desktop-minimal sddm-theme-ubuntu-budgie sddm-theme-breeze; do
   if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
     sudo apt-get purge -y "$pkg"
   fi

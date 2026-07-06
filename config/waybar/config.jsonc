@@ -62,8 +62,8 @@
     "on-click-right": "alacritty"
   },
   "clock#horizontal": {
-    "format": "{:%H:%M}",
-    "format-alt": "<span text_transform='capitalize'>{:L%A, %d %B %Y %H:%M}</span>",
+    "format": "<span text_transform='capitalize'>{:L%A %H:%M}</span>",
+    "format-alt": "<span text_transform='capitalize'>{:L%d %B W%V %Y}</span>",
     "tooltip": false,
     "on-click-right": "omybuntu-launch-floating-terminal-with-presentation omybuntu-tz-select"
   },

@@ -8,14 +8,13 @@ if omybuntu-pkg-present policykit-1-gnome; then
   omybuntu-pkg-drop policykit-1-gnome
 fi
 
-# Update active autostart configs to use hyprpolkitagent path
 if [[ -f ~/.config/hypr/autostart.conf ]]; then
-  sed -i 's|/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1|uwsm-app -- /usr/lib/hyprpolkitagent/hyprpolkitagent|g' ~/.config/hypr/autostart.conf
-  sed -i 's|/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1|uwsm-app -- /usr/lib/hyprpolkitagent/hyprpolkitagent|g' ~/.config/hypr/autostart.conf
+  sed -i 's|/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1|uwsm-app -- /usr/libexec/hyprpolkitagent|g' ~/.config/hypr/autostart.conf
+  sed -i 's|/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1|uwsm-app -- /usr/libexec/hyprpolkitagent|g' ~/.config/hypr/autostart.conf
 fi
 if [[ -f ~/.config/hypr/autostart.lua ]]; then
-  sed -i 's|/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1|/usr/lib/hyprpolkitagent/hyprpolkitagent|g' ~/.config/hypr/autostart.lua
-  sed -i 's|/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1|/usr/lib/hyprpolkitagent/hyprpolkitagent|g' ~/.config/hypr/autostart.lua
+  sed -i 's|/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1|/usr/libexec/hyprpolkitagent|g' ~/.config/hypr/autostart.lua
+  sed -i 's|/usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1|/usr/libexec/hyprpolkitagent|g' ~/.config/hypr/autostart.lua
 fi
 
 # 2. Ensure default chromium-flags has password store in ~/.config

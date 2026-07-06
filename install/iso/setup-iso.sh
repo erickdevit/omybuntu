@@ -47,7 +47,17 @@ sudo systemctl disable gdm.service gdm3.service 2>/dev/null || true
 # Ensure live autologin is configured for the 'ubuntu' user (Casper standard)
 # This runs after install.sh so it is the definitive final state
 sudo mkdir -p /etc/sddm.conf.d
-cat <<EOF | sudo tee /etc/sddm.conf.d/autologin.conf > /dev/null
+sudo rm -f /etc/sddm.conf.d/10-wayland.conf
+sudo rm -f /etc/sddm.conf.d/autologin.conf
+sudo rm -f /etc/sddm.conf.d/50-ubuntu-budgie.conf
+
+cat <<EOF | sudo tee /etc/sddm.conf.d/99-omybuntu.conf > /dev/null
+[General]
+DisplayServer=wayland
+
+[Wayland]
+CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
+
 [Autologin]
 User=ubuntu
 Session=omybuntu

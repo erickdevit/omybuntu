@@ -7,14 +7,7 @@
 OMYBUNTU_PATH="$(dirname "$(dirname "$(readlink -f "$0")")")"
 
 if [[ -x /usr/local/bin/omybuntu-installer ]]; then
-  /usr/local/bin/omybuntu-installer "$@"
-  exit_code=$?
-  if [[ $exit_code -eq 0 ]]; then
-    exit 0
-  fi
-  echo "TUI installer failed (exit $exit_code). Falling back to install.sh..." >&2
-else
-  echo "TUI installer not found. Using install.sh..." >&2
+  exec sudo /usr/local/bin/omybuntu-installer "$@"
 fi
 
 # Fallback: run install.sh (configures existing Ubuntu system)

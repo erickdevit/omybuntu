@@ -166,6 +166,20 @@ sudo rsync -a \
   "$WORKSPACE/" \
   "$CHROOT_DIR/opt/omybuntu/"
 
+# 7aa. Copy custom cursor themes from the host user to the ISO chroot if present
+if [[ -n ${SUDO_USER:-} ]]; then
+  USER_ICONS_DIR="/home/$SUDO_USER/.icons"
+  if [[ -d "$USER_ICONS_DIR" ]]; then
+    echo "Copying custom cursor themes from host user ($SUDO_USER)..."
+    sudo mkdir -p "$CHROOT_DIR/usr/share/icons"
+    for cursor_theme in volantes_cursors volantes_light_cursors; do
+      if [[ -d "$USER_ICONS_DIR/$cursor_theme" ]]; then
+        sudo cp -a "$USER_ICONS_DIR/$cursor_theme" "$CHROOT_DIR/usr/share/icons/"
+      fi
+    done
+  fi
+fi
+
 # 7a. Compile the Ratatui TUI installer inside the chroot
 echo "Installing Rust toolchain and compiling TUI installer..."
 sudo chroot "$CHROOT_DIR" /bin/bash -c "
@@ -177,7 +191,8 @@ sudo chroot "$CHROOT_DIR" /bin/bash -c "
   cd /opt/omybuntu/installer
   cargo build --release --jobs \$(nproc)
   cp target/release/omybuntu-installer /usr/local/bin/omybuntu-installer
-  chmod +x /usr/local/bin/omybuntu-installer
+  cp target/release/omybuntu-tui-monitors /usr/local/bin/omybuntu-tui-monitors
+  chmod +x /usr/local/bin/omybuntu-installer /usr/local/bin/omybuntu-tui-monitors
   rm -rf /root/.cargo /root/.rustup
   rm -rf /opt/omybuntu/installer/target
 "

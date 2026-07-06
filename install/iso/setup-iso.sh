@@ -84,8 +84,8 @@ fi
 
 # Copy state files (toggles, first-run marker, etc.)
 if [[ -d /root/.local/state/omybuntu ]]; then
-  sudo mkdir -p /etc/skel/.local/state
-  sudo cp -a /root/.local/state/omybuntu /etc/skel/.local/state/omybuntu
+  sudo mkdir -p /etc/skel/.local/state/omybuntu
+  sudo cp -a /root/.local/state/omybuntu/. /etc/skel/.local/state/omybuntu/
 fi
 
 # Copy .bashrc

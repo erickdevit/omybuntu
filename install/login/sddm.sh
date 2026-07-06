@@ -4,8 +4,8 @@ omybuntu-refresh-sddm
 # Setup SDDM login service
 sudo mkdir -p /usr/share/wayland-sessions
 sudo cp "$OMYBUNTU_PATH/default/wayland-sessions/omybuntu.desktop" /usr/share/wayland-sessions/omybuntu.desktop
-sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.lua" /usr/share/sddm/hyprland.lua
-sudo rm -f /usr/share/sddm/hyprland.conf
+sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.conf" /usr/share/sddm/hyprland.conf
+sudo rm -f /usr/share/sddm/hyprland.lua
 
 sudo mkdir -p /etc/sddm.conf.d
 cat <<EOF | sudo tee /etc/sddm.conf.d/10-wayland.conf >/dev/null
@@ -13,7 +13,7 @@ cat <<EOF | sudo tee /etc/sddm.conf.d/10-wayland.conf >/dev/null
 DisplayServer=wayland
 
 [Wayland]
-CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.lua
+CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 EOF
 
 if [[ ! -f /etc/sddm.conf.d/autologin.conf ]]; then

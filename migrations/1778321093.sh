@@ -72,18 +72,18 @@ sddm_hypr_conf="/usr/share/sddm/hyprland.conf"
 sddm_hypr_lua="/usr/share/sddm/hyprland.lua"
 sddm_wayland_conf="/etc/sddm.conf.d/10-wayland.conf"
 
-if [[ -f $sddm_hypr_conf || -f $sddm_wayland_conf ]]; then
-  if [[ -f $OMYBUNTU_PATH/default/sddm/hyprland.lua ]]; then
+if [[ -f $sddm_hypr_lua || -f $sddm_wayland_conf ]]; then
+  if [[ -f $OMYBUNTU_PATH/default/sddm/hyprland.conf ]]; then
     sudo mkdir -p /usr/share/sddm
-    sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.lua" "$sddm_hypr_lua"
+    sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.conf" "$sddm_hypr_conf"
   fi
 
   if [[ -f $sddm_wayland_conf ]]; then
-    sudo sed -i 's|/usr/share/sddm/hyprland\.conf|/usr/share/sddm/hyprland.lua|g' "$sddm_wayland_conf"
+    sudo sed -i 's|/usr/share/sddm/hyprland\.lua|/usr/share/sddm/hyprland.conf|g' "$sddm_wayland_conf"
   fi
 
-  if [[ -f $sddm_hypr_conf ]]; then
-    sudo mv "$sddm_hypr_conf" "$sddm_hypr_conf.bak.$timestamp"
+  if [[ -f $sddm_hypr_lua ]]; then
+    sudo rm -f "$sddm_hypr_lua"
   fi
 fi
 

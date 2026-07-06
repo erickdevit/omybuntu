@@ -352,6 +352,41 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   nok "build-iso.sh does not copy omybuntu-tui-monitors to /usr/local/bin"
 
 # ------------------------------------------------------------------
+# Plymouth and Hibernation Ubuntu port checks
+# ------------------------------------------------------------------
+echo "# Plymouth and Hibernation Ubuntu port checks"
+
+# Plymouth scripts rebuild initramfs
+refresh_plymouth_content=$(<"$ROOT/bin/omybuntu-refresh-plymouth")
+[[ $refresh_plymouth_content == *update-initramfs* ]] && ok "refresh-plymouth uses update-initramfs" || nok "refresh-plymouth does not use update-initramfs"
+
+plymouth_reset_content=$(<"$ROOT/bin/omybuntu-plymouth-reset")
+[[ $plymouth_reset_content == *update-initramfs* ]] && ok "plymouth-reset uses update-initramfs" || nok "plymouth-reset does not use update-initramfs"
+
+# omybuntu-reinstall-configs calls grub refresh and not limine
+reinstall_configs_content=$(<"$ROOT/bin/omybuntu-reinstall-configs")
+[[ $reinstall_configs_content == *omybuntu-refresh-grub* && $reinstall_configs_content != *omybuntu-refresh-limine* ]] && \
+  ok "reinstall-configs uses refresh-grub and not refresh-limine" || \
+  nok "reinstall-configs uses refresh-grub and not refresh-limine"
+
+# GRUB config has suppressed logging
+grub_config_content=$(<"$ROOT/default/grub/config")
+[[ $grub_config_content == *systemd.show_status=false* && $grub_config_content == *loglevel=0* ]] && \
+  ok "default grub/config suppresses boot logs" || \
+  nok "default grub/config does not suppress boot logs"
+
+# Hibernation setup and remove scripts check for initramfs-tools and update-grub
+hibernation_setup_content=$(<"$ROOT/bin/omybuntu-hibernation-setup")
+[[ $hibernation_setup_content == *initramfs-tools* && $hibernation_setup_content == *update-grub* ]] && \
+  ok "hibernation-setup uses initramfs-tools and update-grub" || \
+  nok "hibernation-setup does not use initramfs-tools and update-grub"
+
+hibernation_remove_content=$(<"$ROOT/bin/omybuntu-hibernation-remove")
+[[ $hibernation_remove_content == *initramfs-tools* && $hibernation_remove_content == *update-grub* ]] && \
+  ok "hibernation-remove uses initramfs-tools and update-grub" || \
+  nok "hibernation-remove does not use initramfs-tools and update-grub"
+
+# ------------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------------
 echo

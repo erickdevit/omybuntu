@@ -3,12 +3,12 @@
 # omybuntu:summary=Remove hibernation setup including swap and boot resume settings
 # omybuntu:requires-sudo=true
 
-MKINITCPIO_CONF="/etc/mkinitcpio.conf.d/omybuntu_resume.conf"
+INITRAMFS_CONF="/etc/initramfs-tools/conf.d/resume"
 
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
 # Check if hibernation is configured
-if [[ ! -f $MKINITCPIO_CONF ]] || ! grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; then
+if [[ ! -f $INITRAMFS_CONF ]] || ! grep -q "^RESUME=" "$INITRAMFS_CONF"; then
   echo "$I18N_HIBERNATION_NOT_SETUP"
   exit 0
 fi
@@ -48,11 +48,18 @@ if grep -Fq "$SWAP_FILE" /etc/fstab; then
   sudo sed -i '/^# Btrfs swapfile for system hibernation$/d' /etc/fstab
 fi
 
-# Remove mkinitcpio resume hook
+# Remove initramfs config and GRUB kernel parameters
 echo "$I18N_HIBERNATION_REMOVING_HOOK"
-sudo rm "$MKINITCPIO_CONF"
+sudo rm -f "$INITRAMFS_CONF"
+
+if [[ -f /etc/default/grub ]]; then
+  current_cmdline=$(sed -nE 's/^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/p' /etc/default/grub)
+  new_cmdline=$(echo "$current_cmdline" | sed -E 's/\b(resume|resume_offset|rtc_cmos.use_acpi_alarm)=[^ ]+//g' | sed -E 's/[ ]+/ /g' | sed 's/^ //;s/ $//')
+  sudo sed -i -E 's/^(GRUB_CMDLINE_LINUX_DEFAULT=).*/\1"'"$new_cmdline"'"/' /etc/default/grub
+fi
 
 echo "$I18N_HIBERNATION_REGENERATING"
-sudo limine-mkinitcpio
+sudo update-initramfs -u -k all
+sudo update-grub
 
 echo "$I18N_HIBERNATION_REMOVED"

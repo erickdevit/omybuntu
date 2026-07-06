@@ -11,8 +11,8 @@ Rectangle {
   property bool loginFailed: false
   property int sessionIndex: {
     for (var i = 0; i < sessionModel.rowCount(); i++) {
-      var name = (sessionModel.data(sessionModel.index(i, 0), Qt.DisplayRole) || "").toString()
-      if (name.indexOf("uwsm") !== -1)
+      var name = (sessionModel.data(sessionModel.index(i, 0), Qt.DisplayRole) || "").toString().toLowerCase()
+      if (name.indexOf("omybuntu") !== -1 || name.indexOf("uwsm") !== -1)
         return i
     }
     return sessionModel.lastIndex

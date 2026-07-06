@@ -6,8 +6,6 @@
 sudo cp -r ~/.local/share/omybuntu/default/plymouth/* /usr/share/plymouth/themes/omybuntu/
 sudo plymouth-set-default-theme omybuntu
 
-if command -v limine-mkinitcpio &>/dev/null; then
-  sudo limine-mkinitcpio
-else
-  sudo mkinitcpio -P
+if command -v update-initramfs &>/dev/null; then
+  sudo update-initramfs -u
 fi

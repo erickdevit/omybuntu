@@ -135,8 +135,8 @@ fun display_normal_callback() {
   # Get current mode
   mode = Plymouth.GetMode();
 
-  # Only show progress bar for boot and resume modes
-  if (mode == "boot" || mode == "resume") {
+  # Only show progress bar for boot and resume modes after decryption (if LUKS is active)
+  if ((mode == "boot" || mode == "resume") && global.password_shown == 1) {
     show_progress_bar();
     start_fake_progress();
   }

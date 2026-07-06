@@ -20,29 +20,26 @@ if [[ ! -f /sys/power/image_size ]]; then
   exit 0
 fi
 
-# When --no-rebuild is set, the caller is responsible for the UKI rebuild
-# (e.g. running before limine-mkinitcpio-hook is installed during initial
-# install), so we only require limine-mkinitcpio when we'd invoke it ourselves.
-if ! $NO_REBUILD && ! command -v limine-mkinitcpio &>/dev/null; then
+# When --no-rebuild is set, the caller is responsible for the initramfs rebuild
+if ! $NO_REBUILD && ! command -v update-initramfs &>/dev/null; then
   echo "$I18N_HIBERNATION_ERR_BOOTLOADER"
   exit 0
 fi
 
-MKINITCPIO_CONF="/etc/mkinitcpio.conf.d/omybuntu_resume.conf"
+INITRAMFS_CONF="/etc/initramfs-tools/conf.d/resume"
 SWAP_FILE="/swap/swapfile"
-RESUME_DROP_IN="/etc/limine-entry-tool.d/resume.conf"
 
 # Check if hibernation is already configured
-  if [[ -f $MKINITCPIO_CONF ]] && grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; then
+if [[ -f $INITRAMFS_CONF ]] && grep -q "^RESUME=" "$INITRAMFS_CONF"; then
   # Fix empty resume_offset if btrfs map-swapfile failed during initial setup
-  if [[ -f $RESUME_DROP_IN ]] && grep -q 'resume_offset="$' "$RESUME_DROP_IN" && [[ -f $SWAP_FILE ]]; then
+  if grep -q 'resume_offset="$' /etc/default/grub 2>/dev/null && [[ -f $SWAP_FILE ]]; then
     RESUME_OFFSET=$(sudo btrfs inspect-internal map-swapfile -r "$SWAP_FILE" 2>/dev/null)
     if [[ -n $RESUME_OFFSET ]]; then
       fixing_msg=$(printf "$I18N_HIBERNATION_FIXING_OFFSET" "$RESUME_OFFSET")
       echo "$fixing_msg"
-      sudo sed -i "s/resume_offset=\"$/resume_offset=$RESUME_OFFSET\"/" "$RESUME_DROP_IN"
-      sudo sed -i "s/resume_offset=\"$/resume_offset=$RESUME_OFFSET\"/" /etc/default/limine
-      $NO_REBUILD || sudo limine-mkinitcpio
+      sudo sed -i "s/resume_offset=\"$/resume_offset=$RESUME_OFFSET\"/" /etc/default/grub
+      $NO_REBUILD || sudo update-initramfs -u
+      $NO_REBUILD || sudo update-grub
     fi
   fi
   echo "$I18N_HIBERNATION_ALREADY_SETUP"
@@ -87,50 +84,51 @@ if ! swapon --show | grep -q "$SWAP_FILE"; then
   sudo swapon -p 0 "$SWAP_FILE"
 fi
 
-# Add resume hook to mkinitcpio
-sudo mkdir -p /etc/mkinitcpio.conf.d
-adding_hook_msg=$(printf "$I18N_HIBERNATION_ADDING_HOOK" "$MKINITCPIO_CONF")
+# Add resume config to initramfs-tools
+sudo mkdir -p /etc/initramfs-tools/conf.d
+adding_hook_msg=$(printf "$I18N_HIBERNATION_ADDING_HOOK" "$INITRAMFS_CONF")
 echo "$adding_hook_msg"
-echo "HOOKS+=(resume)" | sudo tee "$MKINITCPIO_CONF" >/dev/null
 
 # Ensure keyboard backlight doesn't prevent sleep
 sudo cp -p "$OMYBUNTU_PATH/default/systemd/system-sleep/keyboard-backlight" /usr/lib/systemd/system-sleep/
 
-# Add resume= kernel parameters so the initramfs resume hook knows where to find the
-# hibernation image. Without these, resume happens late (after GPU drivers load) and fails.
-if [[ ! -f $RESUME_DROP_IN ]]; then
-  echo "$I18N_HIBERNATION_ADDING_PARAMS"
-  sudo swapon -p 0 "$SWAP_FILE" 2>/dev/null
-  RESUME_DEVICE=$(findmnt -no SOURCE -T "$SWAP_FILE" | sed 's/\[.*\]//')
-  RESUME_OFFSET=$(sudo btrfs inspect-internal map-swapfile -r "$SWAP_FILE")
-  if [[ -n $RESUME_OFFSET ]]; then
-    sudo mkdir -p /etc/limine-entry-tool.d
-    echo "KERNEL_CMDLINE[default]+=\" resume=$RESUME_DEVICE resume_offset=$RESUME_OFFSET\"" | sudo tee "$RESUME_DROP_IN" >/dev/null
-    sudo tee -a /etc/default/limine < "$RESUME_DROP_IN" >/dev/null
-  else
-    offset_err_msg=$(printf "$I18N_HIBERNATION_ERR_OFFSET" "$SWAP_FILE")
-    echo "$offset_err_msg" >&2
+# Add resume parameters to GRUB and initramfs
+echo "$I18N_HIBERNATION_ADDING_PARAMS"
+sudo swapon -p 0 "$SWAP_FILE" 2>/dev/null
+RESUME_UUID=$(findmnt -no UUID -T "$SWAP_FILE")
+RESUME_OFFSET=$(sudo btrfs inspect-internal map-swapfile -r "$SWAP_FILE")
+
+if [[ -n $RESUME_OFFSET && -n $RESUME_UUID ]]; then
+  # Write to initramfs config
+  echo "RESUME=UUID=$RESUME_UUID resume_offset=$RESUME_OFFSET" | sudo tee "$INITRAMFS_CONF" >/dev/null
+
+  # Add to GRUB_CMDLINE_LINUX_DEFAULT
+  if [[ -f /etc/default/grub ]]; then
+    current_cmdline=$(sed -nE 's/^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/p' /etc/default/grub)
+    new_cmdline=$(echo "$current_cmdline" | sed -E 's/\b(resume|resume_offset)=[^ ]+//g' | sed -E 's/[ ]+/ /g' | sed 's/^ //;s/ $//')
+    new_cmdline="$new_cmdline resume=UUID=$RESUME_UUID resume_offset=$RESUME_OFFSET"
+    sudo sed -i -E 's/^(GRUB_CMDLINE_LINUX_DEFAULT=).*/\1"'"$new_cmdline"'"/' /etc/default/grub
   fi
+else
+  offset_err_msg=$(printf "$I18N_HIBERNATION_ERR_OFFSET" "$SWAP_FILE")
+  echo "$offset_err_msg" >&2
 fi
 
 # Use ACPI alarm for RTC wakeup on s2idle systems (needed for suspend-then-hibernate)
 if grep -q "\[s2idle\]" /sys/power/mem_sleep 2>/dev/null; then
-  LIMINE_DROP_IN="/etc/limine-entry-tool.d/rtc-alarm.conf"
-  if [[ ! -f $LIMINE_DROP_IN ]]; then
-    echo "$I18N_HIBERNATION_ENABLING_RTC"
-    sudo mkdir -p /etc/limine-entry-tool.d
-    echo 'KERNEL_CMDLINE[default]+=" rtc_cmos.use_acpi_alarm=1"' | sudo tee "$LIMINE_DROP_IN" >/dev/null
-    sudo tee -a /etc/default/limine < "$LIMINE_DROP_IN" >/dev/null
+  echo "$I18N_HIBERNATION_ENABLING_RTC"
+  if [[ -f /etc/default/grub ]] && ! grep -q "rtc_cmos.use_acpi_alarm=1" /etc/default/grub; then
+    current_cmdline=$(sed -nE 's/^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/p' /etc/default/grub)
+    new_cmdline=$(echo "$current_cmdline" | sed 's/ $//')
+    new_cmdline="$new_cmdline rtc_cmos.use_acpi_alarm=1"
+    sudo sed -i -E 's/^(GRUB_CMDLINE_LINUX_DEFAULT=).*/\1"'"$new_cmdline"'"/' /etc/default/grub
   fi
 fi
 
 if ! $NO_REBUILD; then
-  # limine-mkinitcpio rebuilds initramfs/UKI for all kernels and updates the
-  # /boot/limine.conf entries via limine-entry-tool. The limine bootloader
-  # binary on the ESP doesn't change here, so we don't need limine-update
-  # (which would also re-deploy the binary and rebuild a second time).
   echo "$I18N_HIBERNATION_REGENERATING"
-  sudo limine-mkinitcpio
+  sudo update-initramfs -u -k all
+  sudo update-grub
   echo
 fi
 

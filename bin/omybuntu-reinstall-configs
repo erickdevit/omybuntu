@@ -19,6 +19,8 @@ echo '[[ -f ~/.bashrc ]] && . ~/.bashrc' | tee ~/.bash_profile >/dev/null
 
 $(bash $OMYBUNTU_PATH/install/config/theme.sh)
 
-omybuntu-refresh-limine
+if omybuntu-cmd-present omybuntu-refresh-grub; then
+  omybuntu-refresh-grub
+fi
 omybuntu-refresh-plymouth
 omybuntu-nvim-setup

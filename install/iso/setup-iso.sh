@@ -127,5 +127,10 @@ done
 sudo rm -rf /etc/skel/.config/chromium/SingletonLock
 sudo rm -rf /etc/skel/.config/google-chrome/SingletonLock
 
+# Refresh SDDM configurations and rebuilding initramfs inside chroot
+echo "Refreshing SDDM configurations and rebuilding initramfs..."
+omybuntu-refresh-sddm
+update-initramfs -u
+
 echo "Skel populated. Live user 'ubuntu' will inherit full Omybuntu configuration."
 

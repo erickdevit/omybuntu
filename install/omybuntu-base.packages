@@ -77,7 +77,7 @@ playerctl
 plocate
 plymouth
 
-policykit-1-gnome
+hyprpolkitagent
 libpq-dev
 power-profiles-daemon
 python3-gi

@@ -240,6 +240,7 @@ mkdir -p "$THEME_DIR"
 magick -size 1920x1080 \
   -define gradient:center=50%,50% \
   radial-gradient:'#2a1a10'-'#140a05' \
+  -depth 8 -type TrueColor \
   "$THEME_DIR/background.png"
 
 # Select indicators (subtle rounded amber rectangles at 15% opacity)

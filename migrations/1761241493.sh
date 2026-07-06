@@ -2,7 +2,7 @@ echo "Cleanup extra UKI if needed to prevent errors"
 if [[ -f /boot/EFI/linux/omybuntu_linux.efi ]] && [[ -f /boot/EFI/linux/$(cat /etc/machine-id)_linux.efi ]]; then
   sudo rm -f /boot/EFI/Linux/$(cat /etc/machine-id)_linux.efi
 
-  if grep -q "/boot/EFI/Linux/$(cat /etc/machine-id)_linux.efi" /boot/limine.conf; then
+  if [[ -f /boot/limine.conf ]] && grep -q "/boot/EFI/Linux/$(cat /etc/machine-id)_linux.efi" /boot/limine.conf; then
     echo -e "Resetting limine config\n(you may need to re-add other entries via sudo limine-update)"
 
     sudo mv /boot/limine.conf /boot/limine.conf.bak
@@ -27,7 +27,11 @@ term_foreground_bright: c0caf5
 term_background_bright: 24283b
 
 EOF
-    sudo limine-update
-    sudo limine-snapper-sync
+    if omybuntu-cmd-present limine-update; then
+      sudo limine-update
+    fi
+    if omybuntu-cmd-present limine-snapper-sync; then
+      sudo limine-snapper-sync
+    fi
   fi
 fi

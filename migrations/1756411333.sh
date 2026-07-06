@@ -1,3 +1,3 @@
 echo "Use new Omybuntu mirror as default"
 
-omybuntu-refresh-pacman
+sudo apt-get update

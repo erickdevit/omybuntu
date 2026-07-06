@@ -1,3 +1,3 @@
-echo "Include pacman mirror and OPR upstreams (edge vs stable) in About"
+echo "Include package manager mirror and OPR upstreams (edge vs stable) in About"
 
 omybuntu-refresh-fastfetch

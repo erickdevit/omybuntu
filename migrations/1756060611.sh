@@ -2,8 +2,8 @@ echo "Migrate AUR packages to official repos where possible"
 
 reinstall_package_opr() {
   if omybuntu-pkg-present $1; then
-    sudo pacman -Rns --noconfirm $1
-    sudo pacman -S --noconfirm ${2:-$1}
+    omybuntu-pkg-drop $1 || true
+    omybuntu-pkg-add ${2:-$1} || true
   fi
 }
 

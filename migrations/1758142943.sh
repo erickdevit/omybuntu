@@ -1,4 +1,4 @@
-echo "Turn off VSCode's own auto-update feature (we rely on pacman)"
+echo "Turn off VSCode's own auto-update feature (we rely on system package manager)"
 
 # Note: We cannot use `jq` to update settings.json because it’s JSONC (allows comments),
 # which jq doesn’t support.

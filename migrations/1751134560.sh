@@ -11,9 +11,8 @@ EOF
 
 # Ensure we have the latest repos and are ready to pull
 omybuntu-update-keyring
-omybuntu-refresh-pacman
+sudo apt-get update
 sudo systemctl restart systemd-timesyncd
-sudo pacman -Sy # Normally not advisable, but we'll do a full -Syu before finishing
 
 mkdir -p ~/.local/state/omybuntu/migrations
 touch ~/.local/state/omybuntu/migrations/1751134560.sh

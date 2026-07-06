@@ -1,3 +1,3 @@
 echo "Pull packages from stable Arch mirror"
 
-omybuntu-refresh-pacman
+sudo apt-get update

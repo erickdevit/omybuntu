@@ -5,7 +5,11 @@ echo "Install sof-firmware on Intel Panther Lake to restore DSP audio"
 # subsequent orphan sweep in the same update cycle cannot take it again.
 
 if omybuntu-hw-intel-ptl && ! omybuntu-hw-match "XPS"; then
-  omybuntu-pkg-add sof-firmware
-  sudo pacman -D --asexplicit sof-firmware >/dev/null
+  omybuntu-pkg-add sof-firmware || true
+  if omybuntu-pkg-present pacman &>/dev/null; then
+    sudo pacman -D --asexplicit sof-firmware >/dev/null || true
+  elif omybuntu-cmd-present apt-mark; then
+    sudo apt-mark manual firmware-sof-signed &>/dev/null || true
+  fi
   omybuntu-state set reboot-required
 fi

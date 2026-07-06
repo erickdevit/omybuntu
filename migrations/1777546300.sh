@@ -5,5 +5,7 @@ DEFAULT_LIMINE="/etc/default/limine"
 if omybuntu-hw-intel-ptl && [[ -f $DEFAULT_LIMINE ]] && ! grep -q 'fred=on' "$DEFAULT_LIMINE"; then
   source "$OMYBUNTU_PATH/install/config/hardware/intel/fred.sh"
 
-  sudo limine-update
+  if omybuntu-cmd-present limine-update; then
+    sudo limine-update
+  fi
 fi

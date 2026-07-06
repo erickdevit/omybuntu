@@ -15,5 +15,7 @@ if [[ -f $DEFAULT_LIMINE ]] && grep -q 'xe\.enable_psr' "$DEFAULT_LIMINE"; then
 fi
 
 if (( NEEDS_UPDATE )); then
-  sudo limine-update
+  if omybuntu-cmd-present limine-update; then
+    sudo limine-update
+  fi
 fi

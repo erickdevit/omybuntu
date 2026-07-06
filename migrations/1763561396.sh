@@ -1,3 +1,3 @@
 echo "Switch to stable Omybuntu Package Repository builds"
 
-omybuntu-refresh-pacman
+sudo apt-get update

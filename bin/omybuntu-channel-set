@@ -27,7 +27,9 @@ STATE_DIR="$HOME/.local/state/omybuntu"
 mkdir -p "$STATE_DIR"
 echo "$channel" > "$STATE_DIR/channel"
 
-# Hooks/Placeholders for custom APT repository updates per channel in the future
-# e.g., omybuntu-refresh-apt "$channel"
+# Refresh apt config and databases for the selected channel
+if omybuntu-cmd-present omybuntu-refresh-apt; then
+  omybuntu-refresh-apt "$channel"
+fi
 
 omybuntu-update -y

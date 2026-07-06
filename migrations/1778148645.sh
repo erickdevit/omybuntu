@@ -3,7 +3,7 @@ echo "Configure SDDM to use Wayland for the greeter"
 sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.conf" /usr/share/sddm/hyprland.conf
 sudo rm -f /usr/share/sddm/hyprland.lua
 sudo mkdir -p /etc/sddm.conf.d
-cat <<EOF | sudo tee /etc/sddm.conf.d/10-wayland.conf >/dev/null
+cat <<EOF | sudo tee /etc/sddm.conf.d/99-omybuntu.conf >/dev/null
 [General]
 DisplayServer=wayland
 

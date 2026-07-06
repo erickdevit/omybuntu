@@ -4,7 +4,13 @@
 # omybuntu:requires-sudo=true
 
 sudo cp -r ~/.local/share/omybuntu/default/plymouth/* /usr/share/plymouth/themes/omybuntu/
-sudo plymouth-set-default-theme omybuntu
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+  sudo plymouth-set-default-theme omybuntu
+fi
+if command -v update-alternatives >/dev/null 2>&1; then
+  sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/omybuntu/omybuntu.plymouth 150 2>/dev/null || true
+  sudo update-alternatives --set default.plymouth /usr/share/plymouth/themes/omybuntu/omybuntu.plymouth 2>/dev/null || true
+fi
 
 if command -v update-initramfs &>/dev/null; then
   sudo update-initramfs -u

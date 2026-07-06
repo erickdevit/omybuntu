@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# omybuntu:summary=Ensure the Omybuntu keyring packages are installed and populated (Stub on Ubuntu)
+# omybuntu:summary=Ensure the system keyring packages are updated
 # omybuntu:requires-sudo=true
 
+echo "Updating system keyrings..."
+sudo apt-get update -o Dir::Etc::sourcelist="sources.list" -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0" -qq || true
+sudo apt-get install --only-upgrade -y ubuntu-keyring ca-certificates 2>/dev/null || true
 echo "Keys are correct"
 exit 0

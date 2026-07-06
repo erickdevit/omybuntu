@@ -1,25 +1,45 @@
 # Packages installed outside of install/packages.sh or optional packages
-# Utilized as a manifest for optional hardware and system drivers on Ubuntu
+# Utilized by ISO builder to ensure package availability in the ISO on Ubuntu
 
 autoconf-archive
+asusctl
 build-essential
 broadcom-sta-dkms
 btrfs-progs
 dkms
+libegl-wayland1
 git
 gstreamer1.0-pipewire
+libgtk4-layer-shell-0
 default-jdk
 libpulse0
+intel-media-va-driver
+i965-va-driver
 timeshift
+linux-image-generic
 linux-firmware
 linux-headers-generic
 linux-oem-24.04
+linux-headers-oem-24.04
+macbook12-spi-driver-dkms
+nvidia-dkms-550
+nvidia-utils-550
+libnvidia-decode-550:i386
 pipewire
+pipewire-alsa
+pipewire-jack
 pipewire-pulse
-pipewire-audio
 qt6-wayland
 firmware-sof-signed
 thermald
 webp-pixbuf-loader
+tuxedo-keyboard-dkms
+yt6801-dkms
+zram-config
 libvpl2
 mesa-vulkan-drivers
+dell-xps-touchpad-haptics
+apple-bcm-firmware
+apple-t2-audio-config
+t2fand
+tiny-dfr

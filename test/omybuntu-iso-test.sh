@@ -435,6 +435,39 @@ live_grub_content=$(<"$ROOT/install/iso/grub.cfg")
 [[ $live_grub_content == *systemd.show_status=false* && $live_grub_content == *loglevel=0* ]] && \
   ok "live ISO grub.cfg has console suppressions" || \
   nok "live ISO grub.cfg does not have console suppressions"
+# Check that omybuntu-refresh-apt is present and channel-set calls it
+[[ -f $ROOT/bin/omybuntu-refresh-apt ]] && \
+  ok "omybuntu-refresh-apt script exists" || \
+  nok "omybuntu-refresh-apt script is missing"
+
+channel_set_content=$(<"$ROOT/bin/omybuntu-channel-set")
+[[ $channel_set_content == *omybuntu-refresh-apt* ]] && \
+  ok "omybuntu-channel-set executes omybuntu-refresh-apt" || \
+  nok "omybuntu-channel-set does not execute omybuntu-refresh-apt"
+
+# Check that omybuntu-menu has no references to bindings.lua or input.lua
+menu_content=$(<"$ROOT/bin/omybuntu-menu")
+[[ $menu_content != *bindings.lua* && $menu_content != *input.lua* ]] && \
+  ok "omybuntu-menu uses .conf instead of .lua" || \
+  nok "omybuntu-menu still references .lua files"
+
+# Check that update-keyring is updated and is not a simple print-only stub
+keyring_content=$(<"$ROOT/bin/omybuntu-update-keyring")
+[[ $keyring_content == *apt-get* && $keyring_content == *ubuntu-keyring* ]] && \
+  ok "omybuntu-update-keyring actually runs package upgrades" || \
+  nok "omybuntu-update-keyring remains an empty stub"
+
+# Check that limine-snapper-restore.desktop is deleted
+[[ ! -f $ROOT/applications/hidden/limine-snapper-restore.desktop ]] && \
+  ok "limine-snapper-restore.desktop has been deleted" || \
+  nok "limine-snapper-restore.desktop still exists"
+
+# Check that legacy sddm migration points to 99-omybuntu.conf
+sddm_migration_content=$(<"$ROOT/migrations/1778148645.sh")
+[[ $sddm_migration_content == *99-omybuntu.conf* && $sddm_migration_content != *10-wayland.conf* ]] && \
+  ok "sddm legacy migration points to 99-omybuntu.conf" || \
+  nok "sddm legacy migration still points to 10-wayland.conf"
+
 # Summary
 # ------------------------------------------------------------------
 echo

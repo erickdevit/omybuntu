@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# omybuntu:summary=Refresh apt configuration, execute pre-refresh hooks, and update apt databases
+# omybuntu:requires-sudo=true
+
+channel="${1:-stable}"
+
+if [[ $channel != "stable" && $channel != "rc" && $channel != "edge" && $channel != "dev" ]]; then
+  echo "Error: Invalid channel '$channel'. Must be one of: stable, rc, edge, dev"
+  exit 1
+fi
+
+echo "Refreshing apt database for channel: $channel"
+
+# Run custom hooks before updating apt (e.g. adding custom repositories)
+if omybuntu-cmd-present omybuntu-hook; then
+  omybuntu-hook pre-refresh-apt
+fi
+
+# Update apt database
+sudo apt-get update

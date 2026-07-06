@@ -55,12 +55,16 @@ for asset in bullet.png entry.png lock.png progress_bar.png; do
 done
 
 sudo cp -a "$staging_dir/." "$theme_dir/"
-sudo plymouth-set-default-theme omybuntu
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+  sudo plymouth-set-default-theme omybuntu
+fi
+if command -v update-alternatives >/dev/null 2>&1; then
+  sudo update-alternatives --install /usr/share/plymouth/themes/default.plymouth default.plymouth /usr/share/plymouth/themes/omybuntu/omybuntu.plymouth 150 2>/dev/null || true
+  sudo update-alternatives --set default.plymouth /usr/share/plymouth/themes/omybuntu/omybuntu.plymouth 2>/dev/null || true
+fi
 
 if command -v update-initramfs >/dev/null 2>&1; then
   sudo update-initramfs -u
-elif command -v mkinitcpio >/dev/null 2>&1; then
-  sudo mkinitcpio -P
 fi
 
 # Sync the SDDM login screen with the same colors and logo.

@@ -23,6 +23,27 @@ copy_chromium_flags() {
   cp -f "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/config/chromium-flags.conf" "$1"
 }
 
+patch_desktop_file() {
+  local desktop_name="$1"
+  local flags_file="$2"
+
+  local src_desktop="/usr/share/applications/$desktop_name"
+  local dest_desktop="$HOME/.local/share/applications/$desktop_name"
+
+  if [[ -f $src_desktop ]]; then
+    mkdir -p "$HOME/.local/share/applications"
+    cp -f "$src_desktop" "$dest_desktop"
+
+    if [[ -f $flags_file ]]; then
+      local flags
+      flags=$(grep -v '^\s*#' "$flags_file" | grep -v '^\s*$' | sed "s|~|$HOME|g" | xargs)
+      if [[ -n $flags ]]; then
+        sed -i -E "s|^(Exec=[^ ]+)(.*)|\1 $flags\2|" "$dest_desktop"
+      fi
+    fi
+  fi
+}
+
 setup_firefox_preferences() {
   local distribution_dir="$1"
 
@@ -44,6 +65,7 @@ chrome)
 
   setup_policy_directory /etc/opt/chrome/policies/managed
   copy_chromium_flags ~/.config/chrome-flags.conf
+  patch_desktop_file google-chrome.desktop ~/.config/chrome-flags.conf
   omybuntu-theme-set-browser
   announce_browser_installed "Chrome"
   ;;
@@ -56,6 +78,7 @@ edge)
 
   setup_policy_directory /etc/opt/edge/policies/managed
   copy_chromium_flags ~/.config/microsoft-edge-stable-flags.conf
+  patch_desktop_file microsoft-edge.desktop ~/.config/microsoft-edge-stable-flags.conf
   omybuntu-theme-set-browser
   announce_browser_installed "Edge"
   ;;
@@ -68,6 +91,7 @@ brave)
 
   setup_policy_directory /etc/brave/policies/managed
   copy_chromium_flags ~/.config/brave-flags.conf
+  patch_desktop_file brave-browser.desktop ~/.config/brave-flags.conf
   omybuntu-theme-set-browser
   announce_browser_installed "Brave"
   ;;
@@ -81,7 +105,8 @@ brave-origin)
   setup_policy_directory /etc/brave/policies/managed
   mkdir -p ~/.config
   # FIXME: Use normal chromium flags when Brave Origin wrapper has been fixed
-  echo "--load-extension=~/.local/share/omybuntu/default/chromium/extensions/copy-url" > ~/.config/brave-origin-beta-flags.conf
+  echo -e "--load-extension=~/.local/share/omybuntu/default/chromium/extensions/copy-url\n--password-store=gnome-libsecret" > ~/.config/brave-origin-beta-flags.conf
+  patch_desktop_file brave-browser-beta.desktop ~/.config/brave-origin-beta-flags.conf
   omybuntu-theme-set-browser
   announce_browser_installed "Brave Origin"
   ;;

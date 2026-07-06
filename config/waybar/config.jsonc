@@ -62,14 +62,14 @@
     "on-click-right": "alacritty"
   },
   "clock#horizontal": {
-    "format": "{:L%A %H:%M}",
-    "format-alt": "{:L%d %B W%V %Y}",
+    "format": "<span text_transform='capitalize'>{:L%A %H:%M}</span>",
+    "format-alt": "<span text_transform='capitalize'>{:L%d %B W%V %Y}</span>",
     "tooltip": false,
     "on-click-right": "omybuntu-launch-floating-terminal-with-presentation omybuntu-tz-select"
   },
   "clock#vertical": {
     "format": "{:%H\n  —\n%M}",
-    "format-alt": "{:L%d\n%b\n%y}",
+    "format-alt": "<span text_transform='capitalize'>{:L%d\n%b\n%y}</span>",
     "tooltip": false,
     "on-click-right": "omybuntu-launch-floating-terminal-with-presentation omybuntu-tz-select"
   },

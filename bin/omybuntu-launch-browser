@@ -21,6 +21,30 @@ else
   private_flag="--incognito"
 fi
 
+# Determine flags file based on browser executable
+flags_file=""
+if [[ $browser_exec =~ chrome ]]; then
+  flags_file="$HOME/.config/chrome-flags.conf"
+elif [[ $browser_exec =~ brave-browser-beta ]]; then
+  flags_file="$HOME/.config/brave-origin-beta-flags.conf"
+elif [[ $browser_exec =~ brave ]]; then
+  flags_file="$HOME/.config/brave-flags.conf"
+elif [[ $browser_exec =~ edge ]]; then
+  flags_file="$HOME/.config/microsoft-edge-stable-flags.conf"
+elif [[ $browser_exec =~ chromium ]]; then
+  flags_file="$HOME/.config/chromium-flags.conf"
+fi
+
+extra_args=()
+if [[ -n $flags_file && -f $flags_file ]]; then
+  while read -r line; do
+    [[ $line =~ ^# ]] || [[ -z $line ]] && continue
+    # Expand ~ to $HOME
+    line="${line//\~/$HOME}"
+    extra_args+=("$line")
+  done < "$flags_file"
+fi
+
 systemd-run --user --quiet --collect --unit="omybuntu-browser-$(date +%s%N)" \
   --property=StandardOutput=null --property=StandardError=null \
-  uwsm-app -- "$browser_exec" "${@/--private/$private_flag}"
+  uwsm-app -- "$browser_exec" "${extra_args[@]}" "${@/--private/$private_flag}"

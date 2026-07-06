@@ -15,6 +15,8 @@ if [[ $# -ne 3 ]]; then
   exit 1
 fi
 
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+
 bg_hex="${1#\#}"
 text_hex="${2#\#}"
 logo_path="$3"
@@ -42,7 +44,7 @@ theme_dir="/usr/share/plymouth/themes/omybuntu"
 staging_dir=$(mktemp -d)
 trap 'rm -rf "$staging_dir"' EXIT
 
-find ~/.local/share/omybuntu/default/plymouth -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
+find "$OMYBUNTU_PATH/default/plymouth" -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
 cp "$logo_path" "$staging_dir/logo.png"
 
 sed -i \
@@ -69,7 +71,7 @@ fi
 
 # Sync the SDDM login screen with the same colors and logo.
 sddm_dir="/usr/share/sddm/themes/omybuntu"
-sddm_template="$HOME/.local/share/omybuntu/default/sddm/omybuntu/Main.qml"
+sddm_template="$OMYBUNTU_PATH/default/sddm/omybuntu/Main.qml"
 
 sed \
   -e "s/#140a05/#$bg_hex/g" \

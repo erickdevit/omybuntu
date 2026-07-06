@@ -41,4 +41,7 @@ sudo sed -i '/-auth.*pam_gnome_keyring\.so/d' /etc/pam.d/sddm
 sudo sed -i '/-password.*pam_gnome_keyring\.so/d' /etc/pam.d/sddm
 
 # Don't use chrootable here as --now will cause issues for manual installs
+sudo systemctl disable gdm.service gdm3.service 2>/dev/null || true
+sudo rm -f /etc/systemd/system/display-manager.service
 sudo systemctl enable sddm.service || true
+sudo systemctl set-default graphical.target 2>/dev/null || true

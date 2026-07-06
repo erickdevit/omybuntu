@@ -35,8 +35,8 @@ fi
 
 FLAG_NAME="$1"
 ACTION="${2:-toggle}"
-FLAG_FILE="$HOME/.local/state/omybuntu/toggles/hypr/$FLAG_NAME.lua"
-FLAG_SOURCE="$OMYBUNTU_PATH/default/hypr/toggles/$FLAG_NAME.lua"
+FLAG_FILE="$HOME/.local/state/omybuntu/toggles/hypr/$FLAG_NAME.conf"
+FLAG_SOURCE="$OMYBUNTU_PATH/default/hypr/toggles/$FLAG_NAME.conf"
 
 on() {
   if [[ -f $FLAG_SOURCE ]]; then

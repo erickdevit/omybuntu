@@ -5,7 +5,7 @@
 
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
-STATE_FILE="$HOME/.local/state/omybuntu/toggles/hypr/touchscreen-disabled.lua"
+STATE_FILE="$HOME/.local/state/omybuntu/toggles/hypr/touchscreen-disabled.conf"
 
 device="$(omybuntu-hw-touchscreen)"
 
@@ -23,7 +23,7 @@ enable() {
 disable() {
   hyprctl eval "hl.device({ name = \"$device\", enabled = false })" >/dev/null 2>&1 || hyprctl keyword "device:$device:enabled" false >/dev/null
   mkdir -p "$(dirname "$STATE_FILE")"
-  printf 'hl.device({ name = "%s", enabled = false })\n' "$device" >"$STATE_FILE"
+  printf 'device {\n  name = %s\n  enabled = false\n}\n' "$device" >"$STATE_FILE"
   omybuntu-swayosd-client --custom-icon touch-disabled-symbolic --custom-message "$I18N_OSD_TOUCHSCREEN_OFF"
 }
 

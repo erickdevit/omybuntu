@@ -70,10 +70,28 @@ fi
 
 setup_content=$(<"$SETUP_ISO")
 
+if [[ $setup_content == '#!/bin/bash'* && $setup_content == *'set -euo pipefail'* ]]; then
+  ok "setup-iso.sh is a strict bash entrypoint"
+else
+  nok "setup-iso.sh is a strict bash entrypoint"
+fi
+
+if [[ $setup_content == *'OMYBUNTU_PATH="${OMYBUNTU_PATH:-/opt/omybuntu}"'* ]]; then
+  ok "setup-iso.sh defaults OMYBUNTU_PATH to /opt/omybuntu"
+else
+  nok "setup-iso.sh defaults OMYBUNTU_PATH to /opt/omybuntu"
+fi
+
 if [[ $setup_content == *.local/bin* ]]; then
   ok "copies .local/bin/ to skel"
 else
   nok "copies .local/bin/ to skel"
+fi
+
+if [[ $setup_content == *'/etc/skel/.local/bin'* && $setup_content == *'mkdir -p /etc/skel/.config /etc/skel/.local/share /etc/skel/.local/bin'* ]]; then
+  ok "creates /etc/skel/.local/bin"
+else
+  nok "creates /etc/skel/.local/bin"
 fi
 
 if [[ $setup_content == *.local/state/omybuntu* ]]; then
@@ -92,6 +110,30 @@ if [[ $setup_content == */etc/skel/.config* ]]; then
   ok "creates /etc/skel/.config"
 else
   nok "creates /etc/skel/.config"
+fi
+
+if [[ $setup_content == *budgie-sddm-theme* && $setup_content == *ubuntu-session* ]]; then
+  ok "setup-iso.sh blocks downstream GNOME/SDDM packages"
+else
+  nok "setup-iso.sh blocks downstream GNOME/SDDM packages"
+fi
+
+if [[ $setup_content == *display-manager.service* && $setup_content == *graphical.target.wants* ]]; then
+  ok "setup-iso.sh forces SDDM display-manager and graphical target"
+else
+  nok "setup-iso.sh forces SDDM display-manager and graphical target"
+fi
+
+if [[ $setup_content == */etc/casper.conf* && $setup_content == *USERNAME=\"ubuntu\"* ]]; then
+  ok "setup-iso.sh defines the live casper user"
+else
+  nok "setup-iso.sh defines the live casper user"
+fi
+
+if [[ $setup_content == *omybuntu-refresh-plymouth* && $setup_content == *omybuntu-refresh-sddm* ]]; then
+  ok "setup-iso.sh refreshes Plymouth and SDDM"
+else
+  nok "setup-iso.sh refreshes Plymouth and SDDM"
 fi
 
 # ------------------------------------------------------------------
@@ -195,6 +237,9 @@ if [[ -f $OMYBUNTU_TOGGLES ]]; then
   [[ $toggles2_content == *toggles/hypr* ]] && \
     ok "omybuntu-toggles.sh creates hypr dir" || \
     nok "omybuntu-toggles.sh creates hypr dir"
+  [[ $toggles2_content == *flags.conf* && $toggles2_content != *flags.lua* ]] && \
+    ok "omybuntu-toggles.sh copies flags.conf" || \
+    nok "omybuntu-toggles.sh still references flags.lua"
 fi
 
 # ------------------------------------------------------------------
@@ -210,6 +255,18 @@ for pkg in casper plymouth linux-image-generic grub-efi-amd64 gum; do
     ok "build-iso.sh installs $pkg" || \
     nok "build-iso.sh installs $pkg"
 done
+
+[[ $build_content == *write_live_apt_pins* && $build_content == *budgie-sddm-theme* ]] && \
+  ok "build-iso.sh writes live APT pins before install" || \
+  nok "build-iso.sh does not write live APT pins before install"
+
+[[ $build_content == *'/usr/bin/env -i'* && $build_content == *'/bin/bash -e -c'* ]] && \
+  ok "build-iso.sh runs chroot setup in a clean aborting environment" || \
+  nok "build-iso.sh does not run chroot setup in a clean aborting environment"
+
+[[ $build_content == *'trap cleanup EXIT'* && $build_content == *cleanup_mounts* ]] && \
+  ok "build-iso.sh cleans up mounts and log tail on exit" || \
+  nok "build-iso.sh does not clean up mounts and log tail on exit"
 
 # ------------------------------------------------------------------
 # First-run invokes elephant service enable
@@ -335,7 +392,7 @@ icons_content=$(<"$ROOT/install/packaging/icons.sh")
 
 # setup-iso.sh blocks budgie and breeze themes
 setup_iso_content=$(<"$ROOT/install/iso/setup-iso.sh")
-[[ $setup_iso_content == *sddm-theme-ubuntu-budgie* && $setup_iso_content == *sddm-theme-breeze* ]] && \
+[[ $setup_iso_content == *budgie-sddm-theme* && $setup_iso_content == *sddm-theme-breeze* ]] && \
   ok "setup-iso.sh blocks downstream sddm themes" || \
   nok "setup-iso.sh does not block downstream sddm themes"
 
@@ -350,6 +407,33 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
 [[ $build_iso_content == *omybuntu-tui-monitors* ]] && \
   ok "build-iso.sh copies omybuntu-tui-monitors to /usr/local/bin" || \
   nok "build-iso.sh does not copy omybuntu-tui-monitors to /usr/local/bin"
+
+# Installer TUI uses a clean chroot install environment and final user autologin
+installer_install_content=$(<"$ROOT/installer/src/install.rs")
+[[ $installer_install_content == *TargetCleanup* && $installer_install_content == *unmount_virtual_fs* ]] && \
+  ok "installer cleans target mounts on failure" || \
+  nok "installer does not clean target mounts on failure"
+
+[[ $installer_install_content == *write_omybuntu_apt_pins* && $installer_install_content == *budgie-sddm-theme* ]] && \
+  ok "installer writes Omybuntu apt pins before install.sh" || \
+  nok "installer does not write Omybuntu apt pins before install.sh"
+
+[[ $installer_install_content == *'"/usr/bin/env"'* && $installer_install_content == *'"-i"'* && $installer_install_content == *'HOME=/root'* ]] && \
+  ok "installer runs install.sh with a clean root chroot environment" || \
+  nok "installer does not run install.sh with a clean root chroot environment"
+
+[[ $installer_install_content == *OMYBUNTU_TARGET_USER* && $installer_install_content != *'"OMYBUNTU_ISO_BUILD=true"'* ]] && \
+  ok "installer passes target user without pretending to be ISO build" || \
+  nok "installer target-user chroot environment is incorrect"
+
+[[ $installer_install_content == *configure_target_login* && $installer_install_content == *display-manager.service* ]] && \
+  ok "installer rewrites SDDM autologin for created user" || \
+  nok "installer does not rewrite SDDM autologin for created user"
+
+installer_app_content=$(<"$ROOT/installer/src/app.rs")
+[[ $installer_app_content == *valid_username* && $installer_app_content == *valid_hostname* ]] && \
+  ok "installer validates system username and hostname format" || \
+  nok "installer does not validate system username and hostname format"
 
 # ------------------------------------------------------------------
 # Plymouth and Hibernation Ubuntu port checks
@@ -435,6 +519,15 @@ live_grub_content=$(<"$ROOT/install/iso/grub.cfg")
 [[ $live_grub_content == *systemd.show_status=false* && $live_grub_content == *loglevel=0* ]] && \
   ok "live ISO grub.cfg has console suppressions" || \
   nok "live ISO grub.cfg does not have console suppressions"
+
+grub_theme_content=$(<"$ROOT/default/grub/theme.txt")
+[[ $grub_theme_content != *'+ scrollbar'* && $grub_theme_content != *fill_color* ]] && \
+  ok "GRUB theme avoids unsupported scrollbar object and fill_color" || \
+  nok "GRUB theme still contains unsupported scrollbar object or fill_color"
+
+[[ $grub_theme_content == *scrollbar_thumb* && $grub_theme_content == *fg_color* && $grub_theme_content == *bg_color* ]] && \
+  ok "GRUB theme uses supported boot menu/progress properties" || \
+  nok "GRUB theme misses supported boot menu/progress properties"
 # Check that omybuntu-refresh-apt is present and channel-set calls it
 [[ -f $ROOT/bin/omybuntu-refresh-apt ]] && \
   ok "omybuntu-refresh-apt script exists" || \

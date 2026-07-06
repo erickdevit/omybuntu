@@ -6,7 +6,7 @@
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
 TOGGLE="internal-monitor-disable"
-TOGGLE_FLAG="$HOME/.local/state/omybuntu/toggles/hypr/$TOGGLE.lua"
+TOGGLE_FLAG="$HOME/.local/state/omybuntu/toggles/hypr/$TOGGLE.conf"
 MIRROR_TOGGLE="internal-monitor-mirror"
 
 # Get internal monitor name dynamically
@@ -26,7 +26,7 @@ off() {
   fi
 
   if omybuntu-hyprland-toggle-disabled $TOGGLE && omybuntu-hyprland-toggle-disabled $MIRROR_TOGGLE; then
-    printf 'hl.monitor({ output = "%s", disabled = true })\n' "$INTERNAL" >"$TOGGLE_FLAG"
+    printf 'monitor = %s, disable\n' "$INTERNAL" >"$TOGGLE_FLAG"
     omybuntu-notification-send -g 󰍹 "$I18N_MON_INTERNAL_DISABLED"
     hyprctl reload
   fi

@@ -3,7 +3,10 @@
 # omybuntu:summary=Overwrite the user config for the Plymouth drive decryption and boot sequence with the Omybuntu default and rebuild it.
 # omybuntu:requires-sudo=true
 
-sudo cp -r ~/.local/share/omybuntu/default/plymouth/* /usr/share/plymouth/themes/omybuntu/
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+
+sudo mkdir -p /usr/share/plymouth/themes/omybuntu
+sudo cp -r "$OMYBUNTU_PATH/default/plymouth/." /usr/share/plymouth/themes/omybuntu/
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then
   sudo plymouth-set-default-theme omybuntu
 fi

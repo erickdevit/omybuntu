@@ -25,7 +25,7 @@ if sudo test -f /etc/sudoers.d/99-omybuntu-installer; then
 fi
 
 # Skip interactive prompt in ISO/chroot builds
-if [[ -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
+if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
   touch /var/tmp/omybuntu-install-completed
   exit 0
 fi
@@ -35,10 +35,5 @@ if gum confirm --padding "0 0 0 $((PADDING_LEFT + 32))" --show-help=false --defa
   # Clear screen to hide any shutdown messages
   clear
 
-  if [[ -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
-    touch /var/tmp/omybuntu-install-completed
-    exit 0
-  else
-    sudo reboot 2>/dev/null
-  fi
+  sudo reboot 2>/dev/null
 fi

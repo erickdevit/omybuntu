@@ -3,4 +3,4 @@
 # omybuntu:summary=Check if a Hyprland toggle is currently disabled (missing).
 # omybuntu:args=<flag-name>
 
-[[ ! -f "$HOME/.local/state/omybuntu/toggles/hypr/$1.lua" ]]
+[[ ! -f "$HOME/.local/state/omybuntu/toggles/hypr/$1.conf" ]]

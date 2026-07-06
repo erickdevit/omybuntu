@@ -22,6 +22,66 @@ BASE_CACHE_FILE="$CACHE_DIR/base-chroot.tar.gz"
 UBUNTU_VERSION="26.04"
 UBUNTU_CODENAME="resolute"
 ROOTFS_URL="http://cdimage.ubuntu.com/ubuntu-base/releases/${UBUNTU_VERSION}/release/ubuntu-base-${UBUNTU_VERSION}-base-amd64.tar.gz"
+tail_pid=""
+
+cleanup_mounts() {
+  for mount in "$CHROOT_DIR/sys" "$CHROOT_DIR/proc" "$CHROOT_DIR/dev/pts" "$CHROOT_DIR/dev"; do
+    if mountpoint -q "$mount"; then
+      sudo umount -lf "$mount" 2>/dev/null || true
+    fi
+  done
+}
+
+write_live_apt_pins() {
+  sudo mkdir -p "$CHROOT_DIR/etc/apt/preferences.d"
+  cat <<EOF | sudo tee "$CHROOT_DIR/etc/apt/preferences.d/99-omybuntu-live-desktop" > /dev/null
+# Omybuntu uses Hyprland via SDDM; GNOME session managers and downstream
+# SDDM themes should not be pulled in as package recommendations.
+Package: gdm3
+Pin: release *
+Pin-Priority: -1
+
+Package: gnome-session
+Pin: release *
+Pin-Priority: -1
+
+Package: ubuntu-session
+Pin: release *
+Pin-Priority: -1
+
+Package: ubuntu-desktop
+Pin: release *
+Pin-Priority: -1
+
+Package: ubuntu-desktop-minimal
+Pin: release *
+Pin-Priority: -1
+
+Package: budgie-sddm-theme
+Pin: release *
+Pin-Priority: -1
+
+Package: sddm-theme-breeze
+Pin: release *
+Pin-Priority: -1
+EOF
+}
+
+cleanup() {
+  if [[ -n ${tail_pid:-} ]]; then
+    kill "$tail_pid" 2>/dev/null || true
+    wait "$tail_pid" 2>/dev/null || true
+    tail_pid=""
+  fi
+
+  if [[ -f "$CHROOT_DIR/etc/sudoers.d/chroot-root" ]]; then
+    sudo rm -f "$CHROOT_DIR/etc/sudoers.d/chroot-root" 2>/dev/null || true
+  fi
+
+  cleanup_mounts
+}
+
+trap cleanup EXIT
 
 ## --- Parse arguments --------------------------------------------------------
 CLEAN_BUILD=false
@@ -44,19 +104,16 @@ fi
 
 # --- Pre-build cleanup & extraction -----------------------------------------
 
-for tool in wget tar mksquashfs xorriso grub-mkrescue mformat rsync; do
+for tool in wget tar mksquashfs xorriso grub-mkrescue mformat rsync magick; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "Error: Required host tool '$tool' is not installed." >&2
-    echo "       Install missing tools with: sudo apt install mtools xorriso grub-pc-bin grub-efi-amd64-bin squashfs-tools" >&2
+    echo "       Install missing tools with: sudo apt install imagemagick mtools xorriso grub-pc-bin grub-efi-amd64-bin squashfs-tools" >&2
     exit 1
   fi
 done
 
 # Unmount anything still mounted from a previous run
-sudo umount -lf "$CHROOT_DIR/sys" 2>/dev/null || true
-sudo umount -lf "$CHROOT_DIR/proc" 2>/dev/null || true
-sudo umount -lf "$CHROOT_DIR/dev/pts" 2>/dev/null || true
-sudo umount -lf "$CHROOT_DIR/dev" 2>/dev/null || true
+cleanup_mounts
 
 if ! $INITIALIZED; then
   echo "Building Omybuntu Live ISO from Ubuntu Base rootfs..."
@@ -88,6 +145,7 @@ mountpoint -q "$CHROOT_DIR/dev/pts" || sudo mount --bind /dev/pts "$CHROOT_DIR/d
 mountpoint -q "$CHROOT_DIR/proc" || sudo mount -t proc proc "$CHROOT_DIR/proc"
 mountpoint -q "$CHROOT_DIR/sys" || sudo mount -t sysfs sysfs "$CHROOT_DIR/sys"
 sudo cp /etc/resolv.conf "$CHROOT_DIR/etc/resolv.conf"
+write_live_apt_pins
 
 # ---------------------------------------------------------------------------
 # INITIAL SETUP: APT + SYSTEM UTILITIES (only when not already initialized)
@@ -166,6 +224,8 @@ sudo rsync -a \
   "$WORKSPACE/" \
   "$CHROOT_DIR/opt/omybuntu/"
 
+sudo mkdir -p "$CHROOT_DIR/root/.local/share"
+sudo ln -snf /opt/omybuntu "$CHROOT_DIR/root/.local/share/omybuntu"
 
 # 7a. Compile the Ratatui TUI installer inside the chroot
 echo "Installing Rust toolchain and compiling TUI installer..."
@@ -199,12 +259,21 @@ sleep 0.5
 echo "root ALL=(ALL) NOPASSWD: ALL" | sudo tee "$CHROOT_DIR/etc/sudoers.d/chroot-root" >/dev/null
 sudo chmod 0440 "$CHROOT_DIR/etc/sudoers.d/chroot-root"
 
-sudo chroot "$CHROOT_DIR" env \
+sudo chroot "$CHROOT_DIR" /usr/bin/env -i \
+  HOME=/root \
+  USER=root \
+  LOGNAME=root \
+  SHELL=/bin/bash \
+  TERM="${TERM:-linux}" \
+  PATH=/opt/omybuntu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  OMYBUNTU_PATH=/opt/omybuntu \
+  OMYBUNTU_INSTALL=/opt/omybuntu/install \
+  OMYBUNTU_INSTALL_LOG_FILE=/var/log/omybuntu-install.log \
   OMYBUNTU_ONLINE_INSTALL=true \
   OMYBUNTU_ISO_BUILD=true \
   OMYBUNTU_CHROOT_INSTALL=true \
   OMYBUNTU_ISO_HOST_PROGRESS=true \
-  /bin/bash -c "
+  /bin/bash -e -c "
     cd /opt/omybuntu
     ./install.sh
     ./install/iso/setup-iso.sh
@@ -215,6 +284,7 @@ sudo rm -f "$CHROOT_DIR/etc/sudoers.d/chroot-root"
 
 kill "$tail_pid" 2>/dev/null || true
 wait "$tail_pid" 2>/dev/null || true
+tail_pid=""
 
 # ---------------------------------------------------------------------------
 # ISO PACKAGING (always runs)
@@ -222,10 +292,7 @@ wait "$tail_pid" 2>/dev/null || true
 
 # 8. Unmount Virtual Filesystems
 echo "Unmounting virtual filesystems..."
-sudo umount -lf "$CHROOT_DIR/sys"
-sudo umount -lf "$CHROOT_DIR/proc"
-sudo umount -lf "$CHROOT_DIR/dev/pts"
-sudo umount -lf "$CHROOT_DIR/dev"
+cleanup_mounts
 
 # 9. Prepare Boot/Casper directory structure for ISO
 echo "Preparing boot structure..."

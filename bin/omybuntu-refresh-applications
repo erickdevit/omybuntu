@@ -2,23 +2,25 @@
 
 # omybuntu:summary=Ensure all default .desktop, web apps, TUIs, and npm wrappers are installed.
 
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+
 mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
-cp ~/.local/share/omybuntu/applications/icons/*.png ~/.local/share/icons/hicolor/48x48/apps/
+cp "$OMYBUNTU_PATH"/applications/icons/*.png ~/.local/share/icons/hicolor/48x48/apps/
 gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null
 
 # Copy .desktop declarations
 mkdir -p ~/.local/share/applications
-cp ~/.local/share/omybuntu/applications/*.desktop ~/.local/share/applications/
-cp ~/.local/share/omybuntu/applications/hidden/*.desktop ~/.local/share/applications/
+cp "$OMYBUNTU_PATH"/applications/*.desktop ~/.local/share/applications/
+cp "$OMYBUNTU_PATH"/applications/hidden/*.desktop ~/.local/share/applications/
 
 if omybuntu-cmd-present alacritty; then
-  cp ~/.local/share/omybuntu/default/alacritty/alacritty.desktop ~/.local/share/applications/
+  cp "$OMYBUNTU_PATH/default/alacritty/alacritty.desktop" ~/.local/share/applications/
 fi
 
 # Refresh the webapps, TUIs, and npm wrappers
-bash $OMYBUNTU_PATH/install/packaging/icons.sh
-bash $OMYBUNTU_PATH/install/packaging/webapps.sh
-bash $OMYBUNTU_PATH/install/packaging/tuis.sh
-bash $OMYBUNTU_PATH/install/packaging/npm.sh
+bash "$OMYBUNTU_PATH/install/packaging/icons.sh"
+bash "$OMYBUNTU_PATH/install/packaging/webapps.sh"
+bash "$OMYBUNTU_PATH/install/packaging/tuis.sh"
+bash "$OMYBUNTU_PATH/install/packaging/npm.sh"
 
 update-desktop-database ~/.local/share/applications

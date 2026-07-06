@@ -140,6 +140,121 @@ fn unmount_virtual_fs(target: &str) {
   }
 }
 
+struct TargetCleanup {
+  target: String,
+  encrypted: bool,
+}
+
+impl TargetCleanup {
+  fn new(target: &str, encrypted: bool) -> Self {
+    Self {
+      target: target.to_string(),
+      encrypted,
+    }
+  }
+}
+
+impl Drop for TargetCleanup {
+  fn drop(&mut self) {
+    unmount_virtual_fs(&self.target);
+    for mp in &["/boot/efi", "/home", "/.snapshots", ""] {
+      let path = format!("{}{}", self.target, mp);
+      let _ = Command::new("umount").args(["-lf", &path]).status();
+    }
+    if self.encrypted {
+      let _ = Command::new("cryptsetup").args(["close", "omybuntu_crypt"]).status();
+    }
+  }
+}
+
+fn write_omybuntu_apt_pins(target: &str) -> Result<(), String> {
+  std::fs::create_dir_all(format!("{target}/etc/apt/preferences.d"))
+    .map_err(|e| format!("Failed to create apt preferences dir: {e}"))?;
+  write_file(
+    &format!("{target}/etc/apt/preferences.d/99-omybuntu-desktop"),
+    concat!(
+      "Package: gdm3\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n\n",
+      "Package: gnome-session\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n\n",
+      "Package: ubuntu-session\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n\n",
+      "Package: ubuntu-desktop\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n\n",
+      "Package: ubuntu-desktop-minimal\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n\n",
+      "Package: budgie-sddm-theme\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n\n",
+      "Package: sddm-theme-breeze\n",
+      "Pin: release *\n",
+      "Pin-Priority: -1\n",
+    ),
+  )
+}
+
+fn prepare_omybuntu_source_link(target: &str) -> Result<(), String> {
+  std::fs::create_dir_all(format!("{target}/root/.local/share"))
+    .map_err(|e| format!("Failed to create root local share: {e}"))?;
+  let link = format!("{target}/root/.local/share/omybuntu");
+  let _ = std::fs::remove_file(&link);
+  std::os::unix::fs::symlink("/opt/omybuntu", &link)
+    .map_err(|e| format!("Failed to link root Omybuntu source: {e}"))
+}
+
+fn configure_target_login(target: &str, username: &str) -> Result<(), String> {
+  std::fs::create_dir_all(format!("{target}/etc/sddm.conf.d"))
+    .map_err(|e| format!("Failed to create sddm.conf.d: {e}"))?;
+  write_file(
+    &format!("{target}/etc/sddm.conf.d/99-omybuntu.conf"),
+    &format!(
+      "[General]\n\
+DisplayServer=wayland\n\n\
+[Wayland]\n\
+CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf\n\n\
+[Autologin]\n\
+User={username}\n\
+Session=omybuntu\n\n\
+[Theme]\n\
+Current=omybuntu\n",
+    ),
+  )?;
+
+  std::fs::create_dir_all(format!("{target}/etc/systemd/system/graphical.target.wants"))
+    .map_err(|e| format!("Failed to create graphical target wants dir: {e}"))?;
+  let display_manager = format!("{target}/etc/systemd/system/display-manager.service");
+  let graphical_want = format!("{target}/etc/systemd/system/graphical.target.wants/sddm.service");
+  let default_target = format!("{target}/etc/systemd/system/default.target");
+  let _ = std::fs::remove_file(&display_manager);
+  let _ = std::fs::remove_file(&graphical_want);
+  let _ = std::fs::remove_file(&default_target);
+
+  let sddm_unit = if std::path::Path::new(&format!("{target}/usr/lib/systemd/system/sddm.service")).exists() {
+    "/usr/lib/systemd/system/sddm.service"
+  } else {
+    "/lib/systemd/system/sddm.service"
+  };
+  std::os::unix::fs::symlink(sddm_unit, &display_manager)
+    .map_err(|e| format!("Failed to link display-manager.service: {e}"))?;
+  std::os::unix::fs::symlink(sddm_unit, &graphical_want)
+    .map_err(|e| format!("Failed to link sddm.service into graphical target: {e}"))?;
+
+  let graphical_target = if std::path::Path::new(&format!("{target}/usr/lib/systemd/system/graphical.target")).exists() {
+    "/usr/lib/systemd/system/graphical.target"
+  } else {
+    "/lib/systemd/system/graphical.target"
+  };
+  std::os::unix::fs::symlink(graphical_target, &default_target)
+    .map_err(|e| format!("Failed to set graphical.target as default: {e}"))?;
+
+  Ok(())
+}
+
 fn clean_disk_mounts(disk: &str) -> Result<(), String> {
   // 0. Deactivate LVM volume groups to avoid locked partitions
   let _ = Command::new("vgchange").args(["-an"]).status();
@@ -329,6 +444,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   cmd(&["mount", "-o", "subvol=@home,noatime,compress=zstd",     &root_dev, &format!("{target}/home")])?;
   cmd(&["mount", "-o", "subvol=@snapshots,noatime,compress=zstd",&root_dev, &format!("{target}/.snapshots")])?;
   cmd(&["mount", &part_efi, &format!("{target}/boot/efi")])?;
+  let _target_cleanup = TargetCleanup::new(target, cfg.encrypt);
 
   // ── 7. Debootstrap Ubuntu base ────────────────────────────────────────────
   prog(tx, 40, "Installing Ubuntu base system via debootstrap...");
@@ -373,6 +489,8 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   if !status.success() {
     return Err("Failed to copy Omybuntu to target".into());
   }
+  prepare_omybuntu_source_link(target)?;
+  write_omybuntu_apt_pins(target)?;
 
   // ── 9. Mount virtual filesystems for chroot ───────────────────────────────
   prog(tx, 60, "Mounting virtual filesystems for chroot...");
@@ -440,12 +558,28 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
 
   // ── 15. Run Omybuntu install.sh inside chroot ────────────────────────────
   prog(tx, 72, "Configuring Omybuntu system (install.sh)...");
+  let target_user_env = format!("OMYBUNTU_TARGET_USER={}", cfg.username);
   let status = Command::new("chroot")
-    .args([target, "env",
-      "OMYBUNTU_ISO_BUILD=true",
+    .arg(target)
+    .arg("/usr/bin/env")
+    .arg("-i")
+    .args([
+      "HOME=/root",
+      "USER=root",
+      "LOGNAME=root",
+      "SHELL=/bin/bash",
+      "TERM=linux",
+      "PATH=/opt/omybuntu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      "OMYBUNTU_PATH=/opt/omybuntu",
+      "OMYBUNTU_INSTALL=/opt/omybuntu/install",
+      "OMYBUNTU_INSTALL_LOG_FILE=/var/log/omybuntu-install.log",
+      "OMYBUNTU_ONLINE_INSTALL=true",
       "OMYBUNTU_CHROOT_INSTALL=true",
       "DEBIAN_FRONTEND=noninteractive",
-      "/bin/bash", "-c",
+    ])
+    .arg(target_user_env)
+    .args([
+      "/bin/bash", "-e", "-c",
       "cd /opt/omybuntu && ./install.sh",
     ])
     .status()
@@ -456,12 +590,17 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
 
   // ── 16. Create user account ──────────────────────────────────────────────
   prog(tx, 84, "Creating user account...");
-  Command::new("chroot")
-    .args([target, "groupadd", "-f", "sudo"])
-    .status().ok();
-  Command::new("chroot")
-    .args([target, "useradd", "-m", "-G", "sudo,audio,video,users", "-s", "/bin/bash", &cfg.username])
-    .status().ok();
+  cmd(&["chroot", target, "groupadd", "-f", "sudo"])?;
+  cmd(&["chroot", target, "useradd", "-m", "-s", "/bin/bash", &cfg.username])?;
+  for group in &["sudo", "audio", "video", "users", "input", "render", "docker"] {
+    let status = Command::new("chroot")
+      .args([target, "getent", "group", group])
+      .status()
+      .map_err(|e| format!("Failed to check group {group}: {e}"))?;
+    if status.success() {
+      cmd(&["chroot", target, "usermod", "-aG", group, &cfg.username])?;
+    }
+  }
 
   cmd_stdin(
     &["chroot", target, "chpasswd"],
@@ -480,9 +619,10 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   Command::new("chroot")
     .args([target, "chown", "-R",
       &format!("{}:{}", cfg.username, cfg.username),
-      &format!("/home/{}/.config", cfg.username),
+      &format!("/home/{}", cfg.username),
     ])
     .status().ok();
+  configure_target_login(target, &cfg.username)?;
 
   // ── 18. GRUB ─────────────────────────────────────────────────────────────
   prog(tx, 88, "Installing GRUB bootloader...");

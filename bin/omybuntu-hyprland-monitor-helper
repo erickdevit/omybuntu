@@ -152,15 +152,17 @@ def handle_project(preset):
     _, m1, m2 = get_connected_monitors()
     
     toggle_conf = os.path.expanduser("~/.local/state/omybuntu/toggles/hypr/monitor-project.conf")
-    toggle_lua = os.path.expanduser("~/.local/state/omybuntu/toggles/hypr/monitor-project.lua")
+    legacy_toggle_lua = os.path.expanduser("~/.local/state/omybuntu/toggles/hypr/monitor-project.lua")
     
     if preset == "extend":
-        for path in [toggle_conf, toggle_lua]:
+        for path in [toggle_conf, legacy_toggle_lua]:
             if os.path.exists(path):
                 os.remove(path)
         legacy_files = [
             "~/.local/state/omybuntu/toggles/hypr/internal-monitor-disable.lua",
-            "~/.local/state/omybuntu/toggles/hypr/internal-monitor-mirror.lua"
+            "~/.local/state/omybuntu/toggles/hypr/internal-monitor-mirror.lua",
+            "~/.local/state/omybuntu/toggles/hypr/internal-monitor-disable.conf",
+            "~/.local/state/omybuntu/toggles/hypr/internal-monitor-mirror.conf"
         ]
         for lf in legacy_files:
             path = os.path.expanduser(lf)
@@ -175,8 +177,8 @@ def handle_project(preset):
         os.makedirs(os.path.dirname(toggle_conf), exist_ok=True)
         with open(toggle_conf, "w") as f:
             f.write(f"monitor={m2},preferred,auto,1,mirror,{m1}\n")
-        with open(toggle_lua, "w") as f:
-            f.write(f'hl.monitor({{ output = "{m2}", mode = "preferred", position = "auto", scale = 1, mirror = "{m1}" }})\n')
+        if os.path.exists(legacy_toggle_lua):
+            os.remove(legacy_toggle_lua)
         print(f"Mirroring {m2} to {m1} enabled.")
         
     elif preset == "screen1":
@@ -186,8 +188,8 @@ def handle_project(preset):
         os.makedirs(os.path.dirname(toggle_conf), exist_ok=True)
         with open(toggle_conf, "w") as f:
             f.write(f"monitor={m2},disable\n")
-        with open(toggle_lua, "w") as f:
-            f.write(f'hl.monitor({{ output = "{m2}", disabled = true }})\n')
+        if os.path.exists(legacy_toggle_lua):
+            os.remove(legacy_toggle_lua)
         print(f"Monitor {m2} disabled (Screen 1 only).")
         
     elif preset == "screen2":
@@ -197,8 +199,8 @@ def handle_project(preset):
         os.makedirs(os.path.dirname(toggle_conf), exist_ok=True)
         with open(toggle_conf, "w") as f:
             f.write(f"monitor={m1},disable\n")
-        with open(toggle_lua, "w") as f:
-            f.write(f'hl.monitor({{ output = "{m1}", disabled = true }})\n')
+        if os.path.exists(legacy_toggle_lua):
+            os.remove(legacy_toggle_lua)
         print(f"Monitor {m1} disabled (Screen 2 only).")
         
     else:

@@ -47,23 +47,20 @@ desktop-color: "#140a05"
   selected_item_font = "unicode.pf2"
   selected_item_pixmap_style = "select_*.png"
   scrollbar = true
-}
-
-# ---- Scrollbar ----
-+ scrollbar {
-  width = 10
-  thumb_color = "#5c4033"
-  bar_color = "#2a1a10"
-  thumb_style = "scrollbar_thumb.png"
+  scrollbar_width = 6
+  scrollbar_thumb = "scrollbar_thumb.png"
 }
 
 # ---- Progress Bar (for timeout) ----
 + progress_bar {
   id = "__timeout__"
+  left = 0%
+  top = 97%
   width = 100%
   height = 4
   border_color = "#140a05"
-  fill_color = "#f59e0b"
+  bg_color = "#140a05"
+  fg_color = "#f59e0b"
 }
 
 # ---- Footer ----

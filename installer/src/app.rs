@@ -203,6 +203,26 @@ fn parse_lsblk_pairs(line: &str) -> Option<DiskInfo> {
     })
 }
 
+fn valid_hostname(hostname: &str) -> bool {
+    if hostname.len() > 63 || hostname.starts_with('-') || hostname.ends_with('-') {
+        return false;
+    }
+    hostname
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-')
+}
+
+fn valid_username(username: &str) -> bool {
+    let mut chars = username.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_lowercase() || first == '_') {
+        return false;
+    }
+    chars.all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-' || c == '_')
+}
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 pub struct App {
@@ -336,8 +356,14 @@ impl App {
     fn validate_credentials(&self) -> Option<String> {
         if self.hostname.is_empty()      { return Some("Hostname cannot be empty".into()); }
         if self.hostname.contains(' ')   { return Some("Hostname cannot contain spaces".into()); }
+        if !valid_hostname(&self.hostname) {
+            return Some("Hostname must use letters, numbers, and hyphens only".into());
+        }
         if self.username.is_empty()      { return Some("Username cannot be empty".into()); }
         if self.username.contains(' ')   { return Some("Username cannot contain spaces".into()); }
+        if !valid_username(&self.username) {
+            return Some("Username must start with a lowercase letter or underscore and use lowercase letters, numbers, hyphens, or underscores".into());
+        }
         if self.password.len() < 6       { return Some("Password must be at least 6 characters".into()); }
         if self.root_password.is_empty() { return Some("Root password cannot be empty".into()); }
         None

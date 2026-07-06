@@ -12,6 +12,8 @@ if [[ $# -ne 4 ]]; then
   exit 1
 fi
 
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+
 bg_hex="${1#\#}"
 text_hex="${2#\#}"
 logo_path="$3"
@@ -35,7 +37,7 @@ fi
 staging_dir=$(mktemp -d)
 trap 'rm -rf "$staging_dir"' EXIT
 
-find ~/.local/share/omybuntu/default/plymouth -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
+find "$OMYBUNTU_PATH/default/plymouth" -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
 cp "$logo_path" "$staging_dir/logo.png"
 
 for asset in bullet.png entry.png lock.png; do

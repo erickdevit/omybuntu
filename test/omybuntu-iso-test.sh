@@ -387,6 +387,54 @@ hibernation_remove_content=$(<"$ROOT/bin/omybuntu-hibernation-remove")
   nok "hibernation-remove does not use initramfs-tools and update-grub"
 
 # ------------------------------------------------------------------
+# Ubuntu Gaps and Leftovers checks
+# ------------------------------------------------------------------
+echo "# Ubuntu Gaps and Leftovers checks"
+
+# Check that obsolete directories are deleted
+[[ ! -d $ROOT/default/pacman && ! -d $ROOT/default/limine && ! -d $ROOT/default/snapper ]] && \
+  ok "obsolete Arch config directories are deleted" || \
+  nok "obsolete Arch config directories still exist"
+
+# Check that .lua configs in config/hypr/ and default/hypr/ are deleted
+[[ ! -f $ROOT/config/hypr/hyprland.lua && ! -f $ROOT/default/hypr/hyprland.lua ]] && \
+  ok "hyprland.lua configuration files are deleted" || \
+  nok "hyprland.lua configuration files still exist"
+
+# Check that .conf configs in config/hypr/ exist
+[[ -f $ROOT/config/hypr/hyprland.conf && -f $ROOT/config/hypr/bindings.conf ]] && \
+  ok "hyprland.conf active configuration files exist" || \
+  nok "hyprland.conf active configuration files are missing"
+
+# Check that walker post-update hook is converted to apt hook
+walker_elephant_content=$(<"$ROOT/install/config/walker-elephant.sh")
+[[ $walker_elephant_content == *apt-get* && $walker_elephant_content == *Post-Invoke* && $walker_elephant_content != *pacman.d/hooks* ]] && \
+  ok "walker-elephant hook uses apt post-invoke" || \
+  nok "walker-elephant hook does not use apt post-invoke"
+
+# Check that omybuntu-refresh-hyprland copies conf files instead of lua
+refresh_hypr_content=$(<"$ROOT/bin/omybuntu-refresh-hyprland")
+[[ $refresh_hypr_content == *hyprland.conf* && $refresh_hypr_content != *hyprland.lua* ]] && \
+  ok "refresh-hyprland points to conf instead of lua" || \
+  nok "refresh-hyprland points to conf instead of lua"
+
+# Check that omybuntu-debug uses dpkg-query
+debug_content=$(<"$ROOT/bin/omybuntu-debug")
+[[ $debug_content == *dpkg-query* && $debug_content != *expac* ]] && \
+  ok "omybuntu-debug uses dpkg-query and not pacman/expac" || \
+  nok "omybuntu-debug does not use dpkg-query"
+
+# Check that hardware configs write to grub
+fred_content=$(<"$ROOT/install/config/hardware/intel/fred.sh")
+[[ $fred_content == *default/grub* && $fred_content != *default/limine* ]] && \
+  ok "intel/fred.sh writes to /etc/default/grub" || \
+  nok "intel/fred.sh does not write to /etc/default/grub"
+
+# Check that live ISO grub.cfg has console suppressions
+live_grub_content=$(<"$ROOT/install/iso/grub.cfg")
+[[ $live_grub_content == *systemd.show_status=false* && $live_grub_content == *loglevel=0* ]] && \
+  ok "live ISO grub.cfg has console suppressions" || \
+  nok "live ISO grub.cfg does not have console suppressions"
 # Summary
 # ------------------------------------------------------------------
 echo

@@ -95,21 +95,21 @@ install_terminal() {
   present_terminal "omybuntu-install-terminal $1"
 }
 
-aur_install() {
+pkg_install() {
   present_terminal "echo 'Installing $1...'; omybuntu-pkg-add $2"
 }
 
-aur_install_and_launch() {
+pkg_install_and_launch() {
   present_terminal "echo 'Installing $1...'; omybuntu-pkg-add $2 && setsid gtk-launch $3"
 }
 
 show_learn_menu() {
-  case $(menu "$I18N_MENU_LEARN" "$I18N_LEARN_KEYBINDINGS\n$I18N_LEARN_TMUX\n$I18N_LEARN_OMYBUNTU\n$I18N_LEARN_HYPRLAND\n$I18N_LEARN_ARCH\n$I18N_LEARN_NEOVIM\n$I18N_LEARN_BASH") in
+  case $(menu "$I18N_MENU_LEARN" "$I18N_LEARN_KEYBINDINGS\n$I18N_LEARN_TMUX\n$I18N_LEARN_OMYBUNTU\n$I18N_LEARN_HYPRLAND\n$I18N_LEARN_UBUNTU\n$I18N_LEARN_NEOVIM\n$I18N_LEARN_BASH") in
   *"$I18N_LEARN_TMUX"*) omybuntu-menu-tmux-keybindings ;;
   *"$I18N_LEARN_KEYBINDINGS"*) omybuntu-menu-keybindings ;;
   *"$I18N_LEARN_OMYBUNTU"*) omybuntu-launch-webapp "https://learn.omacom.io/2/the-omybuntu-manual" ;;
   *"$I18N_LEARN_HYPRLAND"*) omybuntu-launch-webapp "https://wiki.hypr.land/" ;;
-  *"$I18N_LEARN_ARCH"*) omybuntu-launch-webapp "https://wiki.archlinux.org/title/Main_page" ;;
+  *"$I18N_LEARN_UBUNTU"*) omybuntu-launch-webapp "https://help.ubuntu.com/" ;;
   *"$I18N_LEARN_BASH"*) omybuntu-launch-webapp "https://devhints.io/bash" ;;
   *"$I18N_LEARN_NEOVIM"*) omybuntu-launch-webapp "https://www.lazyvim.org/keymaps" ;;
   *) show_main_menu ;;

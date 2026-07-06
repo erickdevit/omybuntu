@@ -31,7 +31,7 @@ export I18N_LEARN_OMYBUNTU="  Omybuntu"
 export I18N_LEARN_HYPRLAND="  Hyprland"
 export I18N_LEARN_NEOVIM="  Neovim"
 export I18N_LEARN_BASH="󱆃  Bash"
-export I18N_LEARN_ARCH="󰣇  Arch"
+export I18N_LEARN_UBUNTU="󰕈  Ubuntu"
 
 # Trigger Menu
 export I18N_MENU_TRIGGER="Trigger"

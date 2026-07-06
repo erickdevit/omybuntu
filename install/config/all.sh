@@ -73,3 +73,9 @@ run_logged $OMYBUNTU_INSTALL/config/hardware/fix-surface-keyboard.sh
 run_logged $OMYBUNTU_INSTALL/config/hardware/fix-yt6801-ethernet-adapter.sh
 run_logged $OMYBUNTU_INSTALL/config/hardware/fix-synaptic-touchpad.sh
 run_logged $OMYBUNTU_INSTALL/config/hardware/fix-tuxedo-backlight.sh
+
+# Update bootloader at the end of configuration
+echo "Rebuilding GRUB config to apply any hardware boot parameters..."
+if omybuntu-cmd-present omybuntu-refresh-grub; then
+  omybuntu-refresh-grub
+fi

@@ -8,9 +8,12 @@
 # but produce no visible change; brightness is effectively binary.
 
 if omybuntu-hw-asus-expertbook-b9406 || omybuntu-hw-asus-zenbook-ux5406aa; then
-  sudo mkdir -p /etc/limine-entry-tool.d
-  cat <<EOF | sudo tee /etc/limine-entry-tool.d/asus-ptl-display-backlight.conf >/dev/null
-# ASUS Panther Lake display backlight fix
-KERNEL_CMDLINE[default]+=" xe.enable_dpcd_backlight=1"
-EOF
+  if [[ -f /etc/default/grub ]]; then
+    current_cmdline=$(sed -nE 's/^GRUB_CMDLINE_LINUX_DEFAULT="(.*)"/\1/p' /etc/default/grub)
+    if ! echo "$current_cmdline" | grep -q "xe.enable_dpcd_backlight=1"; then
+      new_cmdline=$(echo "$current_cmdline" | sed 's/ $//')
+      new_cmdline="$new_cmdline xe.enable_dpcd_backlight=1"
+      sudo sed -i -E 's/^(GRUB_CMDLINE_LINUX_DEFAULT=).*/\1"'"$new_cmdline"'"/' /etc/default/grub
+    fi
+  fi
 fi

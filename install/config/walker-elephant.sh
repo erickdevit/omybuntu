@@ -8,21 +8,11 @@ cp $OMYBUNTU_PATH/default/walker/walker.desktop ~/.config/autostart/
 mkdir -p ~/.config/systemd/user/app-walker@autostart.service.d/
 cp $OMYBUNTU_PATH/default/walker/restart.conf ~/.config/systemd/user/app-walker@autostart.service.d/restart.conf
 
-# Create pacman hook to restart walker after updates (Arch only)
-if command -v pacman >/dev/null 2>&1; then
-  sudo mkdir -p /etc/pacman.d/hooks
-  sudo tee /etc/pacman.d/hooks/walker-restart.hook > /dev/null << EOF
-[Trigger]
-Type = Package
-Operation = Upgrade
-Target = walker
-Target = walker-debug
-Target = elephant*
-
-[Action]
-Description = Restarting Walker services after system update
-When = PostTransaction
-Exec = $OMYBUNTU_PATH/bin/omybuntu-restart-walker
+# Create apt hook to restart walker after updates (Ubuntu only)
+if command -v apt-get >/dev/null 2>&1; then
+  sudo mkdir -p /etc/apt/apt.conf.d
+  sudo tee /etc/apt/apt.conf.d/99walker-restart > /dev/null << 'EOF'
+DPkg::Post-Invoke {"( [ -f /usr/bin/walker ] && [ \"\$(( \$(date +%s) - \$(stat -c %Y /usr/bin/walker 2>/dev/null || echo 0) ))\" -lt 120 ] || [ -f /usr/bin/elephant ] && [ \"\$(( \$(date +%s) - \$(stat -c %Y /usr/bin/elephant 2>/dev/null || echo 0) ))\" -lt 120 ] ) && /opt/omybuntu/bin/omybuntu-restart-walker || true";};
 EOF
 fi
 

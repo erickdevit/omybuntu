@@ -11,18 +11,12 @@ confirm_reboot() {
 }
 
 running_kernel=$(uname -r)
-kernel_updated=true
+kernel_updated=false
 
-for kernel in /usr/lib/modules/*/vmlinuz; do
-  if [[ -f $kernel ]] && pacman -Qo "$kernel" &>/dev/null; then
-    installed_kernel=$(basename "$(dirname "$kernel")")
-
-    if [[ $installed_kernel == $running_kernel ]]; then
-      kernel_updated=false
-      break
-    fi
-  fi
-done
+# On Ubuntu, check if reboot is required (kernel or system update)
+if [[ -f /var/run/reboot-required ]]; then
+  kernel_updated=true
+fi
 
 if [[ $kernel_updated == "true" ]]; then
   confirm_reboot "$I18N_UPD_REBOOT_KERNEL"

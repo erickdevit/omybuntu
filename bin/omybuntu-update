@@ -7,7 +7,7 @@
 
 set -e
 
-# Run the update inside a PTY so pacman/yay keep showing download progress
+# Run the update inside a PTY so apt keeps showing progress
 # while still logging the full session for later analysis.
 if [[ -z $OMYBUNTU_UPDATE_LOGGED ]]; then
   script_command=$(printf '%q ' "$0" "$@")

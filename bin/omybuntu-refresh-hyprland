@@ -1,13 +1,15 @@
 #!/bin/bash
 
-# omybuntu:summary=Overwrite all the user Hyprland Lua configs in ~/.config/hypr with the Omybuntu defaults.
+# omybuntu:summary=Overwrite all the user Hyprland configs in ~/.config/hypr with the Omybuntu defaults.
 
-omybuntu-refresh-config hypr/.luarc.json
-omybuntu-refresh-config hypr/autostart.lua
-omybuntu-refresh-config hypr/bindings.lua
-omybuntu-refresh-config hypr/input.lua
-omybuntu-refresh-config hypr/looknfeel.lua
-omybuntu-refresh-config hypr/hyprland.lua
-omybuntu-refresh-config hypr/monitors.lua
+omybuntu-refresh-config hypr/autostart.conf
+omybuntu-refresh-config hypr/bindings.conf
+omybuntu-refresh-config hypr/envs.conf
+omybuntu-refresh-config hypr/input.conf
+omybuntu-refresh-config hypr/looknfeel.conf
+omybuntu-refresh-config hypr/hyprland.conf
+omybuntu-refresh-config hypr/monitors.conf
+omybuntu-refresh-config hypr/windows.conf
+omybuntu-refresh-config hypr/apps.conf
 bash "$OMYBUNTU_PATH/install/config/omybuntu-toggles.sh"
 bash "$OMYBUNTU_PATH/install/config/detect-keyboard-layout.sh"

@@ -311,31 +311,13 @@ echo "Omybuntu Resolute Live ISO" | sudo tee "$IMAGE_DIR/.disk/info" > /dev/null
 sudo mkdir -p "$IMAGE_DIR/boot/grub"
 sudo cp "$WORKSPACE/install/iso/grub.cfg" "$IMAGE_DIR/boot/grub/grub.cfg"
 
-# Generate GRUB theme assets for the ISO boot menu
-# This uses the host system's magick to create the theme in IMAGE_DIR
+# Generate GRUB theme assets for the ISO boot menu (always English on live ISO)
 echo "Generating GRUB theme for ISO boot menu..."
-THEME_DIR="$IMAGE_DIR/boot/grub/themes/omybuntu"
-mkdir -p "$THEME_DIR"
-
-# Select indicators (subtle rounded amber rectangles at 15% opacity)
-for w in 200 400 600; do
-  magick -size ${w}x28 xc:none \
-  -channel RGBA \
-  -fill 'rgba(245,158,11,0.15)' \
-  -draw "roundrectangle 4,2 $((w-4)),26 14,14" \
-  "$THEME_DIR/select_${w}.png"
-done
-
-# Scrollbar thumb (semi-transparent rounded bar at 60% opacity)
-magick -size 6x30 xc:none \
-  -channel RGBA \
-  -fill 'rgba(92,64,51,0.6)' \
-  -draw "roundrectangle 0,0 6,30 3,3" \
-  "$THEME_DIR/scrollbar_thumb.png"
-
-# Copy theme.txt and font
-cp "$WORKSPACE/default/grub/theme.txt" "$THEME_DIR/theme.txt"
-cp /usr/share/grub/unicode.pf2 "$THEME_DIR/unicode.pf2" 2>/dev/null || true
+export OMYBUNTU_PATH="$WORKSPACE"
+export OMYBUNTU_ISO_BUILD=true
+export OMYBUNTU_LANGUAGE=en
+export GRUB_THEME_OUT_DIR="$IMAGE_DIR/boot/grub/themes/omybuntu"
+source "$WORKSPACE/install/packaging/grub-theme.sh"
 
 # 10. Compress chroot into SquashFS
 echo "Creating filesystem.squashfs (this may take a few minutes)..."

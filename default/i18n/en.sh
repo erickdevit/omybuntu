@@ -10,6 +10,10 @@ export I18N_CANCEL="Cancel"
 export I18N_DONE_PRESS_KEY="Done! Press any key to close..."
 export I18N_ERROR_PRESS_KEY="Error! Press any key to close..."
 
+# GRUB theme
+export I18N_GRUB_SELECT_OS="Select operating system"
+export I18N_GRUB_FOOTER="v - Select    Enter - Boot    e - Edit    c - Terminal"
+
 # Go / Main Menu
 export I18N_MENU_GO="Go"
 export I18N_OPT_APPS="󰀻  Apps"

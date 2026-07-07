@@ -568,6 +568,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   // ── 15. Run Omybuntu install.sh inside chroot ────────────────────────────
   prog(tx, 72, "Configuring Omybuntu system (install.sh)...");
   let target_user_env = format!("OMYBUNTU_TARGET_USER={}", cfg.username);
+  let language_env = format!("OMYBUNTU_LANGUAGE={}", cfg.language);
   let encrypted_install_env = if cfg.encrypt {
     "OMYBUNTU_ENCRYPTED_INSTALL=true"
   } else {
@@ -592,6 +593,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
       encrypted_install_env,
       "DEBIAN_FRONTEND=noninteractive",
     ])
+    .arg(&language_env)
     .arg(target_user_env)
     .args([
       "/bin/bash", "-e", "-c",
@@ -658,8 +660,12 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     "--recheck",
   ])?;
 
-  prog(tx, 93, "Generating grub.cfg...");
-  cmd(&["chroot", target, "grub-mkconfig", "-o", "/boot/grub/grub.cfg"])?;
+  prog(tx, 91, "Applying GRUB theme in selected language...");
+  let refresh_grub = format!(
+    "OMYBUNTU_LANGUAGE={} OMYBUNTU_PATH=/opt/omybuntu /opt/omybuntu/bin/omybuntu-refresh-grub",
+    cfg.language,
+  );
+  cmd(&["chroot", target, "bash", "-c", &refresh_grub])?;
 
   // ── 19. initramfs ─────────────────────────────────────────────────────────
   prog(tx, 96, "Updating initramfs...");

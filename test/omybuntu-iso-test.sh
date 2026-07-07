@@ -594,6 +594,24 @@ grub_theme_content=$(<"$ROOT/default/grub/theme.txt")
 [[ $grub_theme_content == *scrollbar_thumb* && $grub_theme_content == *fg_color* && $grub_theme_content == *bg_color* ]] && \
   ok "GRUB theme uses supported boot menu/progress properties" || \
   nok "GRUB theme misses supported boot menu/progress properties"
+
+[[ $grub_theme_content == *"Select operating system"* ]] && \
+  ok "GRUB theme defaults to English strings" || \
+  nok "GRUB theme does not default to English strings"
+
+grub_theme_tpl_content=$(<"$ROOT/default/grub/theme.tpl")
+grub_theme_sh_content=$(<"$ROOT/install/packaging/grub-theme.sh")
+[[ $grub_theme_tpl_content == *'{{ grub_select_os }}'* && $grub_theme_sh_content == *omybuntu_render_grub_theme_txt* ]] && \
+  ok "GRUB theme renders from i18n template" || \
+  nok "GRUB theme does not render from i18n template"
+
+[[ $grub_theme_sh_content == *OMYBUNTU_ISO_BUILD* && $build_iso_content == *OMYBUNTU_ISO_BUILD=true* ]] && \
+  ok "live ISO build forces English GRUB theme text" || \
+  nok "live ISO build does not force English GRUB theme text"
+
+[[ $installer_install_content == *OMYBUNTU_LANGUAGE* && $installer_install_content == *omybuntu-refresh-grub* ]] && \
+  ok "installer applies localized GRUB theme after install" || \
+  nok "installer does not apply localized GRUB theme after install"
 # Check that omybuntu-refresh-apt is present and channel-set calls it
 [[ -f $ROOT/bin/omybuntu-refresh-apt ]] && \
   ok "omybuntu-refresh-apt script exists" || \

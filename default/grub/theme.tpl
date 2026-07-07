@@ -21,7 +21,7 @@ desktop-color: "#140a05"
 }
 
 + label {
-  text = "Select operating system"
+  text = "{{ grub_select_os }}"
   font = "unicode.pf2"
   color = "#5c4033"
   align = "center"
@@ -65,7 +65,7 @@ desktop-color: "#140a05"
 
 # ---- Footer ----
 + label {
-  text = "v - Select    Enter - Boot    e - Edit    c - Terminal"
+  text = "{{ grub_footer }}"
   font = "unicode.pf2"
   color = "#5c4033"
   align = "center"

@@ -2,4 +2,12 @@
 
 # omybuntu:summary=Print the installed Omybuntu version
 
-cat $OMYBUNTU_PATH/version
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+
+if [[ -f $OMYBUNTU_PATH/version ]]; then
+  cat "$OMYBUNTU_PATH/version"
+elif [[ -f $OMYBUNTU_PATH/.build-info ]]; then
+  awk -F= '$1 == "OMYBUNTU_BUILD_DESCRIBE" { print $2 }' "$OMYBUNTU_PATH/.build-info"
+else
+  echo "unknown"
+fi

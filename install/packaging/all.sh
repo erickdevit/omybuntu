@@ -1,6 +1,8 @@
 run_logged $OMYBUNTU_INSTALL/packaging/base.sh
-run_logged $OMYBUNTU_INSTALL/packaging/ghostty.sh
-run_logged $OMYBUNTU_INSTALL/packaging/chrome.sh
+if [[ -z ${OMYBUNTU_ISO_BUILD:-} ]]; then
+  run_logged $OMYBUNTU_INSTALL/packaging/ghostty.sh
+  run_logged $OMYBUNTU_INSTALL/packaging/chrome.sh
+fi
 run_logged $OMYBUNTU_INSTALL/packaging/grub-btrfs.sh
 run_logged $OMYBUNTU_INSTALL/packaging/fonts.sh
 run_logged $OMYBUNTU_INSTALL/packaging/nvim.sh

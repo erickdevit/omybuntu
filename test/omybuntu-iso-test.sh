@@ -136,6 +136,22 @@ else
   nok "setup-iso.sh refreshes Plymouth and SDDM"
 fi
 
+if [[ $setup_content == *omybuntu-live-session-setup.desktop* ]] \
+  && [[ $setup_content == *"Exec=/usr/local/bin/omybuntu-live-session-setup"* ]] \
+  && [[ $setup_content == *"ln -snf /opt/omybuntu/bin/omybuntu-live-session-setup /usr/local/bin/omybuntu-live-session-setup"* ]]; then
+  ok "setup-iso.sh autostarts live session theming"
+else
+  nok "setup-iso.sh does not autostart live session theming"
+fi
+
+if [[ $setup_content == *'theme/backgrounds/omybuntu.png'* ]] \
+  && [[ $setup_content == *'gtk-theme-name=$live_gtk_theme'* ]] \
+  && [[ $setup_content == *'gtk-cursor-theme-name=$live_cursor_theme'* ]]; then
+  ok "setup-iso.sh seeds live wallpaper and GTK cursor theme"
+else
+  nok "setup-iso.sh does not seed live wallpaper and GTK cursor theme"
+fi
+
 # ------------------------------------------------------------------
 # No /root/ hardcoded in default configs that ship to the user
 # ------------------------------------------------------------------
@@ -705,6 +721,42 @@ hide_launcher_content=$(<"$ROOT/install/config/hide-launcher-clutter.sh")
 [[ $hide_launcher_content == *org.fcitx.Fcitx5.desktop* && $hide_launcher_content == *omybuntu-pkg-drop*foot* ]] && \
   ok "install hides fcitx and foot clutter from the launcher" || \
   nok "install does not hide launcher clutter"
+
+for hidden_desktop in \
+  "com.mitchellh.ghostty.desktop" \
+  "typora.desktop" \
+  "Docker.desktop" \
+  "Google Messages.desktop" \
+  "display-im6.q16.desktop" \
+  "gnome-network-panel.desktop" \
+  "org.freedesktop.IBus.Setup.desktop"; do
+  [[ -f "$ROOT/applications/hidden/$hidden_desktop" ]] && \
+    ok "hidden launcher stub exists: $hidden_desktop" || \
+    nok "hidden launcher stub missing: $hidden_desktop"
+done
+
+[[ ! -f $ROOT/applications/typora.desktop ]] && \
+  ok "typora launcher is not advertised by default" || \
+  nok "typora launcher is still advertised by default"
+
+packaging_all_content=$(<"$ROOT/install/packaging/all.sh")
+[[ $packaging_all_content == *OMYBUNTU_ISO_BUILD* && $packaging_all_content == *packaging/ghostty.sh* && $packaging_all_content == *packaging/chrome.sh* ]] && \
+  ok "ISO build skips default Ghostty and Chrome installers" || \
+  nok "ISO build still installs Ghostty or Chrome by default"
+
+tuis_content=$(<"$ROOT/install/packaging/tuis.sh")
+[[ $tuis_content == *'omybuntu-tui-install "Disk Usage" "gdu"'* && $tuis_content != *'omybuntu-tui-install "Docker"'* ]] && \
+  ok "TUI launchers include Disk Usage but not Docker by default" || \
+  nok "TUI launchers still include Docker or miss Disk Usage"
+
+[[ $base_packages_content == *$'\ngdu\n'* ]] && \
+  ok "base packages install gdu for Disk Usage" || \
+  nok "base packages do not install gdu for Disk Usage"
+
+build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
+[[ $build_iso_content == *'.build-info'* && $build_iso_content == *OMYBUNTU_BUILD_BRANCH* ]] && \
+  ok "ISO build writes Omybuntu build metadata for fastfetch" || \
+  nok "ISO build does not write Omybuntu build metadata"
 
 webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")
 [[ $webapp_install_content == *LAUNCHER_ICON_FIELD* && $webapp_install_content == *hicolor/48x48/apps* ]] && \

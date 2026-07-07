@@ -2,9 +2,12 @@
 
 # omybuntu:summary=Print the active Omybuntu package channel
 
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
 STATE_FILE="$HOME/.local/state/omybuntu/channel"
 if [[ -f $STATE_FILE ]]; then
   channel=$(cat "$STATE_FILE")
+elif [[ -f $OMYBUNTU_PATH/.build-info ]]; then
+  channel=$(awk -F= '$1 == "OMYBUNTU_BUILD_CHANNEL" { print $2 }' "$OMYBUNTU_PATH/.build-info")
 else
   # Fallback to current Git branch
   current_branch=$(git -C "$OMYBUNTU_PATH" branch --show-current 2>/dev/null || true)

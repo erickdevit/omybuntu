@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use crate::app::{App, Step, KEYBOARDS, LANGUAGES};
-use crate::theme::{self, *};
+use crate::theme;
 
 // ─── Welcome logo ─────────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ const LOGO: &[&str] = &[
 pub fn draw(frame: &mut Frame, app: &mut App) {
     // Fill background
     frame.render_widget(
-        Block::default().style(Style::default().bg(BG)),
+        Block::default().style(Style::default().bg(theme::bg())),
         frame.area(),
     );
 
@@ -53,7 +53,7 @@ fn render_header(frame: &mut Frame, app: &App, area: Rect) {
         .saturating_sub(brand.len() + step_label.len() + 2);
 
     let line = Line::from(vec![
-        Span::styled(brand, Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)),
+        Span::styled(brand, Style::default().fg(theme::accent_color()).add_modifier(Modifier::BOLD)),
         Span::raw(" ".repeat(pad)),
         Span::styled(&step_label, theme::muted()),
     ]);
@@ -101,7 +101,7 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
                     .border_type(BorderType::Rounded)
                     .border_style(theme::normal_border()),
             )
-            .gauge_style(Style::default().fg(ACCENT).bg(SURFACE))
+            .gauge_style(Style::default().fg(theme::accent_color()).bg(theme::surface()))
             .percent(progress)
             .label(format!("{progress}%")),
         cols[0],
@@ -143,8 +143,8 @@ fn render_welcome(frame: &mut Frame, area: Rect) {
     let outer = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(ACCENT))
-        .style(Style::default().bg(BG));
+        .border_style(Style::default().fg(theme::accent_color()))
+        .style(Style::default().bg(theme::bg()));
     let inner = outer.inner(area);
     frame.render_widget(outer, area);
 
@@ -153,19 +153,19 @@ fn render_welcome(frame: &mut Frame, area: Rect) {
     for row in LOGO {
         lines.push(Line::from(Span::styled(
             *row,
-            Style::default().fg(ACCENT).add_modifier(Modifier::BOLD),
+            Style::default().fg(theme::accent_color()).add_modifier(Modifier::BOLD),
         )));
     }
 
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
         "  Linux. Refined.",
-        Style::default().fg(TEXT).add_modifier(Modifier::ITALIC),
+        Style::default().fg(theme::text_color()).add_modifier(Modifier::ITALIC),
     )));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
         "  Press ENTER to begin installation",
-        Style::default().fg(ACCENT_LIGHT).add_modifier(Modifier::BOLD),
+        Style::default().fg(theme::accent_light_color()).add_modifier(Modifier::BOLD),
     )));
 
     let h = lines.len() as u16;
@@ -349,7 +349,7 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
             let style = if i == app.disk_idx && app.disk_focus == 0 {
                 theme::selected()
             } else if i == app.disk_idx {
-                Style::default().fg(ACCENT_LIGHT)
+                Style::default().fg(theme::accent_light_color())
             } else {
                 theme::base()
             };
@@ -375,7 +375,7 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
     let enc_border = if app.disk_focus == 1 { theme::focused_border() } else { theme::normal_border() };
     let check = if app.encrypt { "●" } else { "○" };
     let enc_style = if app.disk_focus == 1 {
-        Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)
+        Style::default().fg(theme::accent_color()).add_modifier(Modifier::BOLD)
     } else {
         theme::base()
     };
@@ -488,12 +488,12 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
         .split(rows_layout[3]);
 
     let yes_sty = if app.summary_yes {
-        Style::default().fg(BG).bg(SUCCESS).add_modifier(Modifier::BOLD)
+        Style::default().fg(theme::bg()).bg(theme::success_color()).add_modifier(Modifier::BOLD)
     } else {
         theme::muted()
     };
     let no_sty = if !app.summary_yes {
-        Style::default().fg(BG).bg(ERROR).add_modifier(Modifier::BOLD)
+        Style::default().fg(theme::bg()).bg(theme::error_color()).add_modifier(Modifier::BOLD)
     } else {
         theme::muted()
     };
@@ -516,9 +516,9 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
 fn render_installing(frame: &mut Frame, app: &App, area: Rect) {
     let border_style = if app.install_error.is_some() {
-        Style::default().fg(ERROR)
+        Style::default().fg(theme::error_color())
     } else {
-        Style::default().fg(ACCENT)
+        Style::default().fg(theme::accent_color())
     };
 
     let title = if app.install_error.is_some() {
@@ -533,7 +533,7 @@ fn render_installing(frame: &mut Frame, app: &App, area: Rect) {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(border_style)
-        .style(Style::default().bg(BG));
+        .style(Style::default().bg(theme::bg()));
     let inner = outer.inner(area);
     frame.render_widget(outer, area);
 
@@ -564,7 +564,7 @@ fn render_installing(frame: &mut Frame, app: &App, area: Rect) {
                     .border_type(BorderType::Rounded)
                     .border_style(theme::normal_border()),
             )
-            .gauge_style(Style::default().fg(ACCENT).bg(SURFACE))
+            .gauge_style(Style::default().fg(theme::accent_color()).bg(theme::surface()))
             .percent(app.install_progress)
             .label(format!("{}%", app.install_progress)),
         rows[2],
@@ -596,8 +596,8 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
     let outer = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(SUCCESS))
-        .style(Style::default().bg(BG));
+        .border_style(Style::default().fg(theme::success_color()))
+        .style(Style::default().bg(theme::bg()));
     let inner = outer.inner(area);
     frame.render_widget(outer, area);
 
@@ -608,7 +608,7 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
             Line::from(""),
             Line::from(Span::styled(
                 "  ✓  Installation Complete!",
-                Style::default().fg(SUCCESS).add_modifier(Modifier::BOLD),
+                Style::default().fg(theme::success_color()).add_modifier(Modifier::BOLD),
             )),
             Line::from(""),
             Line::from(Span::styled("  Omybuntu has been successfully installed.", theme::base())),
@@ -626,7 +626,7 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(
         Paragraph::new("  ↺  Reboot now")
             .style(if app.done_focus == 0 {
-                Style::default().fg(BG).bg(SUCCESS).add_modifier(Modifier::BOLD)
+                Style::default().fg(theme::bg()).bg(theme::success_color()).add_modifier(Modifier::BOLD)
             } else {
                 theme::muted()
             })
@@ -636,7 +636,7 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(
         Paragraph::new("  ✕  Exit installer")
             .style(if app.done_focus == 1 {
-                Style::default().fg(BG).bg(MUTED).add_modifier(Modifier::BOLD)
+                Style::default().fg(theme::bg()).bg(theme::muted_color()).add_modifier(Modifier::BOLD)
             } else {
                 theme::muted()
             })
@@ -654,7 +654,7 @@ fn titled_block(title: &'static str) -> Block<'static> {
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(theme::normal_border())
-        .style(Style::default().bg(BG))
+        .style(Style::default().bg(theme::bg()))
 }
 
 fn v_center(area: Rect, content_h: u16) -> Rect {

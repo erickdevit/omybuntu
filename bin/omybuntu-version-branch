@@ -2,4 +2,11 @@
 
 # omybuntu:summary=Print the current Omybuntu git branch
 
-echo $(git -C "$OMYBUNTU_PATH" rev-parse --abbrev-ref HEAD)
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+
+branch=$(git -C "$OMYBUNTU_PATH" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+if [[ -z $branch && -f $OMYBUNTU_PATH/.build-info ]]; then
+  branch=$(awk -F= '$1 == "OMYBUNTU_BUILD_BRANCH" { print $2 }' "$OMYBUNTU_PATH/.build-info")
+fi
+
+echo "${branch:-unknown}"

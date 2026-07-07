@@ -224,6 +224,28 @@ sudo rsync -a \
   "$WORKSPACE/" \
   "$CHROOT_DIR/opt/omybuntu/"
 
+build_branch=$(git -C "$WORKSPACE" branch --show-current 2>/dev/null || echo "unknown")
+build_commit=$(git -C "$WORKSPACE" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+build_describe=$(git -C "$WORKSPACE" describe --tags --always --dirty 2>/dev/null || cat "$WORKSPACE/version")
+build_channel="$build_branch"
+if [[ $build_branch == "main" || $build_branch == "master" ]]; then
+  build_channel="stable"
+elif [[ $build_branch == "rc" ]]; then
+  build_channel="rc"
+elif [[ $build_branch == "dev" ]]; then
+  build_channel="dev"
+elif [[ -z $build_branch ]]; then
+  build_branch="unknown"
+  build_channel="unknown"
+fi
+
+cat <<EOF | sudo tee "$CHROOT_DIR/opt/omybuntu/.build-info" >/dev/null
+OMYBUNTU_BUILD_BRANCH=$build_branch
+OMYBUNTU_BUILD_CHANNEL=$build_channel
+OMYBUNTU_BUILD_COMMIT=$build_commit
+OMYBUNTU_BUILD_DESCRIBE=$build_describe
+EOF
+
 sudo mkdir -p "$CHROOT_DIR/root/.local/share"
 sudo ln -snf /opt/omybuntu "$CHROOT_DIR/root/.local/share/omybuntu"
 

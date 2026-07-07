@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# omybuntu:summary=Apply live-session desktop defaults for the ISO
+# omybuntu:hidden=true
+
+set -euo pipefail
+
+if [[ ! -d /cdrom && ! -f /run/casper-detect && $USER != "ubuntu" && $USER != "omybuntu" ]]; then
+  exit 0
+fi
+
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+export OMYBUNTU_PATH
+export PATH="$OMYBUNTU_PATH/bin:$PATH:$HOME/.local/bin"
+
+mkdir -p "$HOME/.config/omybuntu/current" "$HOME/.config"
+
+background="$HOME/.config/omybuntu/current/background"
+if [[ ! -e $background && -f $HOME/.config/omybuntu/current/theme/backgrounds/omybuntu.png ]]; then
+  ln -snf "theme/backgrounds/omybuntu.png" "$background"
+fi
+
+cat > "$HOME/.config/xdg-terminals.list" <<EOF
+# Terminal emulator preference order for xdg-terminal-exec
+# The first found and valid terminal will be used
+Alacritty.desktop
+EOF
+
+omybuntu-theme-set-gnome >/dev/null 2>&1 || true

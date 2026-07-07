@@ -4,42 +4,42 @@
 # omybuntu:hidden=true
 
 if [[ -f ~/.config/omybuntu/current/theme/light.mode ]]; then
-  gsettings set org.gnome.desktop.interface color-scheme "prefer-light"
-  gsettings set org.gnome.desktop.interface gtk-theme "Adwaita"
+  COLOR_SCHEME="prefer-light"
+  GTK_THEME="Adwaita"
+  GTK_PREFER_DARK=0
   CURSOR_THEME="volantes_cursors"
 else
-  gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
-  gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
+  COLOR_SCHEME="prefer-dark"
+  GTK_THEME="Adwaita-dark"
+  GTK_PREFER_DARK=1
   CURSOR_THEME="volantes_light_cursors"
 fi
 
 # Change gnome icon theme color
 GNOME_ICONS_THEME=~/.config/omybuntu/current/theme/icons.theme
 if [[ -f $GNOME_ICONS_THEME ]]; then
-  gsettings set org.gnome.desktop.interface icon-theme "$(<$GNOME_ICONS_THEME)"
+  ICON_THEME="$(<$GNOME_ICONS_THEME)"
 else
-  gsettings set org.gnome.desktop.interface icon-theme "Yaru-blue"
+  ICON_THEME="Yaru-blue"
 fi
 
-# Set cursor theme in GSettings
-gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME"
+gsettings set org.gnome.desktop.interface color-scheme "$COLOR_SCHEME" >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME" >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME" >/dev/null 2>&1 || true
+gsettings set org.gnome.desktop.interface cursor-theme "$CURSOR_THEME" >/dev/null 2>&1 || true
 
-# Set cursor theme in GTK 3.0 and 4.0 settings.ini
+# Set GTK settings files too. This is required for live/chroot profiles where
+# GSettings may not have a user dconf database yet.
 for gtk_version in "gtk-3.0" "gtk-4.0"; do
   mkdir -p ~/.config/"$gtk_version"
   settings_file=~/.config/"$gtk_version"/settings.ini
-  if [[ -f $settings_file ]]; then
-    if grep -q "gtk-cursor-theme-name" "$settings_file"; then
-      sed -i "s/gtk-cursor-theme-name=.*/gtk-cursor-theme-name=$CURSOR_THEME/" "$settings_file"
-    else
-      echo "gtk-cursor-theme-name=$CURSOR_THEME" >> "$settings_file"
-    fi
-  else
-    cat > "$settings_file" <<EOF
+  cat > "$settings_file" <<EOF
 [Settings]
+gtk-theme-name=$GTK_THEME
+gtk-icon-theme-name=$ICON_THEME
 gtk-cursor-theme-name=$CURSOR_THEME
+gtk-application-prefer-dark-theme=$GTK_PREFER_DARK
 EOF
-  fi
 done
 
 # Set cursor theme in X11 fallback

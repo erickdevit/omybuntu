@@ -14,6 +14,26 @@ launcher_clutter_desktops=(
   fcitx5-wayland-launcher.desktop
   im-config.desktop
   org.quickshell.desktop
+  com.mitchellh.ghostty.desktop
+  ghostty.desktop
+  typora.desktop
+  Docker.desktop
+  "Google Contacts.desktop"
+  "Google Maps.desktop"
+  "Google Messages.desktop"
+  "Google Photos.desktop"
+  display-im6.desktop
+  display-im6.q16.desktop
+  ImageMagick.desktop
+  org.imagemagick.ImageMagick.desktop
+  nm-connection-editor.desktop
+  gnome-network-panel.desktop
+  gnome-language-selector.desktop
+  ibus-setup-table.desktop
+  org.freedesktop.IBus.Setup.desktop
+  org.freedesktop.IBus.Panel.Emojier.desktop
+  org.freedesktop.IBus.Panel.Extension.Gtk3.desktop
+  org.freedesktop.IBus.Panel.Wayland.Gtk3.desktop
 )
 
 for desktop in "${launcher_clutter_desktops[@]}"; do

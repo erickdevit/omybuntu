@@ -47,6 +47,14 @@ for pkg in gdm3 gnome-session ubuntu-session ubuntu-desktop ubuntu-desktop-minim
     sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y "$pkg"
   fi
 done
+
+# Keep the live ISO lean and aligned with the Alacritty-first default. This also
+# cleans stale packages from incremental chroot rebuilds.
+for pkg in ghostty google-chrome-stable google-chrome-beta google-chrome-unstable typora; do
+  if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y "$pkg"
+  fi
+done
 sudo DEBIAN_FRONTEND=noninteractive apt-get autoremove -y --purge
 
 # Create the autostart directory for skel (so the live user gets it)
@@ -60,6 +68,17 @@ Icon=system-software-install
 Categories=System;
 Terminal=false
 EOF
+
+cat <<EOF | sudo tee /etc/skel/.config/autostart/omybuntu-live-session-setup.desktop > /dev/null
+[Desktop Entry]
+Type=Application
+Name=Omybuntu Live Session Setup
+Exec=/usr/local/bin/omybuntu-live-session-setup
+NoDisplay=true
+Terminal=false
+EOF
+
+sudo ln -snf /opt/omybuntu/bin/omybuntu-live-session-setup /usr/local/bin/omybuntu-live-session-setup
 
 # Ensure SDDM assets, session, and greeter compositor are present even if
 # package postinst scripts skipped display-manager setup inside the chroot.
@@ -186,22 +205,126 @@ sudo mkdir -p /etc/skel/.local/share
 sudo ln -snf /opt/omybuntu /etc/skel/.local/share/omybuntu
 
 # Remove any hardcoded /root paths that leaked into skel configs
+root_path_files=$(mktemp)
 for dir in /etc/skel/.config /etc/skel/.local/share /etc/skel/.local/bin; do
   if [[ -d $dir ]]; then
-    while read -r f; do
-      sudo sed -i 's|/root/|/home/ubuntu/|g' "$f"
-    done < <(sudo grep -rl "/root/" "$dir" 2>/dev/null || true)
+    sudo grep -rl "/root/" "$dir" >> "$root_path_files" 2>/dev/null || true
   fi
 done
 
+while read -r f; do
+  [[ -n $f ]] || continue
+  sudo sed -i 's|/root/|/home/ubuntu/|g' "$f"
+done < "$root_path_files"
+rm -f "$root_path_files"
+
 # The root install also creates absolute symlinks for current theme assets and
 # enabled user services. Text replacement above does not touch symlink targets.
+skel_links=$(mktemp)
+sudo find /etc/skel -type l -print0 > "$skel_links" 2>/dev/null || true
 while IFS= read -r -d '' link; do
   target=$(sudo readlink "$link")
   if [[ $target == /root/* ]]; then
     sudo ln -snf "/home/ubuntu/${target#/root/}" "$link"
   fi
-done < <(sudo find /etc/skel -type l -print0 2>/dev/null || true)
+done < "$skel_links"
+rm -f "$skel_links"
+
+# The live username can vary by casper boot path. Keep theme-owned assets
+# relative inside the profile so wallpaper startup does not depend on /home/ubuntu.
+sudo mkdir -p /etc/skel/.config/omybuntu/current
+if [[ -f /etc/skel/.config/omybuntu/current/theme/backgrounds/omybuntu.png ]]; then
+  sudo ln -snf "theme/backgrounds/omybuntu.png" /etc/skel/.config/omybuntu/current/background
+fi
+
+# Write GTK settings files directly for the live user. The install-time
+# gsettings calls run as root in a chroot and do not reliably seed dconf for the
+# casper user.
+if [[ -f /etc/skel/.config/omybuntu/current/theme/light.mode ]]; then
+  live_color_scheme="prefer-light"
+  live_gtk_theme="Adwaita"
+  live_gtk_prefer_dark=0
+  live_cursor_theme="volantes_cursors"
+else
+  live_color_scheme="prefer-dark"
+  live_gtk_theme="Adwaita-dark"
+  live_gtk_prefer_dark=1
+  live_cursor_theme="volantes_light_cursors"
+fi
+
+if [[ -f /etc/skel/.config/omybuntu/current/theme/icons.theme ]]; then
+  live_icon_theme=$(sudo cat /etc/skel/.config/omybuntu/current/theme/icons.theme)
+else
+  live_icon_theme="Yaru-blue"
+fi
+
+for gtk_version in gtk-3.0 gtk-4.0; do
+  sudo mkdir -p "/etc/skel/.config/$gtk_version"
+  cat <<EOF | sudo tee "/etc/skel/.config/$gtk_version/settings.ini" >/dev/null
+[Settings]
+gtk-theme-name=$live_gtk_theme
+gtk-icon-theme-name=$live_icon_theme
+gtk-cursor-theme-name=$live_cursor_theme
+gtk-application-prefer-dark-theme=$live_gtk_prefer_dark
+EOF
+done
+
+sudo mkdir -p /etc/skel/.icons/default
+cat <<EOF | sudo tee /etc/skel/.icons/default/index.theme >/dev/null
+[Icon Theme]
+Inherits=$live_cursor_theme
+EOF
+
+sudo mkdir -p /etc/dconf/db/local.d
+cat <<EOF | sudo tee /etc/dconf/db/local.d/00-omybuntu-live-theme >/dev/null
+[org/gnome/desktop/interface]
+color-scheme='$live_color_scheme'
+gtk-theme='$live_gtk_theme'
+icon-theme='$live_icon_theme'
+cursor-theme='$live_cursor_theme'
+EOF
+sudo dconf update 2>/dev/null || true
+
+# Remove launchers that are implementation details or not part of the live ISO.
+live_hidden_desktops=(
+  "com.mitchellh.ghostty.desktop"
+  "ghostty.desktop"
+  "typora.desktop"
+  "Docker.desktop"
+  "Google Contacts.desktop"
+  "Google Maps.desktop"
+  "Google Messages.desktop"
+  "Google Photos.desktop"
+  "com.google.Chrome.desktop"
+  "google-chrome.desktop"
+  "display-im6.desktop"
+  "display-im6.q16.desktop"
+  "ImageMagick.desktop"
+  "org.imagemagick.ImageMagick.desktop"
+  "nm-connection-editor.desktop"
+  "gnome-network-panel.desktop"
+  "gnome-language-selector.desktop"
+  "ibus-setup-table.desktop"
+  "org.freedesktop.IBus.Setup.desktop"
+  "org.freedesktop.IBus.Panel.Emojier.desktop"
+  "org.freedesktop.IBus.Panel.Extension.Gtk3.desktop"
+  "org.freedesktop.IBus.Panel.Wayland.Gtk3.desktop"
+)
+
+for desktop in "${live_hidden_desktops[@]}"; do
+  sudo rm -f "/etc/skel/.local/share/applications/$desktop"
+  sudo rm -f "/root/.local/share/applications/$desktop"
+  sudo rm -f "/usr/share/applications/$desktop"
+  sudo rm -f "/usr/local/share/applications/$desktop"
+done
+
+sudo rm -rf /etc/skel/.config/ghostty /root/.config/ghostty
+sudo rm -f /etc/skel/.config/xdg-terminals.list /root/.config/xdg-terminals.list
+cat <<EOF | sudo tee /etc/skel/.config/xdg-terminals.list >/dev/null
+# Terminal emulator preference order for xdg-terminal-exec
+# The first found and valid terminal will be used
+Alacritty.desktop
+EOF
 
 # Remove Chromium singleton lock that may have been created during install
 sudo rm -rf /etc/skel/.config/chromium/SingletonLock

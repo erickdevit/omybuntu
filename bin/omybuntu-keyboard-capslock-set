@@ -9,6 +9,7 @@ OPT_NORMAL="󰌌  Caps Lock (Normal)"
 list="$OPT_OMARCHY\n$OPT_NORMAL"
 
 current_label="$OPT_NORMAL"
+# Check if kb_options has compose:caps and is not empty
 if grep -qE "^[[:space:]]*kb_options[[:space:]]*=.*compose:caps" ~/.config/hypr/input.conf 2>/dev/null; then
     current_label="$OPT_OMARCHY"
 fi
@@ -31,8 +32,11 @@ if [[ "$selected" == "$OPT_OMARCHY" ]]; then
         sed -i '/^[[:space:]]*input[[:space:]]*{/a \  kb_options = compose:caps # ,grp:alts_toggle' ~/.config/hypr/input.conf
     fi
 else
-    # Remove kb_options
-    sed -i '/^[[:space:]]*kb_options[[:space:]]*=.*/d' ~/.config/hypr/input.conf
+    if grep -qE "^[[:space:]]*kb_options[[:space:]]*=" ~/.config/hypr/input.conf; then
+        sed -i 's/^[[:space:]]*kb_options[[:space:]]*=.*/  kb_options =/' ~/.config/hypr/input.conf
+    else
+        sed -i '/^[[:space:]]*input[[:space:]]*{/a \  kb_options =' ~/.config/hypr/input.conf
+    fi
 fi
 
 hyprctl reload >/dev/null 2>&1

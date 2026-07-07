@@ -1,0 +1,62 @@
+#!/bin/sh
+
+PREREQ=""
+DESCRIPTION="Configuring Omybuntu SDDM autologin for the live session"
+
+prereqs()
+{
+  echo "$PREREQ"
+}
+
+case $1 in
+prereqs)
+  prereqs
+  exit 0
+  ;;
+esac
+
+. /scripts/casper-functions
+
+log_begin_msg "$DESCRIPTION"
+
+if [ ! -f /root/usr/bin/sddm ]; then
+  log_end_msg
+  exit 0
+fi
+
+if [ ! -f /root/usr/share/wayland-sessions/omybuntu.desktop ]; then
+  log_end_msg
+  exit 0
+fi
+
+mkdir -p /root/etc/sddm.conf.d
+rm -f /root/etc/sddm.conf.d/autologin.conf
+rm -f /root/etc/sddm.conf.d/50-ubuntu-budgie.conf
+
+cat >/root/etc/sddm.conf.d/99-omybuntu.conf <<EOF
+[General]
+DisplayServer=wayland
+
+[Wayland]
+CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
+
+[Autologin]
+User=$USERNAME
+Session=omybuntu
+Relogin=true
+
+[Theme]
+Current=omybuntu
+EOF
+
+# Casper's generic SDDM autologin hook does not know about omybuntu.desktop and
+# appends an [Autologin] block with an empty Session value to /etc/sddm.conf.
+if [ -f /root/etc/sddm.conf ]; then
+  sed -i '/^\[Autologin\]/,/^$/d' /root/etc/sddm.conf
+fi
+
+if [ -n "$USERNAME" ]; then
+  chroot /root passwd -d "$USERNAME" >/dev/null 2>&1 || true
+fi
+
+log_end_msg

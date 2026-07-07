@@ -106,10 +106,14 @@ export HOST="omybuntu"
 export BUILD_SYSTEM="Ubuntu"
 EOF
 
-# SDDM autologin needs the live user in passwd before the greeter starts.
-if ! getent passwd ubuntu >/dev/null; then
-  sudo useradd -s /bin/bash -G adm,cdrom,sudo,dip,plugdev,users,lpadmin -p '*' ubuntu
+# Casper creates the live user during boot. If a stale locked account leaked into
+# the image, clear it so manual login still works with an empty password.
+if getent passwd ubuntu >/dev/null; then
+  sudo passwd -d ubuntu 2>/dev/null || true
 fi
+
+sudo install -m 0755 "$OMYBUNTU_PATH/install/iso/casper-bottom/16omybuntu-sddm-autologin" \
+  /usr/share/initramfs-tools/scripts/casper-bottom/16omybuntu-sddm-autologin
 
 # Ensure SDDM is the active display manager and graphical target is reached.
 sudo systemctl disable gdm.service gdm3.service 2>/dev/null || true

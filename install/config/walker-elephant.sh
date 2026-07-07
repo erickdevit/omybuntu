@@ -12,7 +12,7 @@ cp $OMYBUNTU_PATH/default/walker/restart.conf ~/.config/systemd/user/app-walker@
 if command -v apt-get >/dev/null 2>&1; then
   sudo mkdir -p /etc/apt/apt.conf.d
   sudo tee /etc/apt/apt.conf.d/99walker-restart > /dev/null << 'EOF'
-DPkg::Post-Invoke {"( [ -f /usr/bin/walker ] && [ \"\$(( \$(date +%s) - \$(stat -c %Y /usr/bin/walker 2>/dev/null || echo 0) ))\" -lt 120 ] || [ -f /usr/bin/elephant ] && [ \"\$(( \$(date +%s) - \$(stat -c %Y /usr/bin/elephant 2>/dev/null || echo 0) ))\" -lt 120 ] ) && /opt/omybuntu/bin/omybuntu-restart-walker || true";};
+DPkg::Post-Invoke {"/opt/omybuntu/bin/omybuntu-restart-walker --only-if-updated || true";};
 EOF
 fi
 

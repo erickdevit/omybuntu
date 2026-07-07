@@ -2,6 +2,23 @@
 
 # omybuntu:summary=Restart Walker and related user services
 
+if [[ "$1" == "--only-if-updated" ]]; then
+  was_updated=false
+  for bin in /usr/bin/walker /usr/bin/elephant /usr/local/bin/walker /usr/local/bin/elephant; do
+    if [[ -f "$bin" ]]; then
+      mtime=$(stat -c '%Y' "$bin" 2>/dev/null || echo 0)
+      now=$(date +%s)
+      if (( now - mtime < 120 )); then
+        was_updated=true
+        break
+      fi
+    fi
+  done
+  if ! $was_updated; then
+    exit 0
+  fi
+fi
+
 restart_services() {
   if systemctl --user is-enabled elephant.service &>/dev/null; then
     systemctl --user restart elephant.service

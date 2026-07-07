@@ -404,6 +404,27 @@ show_setup_menu() {
   esac
 }
 
+translate_profile() {
+  case "$1" in
+    performance) echo "$I18N_POWER_PERFORMANCE" ;;
+    balanced) echo "$I18N_POWER_BALANCED" ;;
+    power-saver) echo "$I18N_POWER_POWER_SAVER" ;;
+    *) echo "$1" ;;
+  esac
+}
+
+untranslate_profile() {
+  if [[ $1 == "$I18N_POWER_PERFORMANCE" ]]; then
+    echo "performance"
+  elif [[ $1 == "$I18N_POWER_BALANCED" ]]; then
+    echo "balanced"
+  elif [[ $1 == "$I18N_POWER_POWER_SAVER" ]]; then
+    echo "power-saver"
+  else
+    echo "$1"
+  fi
+}
+
 show_setup_power_menu() {
   local current
   current=$(powerprofilesctl get)
@@ -413,21 +434,28 @@ show_setup_power_menu() {
   mapfile -t list < <(omybuntu-powerprofiles-list)
 
   for p in "${list[@]}"; do
+    local display_p
+    display_p=$(translate_profile "$p")
     if [[ $p == "$current" ]]; then
-      options+="${options:+$'\n'}●  $p"
+      options+="${options:+$'\n'}●  $display_p"
     else
-      options+="${options:+$'\n'}○  $p"
+      options+="${options:+$'\n'}○  $display_p"
     fi
   done
 
+  local current_display
+  current_display=$(translate_profile "$current")
+
   local selected
-  selected=$(menu "$I18N_SET_POWER" "$options" "" "●  $current")
+  selected=$(menu "$I18N_SET_POWER" "$options" "" "●  $current_display")
 
   if [[ $selected == "CNCLD" || -z $selected ]]; then
     back_to show_setup_menu
   else
+    local display_profile
+    display_profile="${selected#*  }"
     local profile
-    profile="${selected#*  }"
+    profile=$(untranslate_profile "$display_profile")
     powerprofilesctl set "$profile"
   fi
 }

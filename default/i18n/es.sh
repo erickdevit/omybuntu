@@ -676,4 +676,10 @@ export I18N_KB_COPY_URL="Copiar URL del Web App"
 # Hyprlock
 export I18N_HYPRLOCK_PLACEHOLDER="Introducir contraseña"
 
+# Power Profiles
+export I18N_POWER_PERFORMANCE="Alto Rendimiento"
+export I18N_POWER_BALANCED="Equilibrado"
+export I18N_POWER_POWER_SAVER="Ahorro de Energía"
+
+
 

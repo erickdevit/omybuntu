@@ -41,6 +41,11 @@ for desktop in "${launcher_clutter_desktops[@]}"; do
   sudo rm -f "/usr/local/share/applications/$desktop"
 done
 
+while IFS= read -r -d '' desktop; do
+  sudo rm -f "$desktop"
+done < <(sudo find /usr/share/applications /usr/local/share/applications \
+  -maxdepth 1 -type f \( -iname "*magick*.desktop" -o -iname "*im6*.desktop" \) -print0 2>/dev/null || true)
+
 if omybuntu-pkg-present foot; then
   omybuntu-pkg-drop foot
 fi

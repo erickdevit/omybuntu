@@ -4,6 +4,7 @@ set -euo pipefail
 
 export OMYBUNTU_PATH="${OMYBUNTU_PATH:-/opt/omybuntu}"
 export OMYBUNTU_INSTALL="${OMYBUNTU_INSTALL:-$OMYBUNTU_PATH/install}"
+LIVE_USER="${OMYBUNTU_LIVE_USER:-omybuntu}"
 export PATH="$OMYBUNTU_PATH/bin:$PATH"
 
 echo "Preparing Omybuntu Live ISO Environment..."
@@ -48,9 +49,9 @@ for pkg in gdm3 gnome-session ubuntu-session ubuntu-desktop ubuntu-desktop-minim
   fi
 done
 
-# Keep the live ISO lean and aligned with the Alacritty-first default. This also
-# cleans stale packages from incremental chroot rebuilds.
-for pkg in ghostty google-chrome-stable google-chrome-beta google-chrome-unstable typora; do
+# Keep the live ISO lean and aligned with the Alacritty-first default. Chrome is
+# intentionally kept because the live environment must always include a browser.
+for pkg in ghostty typora; do
   if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y "$pkg"
   fi
@@ -63,7 +64,7 @@ cat <<EOF | sudo tee /etc/skel/.config/autostart/omybuntu-installer.desktop > /d
 [Desktop Entry]
 Type=Application
 Name=Install Omybuntu
-Exec=alacritty -e omybuntu-setup-install
+Exec=omybuntu-launch-tui omybuntu-setup-install
 Icon=system-software-install
 Categories=System;
 Terminal=false
@@ -94,7 +95,7 @@ for session in hyprland-uwsm.desktop ubuntu.desktop; do
   fi
 done
 
-# Ensure live autologin is configured for the 'ubuntu' user (Casper standard)
+# Ensure live autologin is configured for the Omybuntu live user.
 # This runs after install.sh so it is the definitive final state
 sudo mkdir -p /etc/sddm.conf.d
 sudo rm -f /etc/sddm.conf.d/10-wayland.conf
@@ -112,7 +113,7 @@ DefaultSession=omybuntu
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 
 [Autologin]
-User=ubuntu
+User=$LIVE_USER
 Session=omybuntu
 Relogin=true
 
@@ -124,7 +125,7 @@ sudo sed -i '/pam_faillock\.so/d' /etc/pam.d/sddm-autologin 2>/dev/null || true
 
 # Make the live user deterministic for casper-based boots.
 cat <<EOF | sudo tee /etc/casper.conf > /dev/null
-export USERNAME="ubuntu"
+export USERNAME="$LIVE_USER"
 export USERFULLNAME="Omybuntu Live User"
 export HOST="omybuntu"
 export BUILD_SYSTEM="Ubuntu"
@@ -132,9 +133,14 @@ EOF
 
 # Casper creates the live user during boot. If a stale locked account leaked into
 # the image, clear it so manual login still works with an empty password.
-if getent passwd ubuntu >/dev/null; then
-  sudo passwd -d ubuntu 2>/dev/null || true
+if getent passwd "$LIVE_USER" >/dev/null; then
+  sudo passwd -d "$LIVE_USER" 2>/dev/null || true
 fi
+
+if getent passwd ubuntu >/dev/null; then
+  sudo userdel -r ubuntu 2>/dev/null || sudo userdel ubuntu 2>/dev/null || true
+fi
+sudo rm -rf /home/ubuntu
 
 sudo install -m 0755 "$OMYBUNTU_PATH/install/iso/casper-bottom/15autologin" \
   /usr/share/initramfs-tools/scripts/casper-bottom/15autologin
@@ -167,10 +173,10 @@ sudo systemctl set-default graphical.target 2>/dev/null || true
 echo "Live ISO environment prepared successfully."
 
 # ---------------------------------------------------------------------------
-# Populate /etc/skel/ with root configs so the casper live user 'ubuntu'
+# Populate /etc/skel/ with root configs so the casper live user
 # gets a fully configured Hyprland session on first boot.
 # install.sh runs as root in the chroot, so all configs land in /root/.
-# Casper creates /home/ubuntu/ by copying /etc/skel/ at boot.
+# Casper creates the live home by copying /etc/skel/ at boot.
 # ---------------------------------------------------------------------------
 echo "Copying configs to /etc/skel/ for the live user..."
 
@@ -214,7 +220,7 @@ done
 
 while read -r f; do
   [[ -n $f ]] || continue
-  sudo sed -i 's|/root/|/home/ubuntu/|g' "$f"
+  sudo sed -i "s|/root/|/home/$LIVE_USER/|g" "$f"
 done < "$root_path_files"
 rm -f "$root_path_files"
 
@@ -225,13 +231,23 @@ sudo find /etc/skel -type l -print0 > "$skel_links" 2>/dev/null || true
 while IFS= read -r -d '' link; do
   target=$(sudo readlink "$link")
   if [[ $target == /root/* ]]; then
-    sudo ln -snf "/home/ubuntu/${target#/root/}" "$link"
+    sudo ln -snf "/home/$LIVE_USER/${target#/root/}" "$link"
   fi
 done < "$skel_links"
 rm -f "$skel_links"
 
+for gtk_version in gtk-3.0 gtk-4.0; do
+  bookmark_file="/etc/skel/.config/$gtk_version/bookmarks"
+  if [[ -f $bookmark_file ]]; then
+    bookmark_tmp=$(mktemp)
+    sudo awk '!seen[$0]++' "$bookmark_file" >"$bookmark_tmp"
+    sudo install -m 0644 "$bookmark_tmp" "$bookmark_file"
+    rm -f "$bookmark_tmp"
+  fi
+done
+
 # The live username can vary by casper boot path. Keep theme-owned assets
-# relative inside the profile so wallpaper startup does not depend on /home/ubuntu.
+# relative inside the profile so wallpaper startup does not depend on a fixed home path.
 sudo mkdir -p /etc/skel/.config/omybuntu/current
 if [[ -f /etc/skel/.config/omybuntu/current/theme/backgrounds/omybuntu.png ]]; then
   sudo ln -snf "theme/backgrounds/omybuntu.png" /etc/skel/.config/omybuntu/current/background
@@ -295,8 +311,6 @@ live_hidden_desktops=(
   "Google Maps.desktop"
   "Google Messages.desktop"
   "Google Photos.desktop"
-  "com.google.Chrome.desktop"
-  "google-chrome.desktop"
   "display-im6.desktop"
   "display-im6.q16.desktop"
   "ImageMagick.desktop"
@@ -318,6 +332,11 @@ for desktop in "${live_hidden_desktops[@]}"; do
   sudo rm -f "/usr/local/share/applications/$desktop"
 done
 
+while IFS= read -r -d '' desktop; do
+  sudo rm -f "$desktop"
+done < <(sudo find /etc/skel/.local/share/applications /root/.local/share/applications /usr/share/applications /usr/local/share/applications \
+  -maxdepth 1 -type f \( -iname "*magick*.desktop" -o -iname "*im6*.desktop" \) -print0 2>/dev/null || true)
+
 sudo rm -rf /etc/skel/.config/ghostty /root/.config/ghostty
 sudo rm -f /etc/skel/.config/xdg-terminals.list /root/.config/xdg-terminals.list
 cat <<EOF | sudo tee /etc/skel/.config/xdg-terminals.list >/dev/null
@@ -336,4 +355,4 @@ omybuntu-refresh-plymouth
 omybuntu-refresh-sddm
 update-initramfs -u
 
-echo "Skel populated. Live user 'ubuntu' will inherit full Omybuntu configuration."
+echo "Skel populated. Live user '$LIVE_USER' will inherit full Omybuntu configuration."

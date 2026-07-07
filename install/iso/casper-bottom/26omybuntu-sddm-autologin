@@ -29,7 +29,7 @@ if [ ! -f /root/usr/share/wayland-sessions/omybuntu.desktop ]; then
   exit 0
 fi
 
-live_user="${USERNAME:-ubuntu}"
+live_user="${USERNAME:-omybuntu}"
 
 if [ -f /root/etc/sddm.conf ]; then
   sed -i '/^\[Autologin\]/,/^$/d' /root/etc/sddm.conf

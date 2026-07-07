@@ -1,8 +1,8 @@
 # Allow passwordless reboot for the installer - removed in first-run
-# In ISO builds the chroot user is root, but the live session user is 'ubuntu'
+# In ISO builds the chroot user is root, but the live session user is 'omybuntu'
 SUDOERS_USER="${OMYBUNTU_TARGET_USER:-}"
 if [[ -z $SUDOERS_USER && -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
-  SUDOERS_USER="ubuntu"
+  SUDOERS_USER="omybuntu"
 fi
 SUDOERS_USER="${SUDOERS_USER:-$USER}"
 

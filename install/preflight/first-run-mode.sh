@@ -2,11 +2,11 @@
 mkdir -p ~/.local/state/omybuntu
 touch ~/.local/state/omybuntu/first-run.mode
 
-# In ISO builds the chroot user is root, but the live session user is 'ubuntu'
+# In ISO builds the chroot user is root, but the live session user is 'omybuntu'
 # For regular installs, $USER is the actual user running the script
 SUDOERS_USER="${OMYBUNTU_TARGET_USER:-}"
 if [[ -z $SUDOERS_USER && -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
-  SUDOERS_USER="ubuntu"
+  SUDOERS_USER="omybuntu"
 fi
 SUDOERS_USER="${SUDOERS_USER:-$USER}"
 

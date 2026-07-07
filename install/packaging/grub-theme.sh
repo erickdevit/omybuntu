@@ -41,7 +41,7 @@ omybuntu_render_grub_theme_txt() {
     -e "s|{{ grub_footer }}|$I18N_GRUB_FOOTER|g" \
     "$OMYBUNTU_PATH/default/grub/theme.tpl" > "$rendered"
 
-  if [[ $out_file == /boot/* ]]; then
+  if [[ $out_file == /boot/* || -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
     sudo tee "$out_file" < "$rendered" >/dev/null
   else
     cp "$rendered" "$out_file"
@@ -54,7 +54,7 @@ echo "Generating GRUB theme assets..."
 THEME_DIR="$OMYBUNTU_PATH/default/grub"
 OUT_DIR="${GRUB_THEME_OUT_DIR:-/boot/grub/themes/omybuntu}"
 
-if [[ $OUT_DIR == /boot/* ]]; then
+if [[ $OUT_DIR == /boot/* || -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
   sudo mkdir -p "$OUT_DIR"
   magick_write() {
     sudo magick "$@"
@@ -91,13 +91,13 @@ magick_write -size 6x30 xc:none \
 omybuntu_render_grub_theme_txt "$OUT_DIR/theme.txt"
 
 if [[ -f /usr/share/grub/unicode.pf2 ]]; then
-  if [[ $OUT_DIR == /boot/* ]]; then
+  if [[ $OUT_DIR == /boot/* || -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
     sudo cp -f /usr/share/grub/unicode.pf2 "$OUT_DIR/unicode.pf2"
   else
     cp -f /usr/share/grub/unicode.pf2 "$OUT_DIR/unicode.pf2"
   fi
 elif [[ -f /boot/grub/unicode.pf2 ]]; then
-  if [[ $OUT_DIR == /boot/* ]]; then
+  if [[ $OUT_DIR == /boot/* || -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
     sudo cp -f /boot/grub/unicode.pf2 "$OUT_DIR/unicode.pf2"
   else
     cp -f /boot/grub/unicode.pf2 "$OUT_DIR/unicode.pf2"

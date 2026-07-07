@@ -118,7 +118,7 @@ cleanup_mounts
 if ! $INITIALIZED; then
   echo "Building Omybuntu Live ISO from Ubuntu Base rootfs..."
   sudo rm -rf "$BUILD_DIR"
-  mkdir -p "$BUILD_DIR" "$CHROOT_DIR" "$IMAGE_DIR/casper"
+  sudo mkdir -p "$BUILD_DIR" "$CHROOT_DIR" "$IMAGE_DIR/casper"
 
   # 1. Download Ubuntu Base Rootfs
   if [[ ! -f "$WORKSPACE/ubuntu-base.tar.gz" ]]; then
@@ -133,7 +133,7 @@ if ! $INITIALIZED; then
 else
   echo "Reusing existing chroot directory at $CHROOT_DIR..."
   sudo rm -rf "$IMAGE_DIR"
-  mkdir -p "$IMAGE_DIR/casper"
+  sudo mkdir -p "$IMAGE_DIR/casper"
 fi
 
 # --- Virtual filesystems & basic chroot setup (always) ----------------------
@@ -289,7 +289,7 @@ sudo chroot "$CHROOT_DIR" /usr/bin/env -i \
   USER=root \
   LOGNAME=root \
   SHELL=/bin/bash \
-  TERM="${TERM:-linux}" \
+  TERM=linux \
   PATH=/opt/omybuntu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
   OMYBUNTU_PATH=/opt/omybuntu \
   OMYBUNTU_INSTALL=/opt/omybuntu/install \
@@ -298,6 +298,8 @@ sudo chroot "$CHROOT_DIR" /usr/bin/env -i \
   OMYBUNTU_ISO_BUILD=true \
   OMYBUNTU_CHROOT_INSTALL=true \
   OMYBUNTU_ISO_HOST_PROGRESS=true \
+  OMYBUNTU_LIVE_USER=omybuntu \
+  OMYBUNTU_TARGET_USER=omybuntu \
   /bin/bash -e -c "
     cd /opt/omybuntu
     ./install.sh

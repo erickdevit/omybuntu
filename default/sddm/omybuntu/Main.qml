@@ -16,7 +16,7 @@ Rectangle {
         return userName.toString()
     }
 
-    return "ubuntu"
+    return "omybuntu"
   }
   property bool loginFailed: false
   property int sessionIndex: {

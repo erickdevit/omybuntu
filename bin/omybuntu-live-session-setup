@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-if [[ ! -d /cdrom && ! -f /run/casper-detect && $USER != "ubuntu" && $USER != "omybuntu" ]]; then
+if [[ ! -d /cdrom && ! -f /run/casper-detect && $USER != "omybuntu" ]]; then
   exit 0
 fi
 

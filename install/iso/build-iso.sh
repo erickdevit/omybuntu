@@ -354,6 +354,10 @@ sudo rm -rf "$CHROOT_DIR"/var/cache/apt/archives/*.deb
 sudo mksquashfs "$CHROOT_DIR" "$IMAGE_DIR/casper/filesystem.squashfs" \
   -comp xz -e opt/omybuntu/build
 
+echo "Generating ISO checksum manifest..."
+sudo bash -c 'cd "$1" && find . -type f ! -name md5sum.txt -print0 | sort -z | xargs -0 md5sum > md5sum.txt' bash "$IMAGE_DIR"
+sudo chmod 0644 "$IMAGE_DIR/md5sum.txt"
+
 # 11. Build bootable ISO with grub-mkrescue
 echo "Building the bootable ISO..."
 sudo grub-mkrescue -o "$ISO_OUT" "$IMAGE_DIR"

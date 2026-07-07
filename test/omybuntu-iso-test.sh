@@ -758,6 +758,10 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   ok "ISO build writes Omybuntu build metadata for fastfetch" || \
   nok "ISO build does not write Omybuntu build metadata"
 
+[[ $build_iso_content == *'md5sum.txt'* && $build_iso_content == *'xargs -0 md5sum'* ]] && \
+  ok "ISO build writes casper checksum manifest" || \
+  nok "ISO build does not write casper checksum manifest"
+
 webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")
 [[ $webapp_install_content == *LAUNCHER_ICON_FIELD* && $webapp_install_content == *hicolor/48x48/apps* ]] && \
   ok "webapp launchers register icons in the icon theme" || \

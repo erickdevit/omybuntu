@@ -227,6 +227,9 @@ sudo rsync -a \
 sudo mkdir -p "$CHROOT_DIR/root/.local/share"
 sudo ln -snf /opt/omybuntu "$CHROOT_DIR/root/.local/share/omybuntu"
 
+# Clean up potentially broken legacy APT hooks in persistent chroot
+sudo rm -f "$CHROOT_DIR/etc/apt/apt.conf.d/99walker-restart"
+
 # 7a. Compile the Ratatui TUI installer inside the chroot
 echo "Installing Rust toolchain and compiling TUI installer..."
 sudo chroot "$CHROOT_DIR" /bin/bash -c "

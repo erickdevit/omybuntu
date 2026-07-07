@@ -1,0 +1,82 @@
+#!/bin/bash
+# omybuntu:summary=Set the behavior of the Caps Lock key
+# omybuntu:hidden=true
+
+source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+
+# Identify current caps lock behavior
+line=$(grep -E "^[[:space:]]*kb_options[[:space:]]*=" ~/.config/hypr/input.conf | grep -v "^#" | head -n1)
+current_caps=""
+
+if [[ -n $line ]]; then
+    val=$(echo "$line" | awk -F'=' '{print $2}' | cut -d'#' -f1 | tr -d ' ')
+    current_caps=$(echo "$val" | tr ',' '\n' | grep -E "^(compose:caps|caps:.*)$" | head -n1)
+fi
+
+list="󰌌  Caps Lock (Normal)\n󱊷  Compose Key (Omybuntu Default)\n󱊷  Escape\n󱊷  Control\n󱊷  Super\n󱊷  Swap Caps Lock & Escape\n󱊷  Disable"
+
+declare -A options
+options["󰌌  Caps Lock (Normal)"]=""
+options["󱊷  Compose Key (Omybuntu Default)"]="compose:caps"
+options["󱊷  Escape"]="caps:escape"
+options["󱊷  Control"]="caps:ctrl_modifier"
+options["󱊷  Super"]="caps:super"
+options["󱊷  Swap Caps Lock & Escape"]="caps:swapescape"
+options["󱊷  Disable"]="caps:none"
+
+current_label="󰌌  Caps Lock (Normal)"
+if [[ -n $current_caps ]]; then
+  for label in "${!options[@]}"; do
+    if [[ "${options[$label]}" == "$current_caps" ]]; then
+      current_label="$label"
+      break
+    fi
+  done
+fi
+
+index=$(echo -e "$list" | grep -nx "$current_label" | cut -d: -f1)
+selected=$(echo -e "$list" | omybuntu-launch-walker --dmenu --width 350 -p "Caps Lock Behavior…" -c "$index")
+
+if [[ -n $selected && $selected != "CNCLD" ]]; then
+  new_caps="${options[$selected]}"
+  
+  if [[ -z $line ]]; then
+      # No kb_options line exists, create it under input {
+      if [[ -n $new_caps ]]; then
+          sed -i '/^[[:space:]]*input[[:space:]]*{/a \  kb_options = '"$new_caps" ~/.config/hypr/input.conf
+      fi
+  else
+      # Extract value and comment
+      val=$(echo "$line" | awk -F'=' '{print $2}' | cut -d'#' -f1 | tr -d ' ' | tr -d '\n')
+      comment=$(echo "$line" | grep -o '#.*' || true)
+      
+      # Filter out existing caps options
+      new_val=$(echo "$val" | tr ',' '\n' | grep -vE "^(compose:caps|caps:.*)$" | tr '\n' ',' | sed 's/,$//')
+      
+      if [[ -n $new_caps ]]; then
+          if [[ -z $new_val ]]; then
+              new_val="$new_caps"
+          else
+              new_val="$new_caps,$new_val"
+          fi
+      fi
+      
+      line_num=$(grep -nE "^[[:space:]]*kb_options[[:space:]]*=" ~/.config/hypr/input.conf | head -n1 | cut -d: -f1)
+      
+      if [[ -z $new_val ]]; then
+          if [[ -z $comment ]]; then
+              sed -i "${line_num}d" ~/.config/hypr/input.conf
+          else
+              # Leave the comment
+              sed -i "${line_num}s/.*/  ${comment}/" ~/.config/hypr/input.conf
+          fi
+      else
+          if [[ -n $comment ]]; then
+              sed -i "${line_num}s/.*/  kb_options = ${new_val} ${comment}/" ~/.config/hypr/input.conf
+          else
+              sed -i "${line_num}s/.*/  kb_options = ${new_val}/" ~/.config/hypr/input.conf
+          fi
+      fi
+  fi
+  hyprctl reload >/dev/null 2>&1
+fi

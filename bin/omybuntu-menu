@@ -383,7 +383,7 @@ show_font_menu() {
 show_setup_menu() {
   local options="$I18N_SET_AUDIO\n$I18N_SET_WIFI\n$I18N_SET_BLUETOOTH\n$I18N_SET_POWER\n$I18N_SET_SLEEP\n$I18N_SET_MONITORS"
   [[ -f ~/.config/hypr/bindings.conf ]] && options="$options\n$I18N_SET_KEYBINDINGS"
-  [[ -f ~/.config/hypr/input.conf ]] && options="$options\n$I18N_SET_INPUT"
+  [[ -f ~/.config/hypr/input.conf ]] && options="$options\n$I18N_SET_CAPSLOCK\n$I18N_SET_INPUT"
   options="$options\n$I18N_SET_DEFAULTS\n$I18N_SET_DNS\n$I18N_SET_SECURITY\n$I18N_SET_CONFIG\n$I18N_SET_LANGUAGE"
 
   case $(menu "$I18N_MENU_SETUP" "$options") in
@@ -394,6 +394,7 @@ show_setup_menu() {
   *"$I18N_SET_SLEEP"*) show_setup_system_menu ;;
   *"$I18N_SET_MONITORS"*) open_in_editor "$(hypr_config_file monitors)" ;;
   *"$I18N_SET_KEYBINDINGS"*) open_in_editor "$(hypr_config_file bindings)" ;;
+  *"$I18N_SET_CAPSLOCK"*) omybuntu-keyboard-capslock-set ;;
   *"$I18N_SET_INPUT"*) open_in_editor "$(hypr_config_file input)" ;;
   *"$I18N_SET_DEFAULTS"*) show_setup_default_menu ;;
   *"$I18N_SET_DNS"*) present_terminal omybuntu-setup-dns ;;

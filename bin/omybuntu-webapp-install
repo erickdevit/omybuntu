@@ -7,8 +7,19 @@ set -euo pipefail
 trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 
 ICON_DIR="$HOME/.local/share/applications/icons"
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
 
-source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
+source "$OMYBUNTU_PATH/default/i18n/init.sh"
+
+install_launcher_icon() {
+  local icon_path=$1
+  local icon_field=$2
+
+  mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
+  cp "$icon_path" ~/.local/share/icons/hicolor/48x48/apps/"$(basename "$icon_path")"
+  gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null
+  LAUNCHER_ICON_FIELD="$icon_field"
+}
 
 if (( $# < 3 )); then
   echo -e "\e[32m$I18N_WEBAPP_CREATE_INTRO\n\e[0m"
@@ -61,9 +72,20 @@ if [[ $ICON_REF =~ ^https?:// ]]; then
     echo "$I18N_WEBAPP_ERR_DOWNLOAD"
     exit 1
   fi
+  ICON_FIELD="$APP_NAME"
 else
   ICON_PATH="$ICON_DIR/$ICON_REF"
+  if [[ ! -f $ICON_PATH && -f "$OMYBUNTU_PATH/applications/icons/$ICON_REF" ]]; then
+    cp "$OMYBUNTU_PATH/applications/icons/$ICON_REF" "$ICON_PATH"
+  fi
+  if [[ ! -f $ICON_PATH ]]; then
+    echo "$I18N_WEBAPP_ERR_DOWNLOAD"
+    exit 1
+  fi
+  ICON_FIELD="${ICON_REF%.png}"
 fi
+
+install_launcher_icon "$ICON_PATH" "$ICON_FIELD"
 
 # Use custom exec if provided, otherwise default behavior
 EXEC_COMMAND="${CUSTOM_EXEC:-omybuntu-launch-webapp $APP_URL}"
@@ -79,7 +101,7 @@ Comment=$APP_NAME
 Exec=$EXEC_COMMAND
 Terminal=false
 Type=Application
-Icon=$ICON_PATH
+Icon=$LAUNCHER_ICON_FIELD
 StartupNotify=true
 EOF
 

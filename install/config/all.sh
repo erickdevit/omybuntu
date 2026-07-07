@@ -14,6 +14,7 @@ run_logged $OMYBUNTU_INSTALL/config/xcompose.sh
 run_logged $OMYBUNTU_INSTALL/config/mise-work.sh
 run_logged $OMYBUNTU_INSTALL/config/fix-powerprofilesctl-shebang.sh
 run_logged $OMYBUNTU_INSTALL/config/docker.sh
+run_logged $OMYBUNTU_INSTALL/config/hide-launcher-clutter.sh
 run_logged $OMYBUNTU_INSTALL/config/mimetypes.sh
 run_logged $OMYBUNTU_INSTALL/config/user-dirs.sh
 run_logged $OMYBUNTU_INSTALL/config/toggles.sh

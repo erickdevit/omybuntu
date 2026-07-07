@@ -627,6 +627,26 @@ sddm_migration_content=$(<"$ROOT/migrations/1778148645.sh")
   ok "sddm legacy migration points to 99-omybuntu.conf" || \
   nok "sddm legacy migration still points to 10-wayland.conf"
 
+# Launcher hygiene: Ghostty-only terminal and hidden clutter apps
+base_packages_content=$(<"$ROOT/install/omybuntu-base.packages")
+[[ $base_packages_content != *$'\nfoot'$* && $base_packages_content != *$'\nfoot\n'* ]] && \
+  ok "base packages no longer install foot by default" || \
+  nok "base packages still install foot by default"
+
+[[ ! -f $ROOT/applications/foot.desktop && -f $ROOT/applications/hidden/foot.desktop ]] && \
+  ok "foot launcher is hidden instead of advertised in applications/" || \
+  nok "foot launcher is still exposed in applications/"
+
+hide_launcher_content=$(<"$ROOT/install/config/hide-launcher-clutter.sh")
+[[ $hide_launcher_content == *org.fcitx.Fcitx5.desktop* && $hide_launcher_content == *omybuntu-pkg-drop*foot* ]] && \
+  ok "install hides fcitx and foot clutter from the launcher" || \
+  nok "install does not hide launcher clutter"
+
+webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")
+[[ $webapp_install_content == *LAUNCHER_ICON_FIELD* && $webapp_install_content == *hicolor/48x48/apps* ]] && \
+  ok "webapp launchers register icons in the icon theme" || \
+  nok "webapp launchers do not register icons in the icon theme"
+
 # Summary
 # ------------------------------------------------------------------
 echo

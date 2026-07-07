@@ -81,10 +81,13 @@ sudo mkdir -p /etc/sddm.conf.d
 sudo rm -f /etc/sddm.conf.d/10-wayland.conf
 sudo rm -f /etc/sddm.conf.d/autologin.conf
 sudo rm -f /etc/sddm.conf.d/50-ubuntu-budgie.conf
+sudo rm -f /etc/sddm.conf.d/99-omybuntu.conf
 
-cat <<EOF | sudo tee /etc/sddm.conf.d/99-omybuntu.conf > /dev/null
+# Live ISO should boot straight into Hyprland; SDDM only appears after logout.
+cat <<EOF | sudo tee /etc/sddm.conf.d/zz-omybuntu-live.conf > /dev/null
 [General]
 DisplayServer=wayland
+DefaultSession=omybuntu
 
 [Wayland]
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
@@ -97,6 +100,8 @@ Relogin=true
 [Theme]
 Current=omybuntu
 EOF
+
+sudo sed -i '/pam_faillock\.so/d' /etc/pam.d/sddm-autologin 2>/dev/null || true
 
 # Make the live user deterministic for casper-based boots.
 cat <<EOF | sudo tee /etc/casper.conf > /dev/null
@@ -112,8 +117,11 @@ if getent passwd ubuntu >/dev/null; then
   sudo passwd -d ubuntu 2>/dev/null || true
 fi
 
-sudo install -m 0755 "$OMYBUNTU_PATH/install/iso/casper-bottom/16omybuntu-sddm-autologin" \
-  /usr/share/initramfs-tools/scripts/casper-bottom/16omybuntu-sddm-autologin
+sudo install -m 0755 "$OMYBUNTU_PATH/install/iso/casper-bottom/15autologin" \
+  /usr/share/initramfs-tools/scripts/casper-bottom/15autologin
+sudo install -m 0755 "$OMYBUNTU_PATH/install/iso/casper-bottom/26omybuntu-sddm-autologin" \
+  /usr/share/initramfs-tools/scripts/casper-bottom/26omybuntu-sddm-autologin
+sudo rm -f /usr/share/initramfs-tools/scripts/casper-bottom/16omybuntu-sddm-autologin
 
 # Ensure SDDM is the active display manager and graphical target is reached.
 sudo systemctl disable gdm.service gdm3.service 2>/dev/null || true

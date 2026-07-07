@@ -426,15 +426,20 @@ sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
   ok "sddm metadata declares MainScript and Theme-API" || \
   nok "sddm metadata is incomplete"
 
-[[ -x $ROOT/install/iso/casper-bottom/16omybuntu-sddm-autologin ]] && \
-  ok "casper hook fixes live SDDM autologin" || \
+[[ -x $ROOT/install/iso/casper-bottom/26omybuntu-sddm-autologin ]] && \
+  ok "casper hook finalizes live SDDM autologin after user creation" || \
   nok "casper hook for live SDDM autologin is missing"
 
-if [[ $setup_iso_content == *16omybuntu-sddm-autologin* ]] \
+[[ -f $ROOT/install/iso/casper-bottom/15autologin ]] \
+  && grep -q 'omybuntu.desktop' "$ROOT/install/iso/casper-bottom/15autologin" && \
+  ok "patched casper 15autologin knows the omybuntu session" || \
+  nok "patched casper 15autologin is missing omybuntu session support"
+
+if [[ $setup_iso_content == *zz-omybuntu-live.conf* && $setup_iso_content == *26omybuntu-sddm-autologin* ]] \
   && ! grep -q "\-p '\*' ubuntu" <<<"$setup_iso_content"; then
-  ok "setup-iso installs casper autologin hook without locking ubuntu"
+  ok "setup-iso installs live autologin hooks without locking ubuntu"
 else
-  nok "setup-iso still locks the live ubuntu account"
+  nok "setup-iso live autologin setup is incomplete"
 fi
 
 # icons.sh copies volantes cursors

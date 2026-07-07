@@ -2,6 +2,5 @@
 sudo sed -i 's|^\(auth\s\+required\s\+pam_faillock.so\)\s\+preauth.*$|\1 preauth silent deny=10 unlock_time=120|' "/etc/pam.d/system-auth" 2>/dev/null || true
 sudo sed -i 's|^\(auth\s\+\[default=die\]\s\+pam_faillock.so\)\s\+authfail.*$|\1 authfail deny=10 unlock_time=120|' "/etc/pam.d/system-auth" 2>/dev/null || true
 
-# Ensure lockout limit is reset on restart
-sudo sed -i '/pam_faillock\.so preauth/d' /etc/pam.d/sddm-autologin 2>/dev/null || true
-sudo sed -i '/auth.*pam_permit\.so/a auth        required    pam_faillock.so authsucc' /etc/pam.d/sddm-autologin 2>/dev/null || true
+# Keep SDDM autologin on pam_permit only; faillock breaks passwordless live boot.
+sudo sed -i '/pam_faillock\.so/d' /etc/pam.d/sddm-autologin 2>/dev/null || true

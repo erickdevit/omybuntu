@@ -21,22 +21,31 @@ sudo mkdir -p /etc/sddm.conf.d
 sudo rm -f /etc/sddm.conf.d/10-wayland.conf
 sudo rm -f /etc/sddm.conf.d/autologin.conf
 sudo rm -f /etc/sddm.conf.d/50-ubuntu-budgie.conf
+sudo rm -f /etc/sddm.conf.d/zz-omybuntu-live.conf
+
+sddm_autologin_block=""
+if [[ -z ${OMYBUNTU_ISO_BUILD:-} ]]; then
+  sddm_autologin_block="
+[Autologin]
+User=$USER
+Session=omybuntu
+Relogin=true"
+fi
 
 cat <<EOF | sudo tee /etc/sddm.conf.d/99-omybuntu.conf >/dev/null
 [General]
 DisplayServer=wayland
+DefaultSession=omybuntu
 
 [Wayland]
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
-
-[Autologin]
-User=$USER
-Session=omybuntu
-Relogin=true
+$sddm_autologin_block
 
 [Theme]
 Current=omybuntu
 EOF
+
+sudo sed -i '/pam_faillock\.so/d' /etc/pam.d/sddm-autologin 2>/dev/null || true
 
 # Prevent password-based SDDM logins from creating an encrypted login keyring
 # (which conflicts with the passwordless Default_keyring used for auto-unlock)

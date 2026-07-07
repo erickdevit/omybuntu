@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PREREQ=""
-DESCRIPTION="Configuring Omybuntu SDDM autologin for the live session"
+DESCRIPTION="Finalizing Omybuntu SDDM autologin for the live session"
 
 prereqs()
 {
@@ -29,19 +29,26 @@ if [ ! -f /root/usr/share/wayland-sessions/omybuntu.desktop ]; then
   exit 0
 fi
 
-mkdir -p /root/etc/sddm.conf.d
+live_user="${USERNAME:-ubuntu}"
+
+if [ -f /root/etc/sddm.conf ]; then
+  sed -i '/^\[Autologin\]/,/^$/d' /root/etc/sddm.conf
+fi
+
 rm -f /root/etc/sddm.conf.d/autologin.conf
 rm -f /root/etc/sddm.conf.d/50-ubuntu-budgie.conf
+rm -f /root/etc/sddm.conf.d/99-omybuntu.conf
 
-cat >/root/etc/sddm.conf.d/99-omybuntu.conf <<EOF
+cat >/root/etc/sddm.conf.d/zz-omybuntu-live.conf <<EOF
 [General]
 DisplayServer=wayland
+DefaultSession=omybuntu
 
 [Wayland]
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 
 [Autologin]
-User=$USERNAME
+User=$live_user
 Session=omybuntu
 Relogin=true
 
@@ -49,14 +56,12 @@ Relogin=true
 Current=omybuntu
 EOF
 
-# Casper's generic SDDM autologin hook does not know about omybuntu.desktop and
-# appends an [Autologin] block with an empty Session value to /etc/sddm.conf.
-if [ -f /root/etc/sddm.conf ]; then
-  sed -i '/^\[Autologin\]/,/^$/d' /root/etc/sddm.conf
+if [ -f /root/etc/pam.d/sddm-autologin ]; then
+  sed -i '/pam_faillock\.so/d' /root/etc/pam.d/sddm-autologin
 fi
 
-if [ -n "$USERNAME" ]; then
-  chroot /root passwd -d "$USERNAME" >/dev/null 2>&1 || true
+if [ -n "$live_user" ]; then
+  chroot /root passwd -d "$live_user" >/dev/null 2>&1 || true
 fi
 
 log_end_msg

@@ -55,7 +55,7 @@ cat <<EOF | sudo tee /etc/skel/.config/autostart/omybuntu-installer.desktop > /d
 [Desktop Entry]
 Type=Application
 Name=Install Omybuntu
-Exec=ghostty -e omybuntu-setup-install
+Exec=alacritty -e omybuntu-setup-install
 Icon=system-software-install
 Categories=System;
 Terminal=false

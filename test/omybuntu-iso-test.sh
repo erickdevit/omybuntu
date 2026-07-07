@@ -385,23 +385,31 @@ sddm_content=$(<"$ROOT/install/login/sddm.sh")
 setup_iso_content=$(<"$ROOT/install/iso/setup-iso.sh")
 [[ $sddm_content == *99-omybuntu.conf* ]] && ok "sddm.sh configures 99-omybuntu.conf" || nok "sddm.sh does not configure 99-omybuntu.conf"
 
-[[ -f $ROOT/default/wayland-sessions/hyprland.desktop ]] && \
-  ok "hidden hyprland.desktop exists for uwsm" || \
-  nok "hidden hyprland.desktop is missing for uwsm"
+hyprland_desktop_content=$(<"$ROOT/default/wayland-sessions/hyprland.desktop")
+if [[ $hyprland_desktop_content == *NoDisplay=true* ]] \
+  && [[ $hyprland_desktop_content != *Hidden=true* ]]; then
+  ok "hyprland.desktop remains a valid hidden-from-menus uwsm target"
+else
+  nok "hyprland.desktop is hidden from uwsm or visible in menus"
+fi
 
 if [[ $sddm_content == *default/wayland-sessions/hyprland.desktop* ]] \
   && ! grep -q 'for session in hyprland.desktop' <<<"$sddm_content"; then
-  ok "sddm.sh keeps hidden hyprland.desktop for uwsm"
+  ok "sddm.sh keeps hyprland.desktop for uwsm"
 else
   nok "sddm.sh still deletes hyprland.desktop"
 fi
 
 if [[ $setup_iso_content == *default/wayland-sessions/hyprland.desktop* ]] \
   && ! grep -q 'for session in hyprland.desktop' <<<"$setup_iso_content"; then
-  ok "setup-iso.sh keeps hidden hyprland.desktop for uwsm"
+  ok "setup-iso.sh keeps hyprland.desktop for uwsm"
 else
   nok "setup-iso.sh still deletes hyprland.desktop"
 fi
+
+[[ $setup_iso_content == *'Exec=alacritty -e omybuntu-setup-install'* ]] && \
+  ok "live installer autostart uses alacritty" || \
+  nok "live installer autostart still uses a fragile terminal"
 
 [[ -f $ROOT/bin/omybuntu-cmd-generate-ascii-logo ]] && \
   ok "ascii logo helper exists" || \

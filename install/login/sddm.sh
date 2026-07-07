@@ -9,7 +9,7 @@ sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.conf" /usr/share/sddm/hyprland.con
 sudo rm -f /usr/share/sddm/hyprland.lua
 
 # Hide other desktop sessions so only Omybuntu is listed in SDDM.
-# Keep the hidden hyprland.desktop because uwsm still needs it as a launch target.
+# Keep hyprland.desktop as a valid NoDisplay launch target for uwsm.
 for session in hyprland-uwsm.desktop ubuntu.desktop; do
   if [[ -f /usr/share/wayland-sessions/$session ]]; then
     sudo rm -f "/usr/share/wayland-sessions/$session"

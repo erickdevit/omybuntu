@@ -139,6 +139,7 @@ fi
 # Porting from Omarchy
 
 - Look exactly at how Omarchy originally implemented scripts and features. Nothing should be reinvented unless extremely necessary.
+  - **Exception (Hyprland Configuration):** While Omarchy has migrated to `.lua` files for Hyprland configuration, Omybuntu will continue to use the legacy `.conf` format until the `hyprland` package in Ubuntu officially updates and fully supports Lua plugins/configurations. Do NOT migrate `.conf` to `.lua`.
 - If an existing feature is broken, find and fix the root cause of why the Omarchy implementation is failing instead of rewriting it from scratch.
 - You must ask for permission from the user before reinventing or rewriting any script.
 

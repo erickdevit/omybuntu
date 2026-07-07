@@ -45,6 +45,7 @@ omybuntu theme set gruvbox
 * **Templates**: Located in `default/themed/*.tpl`, these files contain placeholders like `{{ accent }}` or `{{ background }}`.
 * **Color Definitions**: Found in `themes/*/colors.toml`, specifying colors for every themed element.
 * **Refresh Pattern**: When a theme is updated, the template renderers read the theme definitions and dynamically rewrite configuration files for Waybar, Foot, Hyprland, Hyprlock, Kvantum, and GDM/SDDM.
+* **Hyprland Configuration**: Note that Omybuntu uses `.conf` files for Hyprland configuration (unlike Omarchy, which uses `.lua`). This is a deliberate choice; we will maintain the `.conf` format until the Ubuntu packages for Hyprland are updated to fully support Lua.
 * **Config Overwrites**: The utility `omybuntu-refresh-config` copies default templates under `config/` to the user's `~/.config/` with automatic backups.
 
 ### 3. Integrated Launchers & TUIs

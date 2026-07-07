@@ -23,8 +23,9 @@ case "$CURRENT_LAYOUT" in
   *) NEW_LAYOUT=dwindle ;;
 esac
 
-if ! hyprctl eval "hl.workspace_rule({ workspace = \"$ACTIVE_WORKSPACE\", layout = \"$NEW_LAYOUT\" })" >/dev/null 2>&1; then
-  hyprctl keyword workspace "$ACTIVE_WORKSPACE, layout:$NEW_LAYOUT"
+if ! hyprctl keyword workspace "$ACTIVE_WORKSPACE, layout:$NEW_LAYOUT" >/dev/null 2>&1 &&
+  ! hyprctl eval "hl.workspace_rule({ workspace = \"$ACTIVE_WORKSPACE\", layout = \"$NEW_LAYOUT\" })" >/dev/null 2>&1; then
+  exit 1
 fi
 
 mkdir -p "$STATE_DIR"

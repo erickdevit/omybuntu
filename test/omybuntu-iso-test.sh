@@ -412,6 +412,10 @@ ascii_logo_content=$(<"$ROOT/bin/omybuntu-cmd-generate-ascii-logo")
   ok "ascii logo helper defaults to orange and renders line-by-line" || \
   nok "ascii logo helper does not render orange line-by-line assets"
 
+[[ $ascii_logo_content == *fc-match* && $ascii_logo_content == *NotoSansMono-Regular.ttf* ]] && \
+  ok "ascii logo helper resolves a real font file for chroot builds" || \
+  nok "ascii logo helper still depends on ImageMagick font aliases only"
+
 [[ -f $ROOT/bin/omybuntu-cmd-recolor-image-assets ]] && \
   ok "theme asset recolor helper exists" || \
   nok "theme asset recolor helper is missing"
@@ -429,6 +433,14 @@ sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
 [[ -x $ROOT/install/iso/casper-bottom/26omybuntu-sddm-autologin ]] && \
   ok "casper hook finalizes live SDDM autologin after user creation" || \
   nok "casper hook for live SDDM autologin is missing"
+
+casper_sddm_content=$(<"$ROOT/install/iso/casper-bottom/26omybuntu-sddm-autologin")
+if [[ $setup_iso_content == *Session=omybuntu.desktop* ]] \
+  && [[ $casper_sddm_content == *Session=omybuntu.desktop* ]]; then
+  ok "live SDDM autologin targets the omybuntu desktop file"
+else
+  nok "live SDDM autologin does not target the omybuntu desktop file"
+fi
 
 [[ -f $ROOT/install/iso/casper-bottom/15autologin ]] \
   && grep -q 'omybuntu.desktop' "$ROOT/install/iso/casper-bottom/15autologin" && \
@@ -509,9 +521,22 @@ echo "# Plymouth and Hibernation Ubuntu port checks"
 # Plymouth scripts rebuild initramfs
 refresh_plymouth_content=$(<"$ROOT/bin/omybuntu-refresh-plymouth")
 [[ $refresh_plymouth_content == *update-initramfs* ]] && ok "refresh-plymouth uses update-initramfs" || nok "refresh-plymouth does not use update-initramfs"
+[[ $refresh_plymouth_content == *'chown -R root:root'* && $refresh_plymouth_content == *'chmod 0755'* ]] && \
+  ok "refresh-plymouth normalizes theme ownership and permissions" || \
+  nok "refresh-plymouth does not normalize theme ownership and permissions"
 
 plymouth_reset_content=$(<"$ROOT/bin/omybuntu-plymouth-reset")
 [[ $plymouth_reset_content == *update-initramfs* ]] && ok "plymouth-reset uses update-initramfs" || nok "plymouth-reset does not use update-initramfs"
+
+plymouth_install_content=$(<"$ROOT/install/login/plymouth.sh")
+plymouth_set_content=$(<"$ROOT/bin/omybuntu-plymouth-set")
+if [[ $plymouth_install_content == *'chown -R root:root'* ]] \
+  && [[ $plymouth_reset_content == *'chown -R root:root'* ]] \
+  && [[ $plymouth_set_content == *'chown -R root:root'* ]]; then
+  ok "all Plymouth writers normalize theme ownership"
+else
+  nok "one or more Plymouth writers do not normalize theme ownership"
+fi
 
 # omybuntu-reinstall-configs calls grub refresh and not limine
 reinstall_configs_content=$(<"$ROOT/bin/omybuntu-reinstall-configs")

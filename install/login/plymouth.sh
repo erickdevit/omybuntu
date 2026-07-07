@@ -9,8 +9,12 @@ omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png" "$accent_hex"
 omybuntu-cmd-recolor-image-assets "$staging_dir" "$accent_hex" \
   bullet.png entry.png lock.png progress_bar.png progress_box.png
 
+sudo rm -rf "$theme_dir"
 sudo mkdir -p "$theme_dir"
 sudo cp -a "$staging_dir/." "$theme_dir/"
+sudo chown -R root:root "$theme_dir"
+sudo find "$theme_dir" -type d -exec chmod 0755 {} +
+sudo find "$theme_dir" -type f -exec chmod 0644 {} +
 
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then
   sudo plymouth-set-default-theme omybuntu

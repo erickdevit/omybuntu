@@ -56,7 +56,12 @@ for asset in bullet.png entry.png lock.png progress_bar.png; do
   magick "$staging_dir/$asset" -channel RGB +level-colors "#$text_hex","#$text_hex" "$staging_dir/$asset"
 done
 
+sudo rm -rf "$theme_dir"
+sudo mkdir -p "$theme_dir"
 sudo cp -a "$staging_dir/." "$theme_dir/"
+sudo chown -R root:root "$theme_dir"
+sudo find "$theme_dir" -type d -exec chmod 0755 {} +
+sudo find "$theme_dir" -type f -exec chmod 0644 {} +
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then
   sudo plymouth-set-default-theme omybuntu
 fi
@@ -87,3 +92,6 @@ for asset in entry lock; do
   sudo cp "$staging_dir/$asset-failed.png" "$sddm_dir/$asset-failed.png"
 done
 sudo rm -f "$sddm_dir/logo.svg"
+sudo chown -R root:root "$sddm_dir"
+sudo find "$sddm_dir" -type d -exec chmod 0755 {} +
+sudo find "$sddm_dir" -type f -exec chmod 0644 {} +

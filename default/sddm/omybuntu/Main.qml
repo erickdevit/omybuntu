@@ -47,7 +47,7 @@ Rectangle {
     Image {
       id: logo
       source: "logo.png"
-      width: Math.min(sourceSize.width, root.width * 0.85)
+      width: Math.min(sourceSize.width, root.width * 0.58, 520)
       height: sourceSize.width > 0 ? Math.round(width * sourceSize.height / sourceSize.width) : 0
       fillMode: Image.PreserveAspectFit
       anchors.horizontalCenter: parent.horizontalCenter

@@ -42,14 +42,14 @@ rm -f /root/etc/sddm.conf.d/99-omybuntu.conf
 cat >/root/etc/sddm.conf.d/zz-omybuntu-live.conf <<EOF
 [General]
 DisplayServer=wayland
-DefaultSession=omybuntu
+DefaultSession=omybuntu.desktop
 
 [Wayland]
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 
 [Autologin]
 User=$live_user
-Session=omybuntu
+Session=omybuntu.desktop
 Relogin=true
 
 [Theme]
@@ -62,6 +62,12 @@ fi
 
 if [ -n "$live_user" ]; then
   chroot /root passwd -d "$live_user" >/dev/null 2>&1 || true
+  for group in adm cdrom sudo dip plugdev users lpadmin video input render netdev; do
+    if chroot /root getent group "$group" >/dev/null 2>&1; then
+      chroot /root usermod -aG "$group" "$live_user" >/dev/null 2>&1 || true
+    fi
+  done
+  chroot /root chown -R "$live_user:$live_user" "/home/$live_user" >/dev/null 2>&1 || true
 fi
 
 log_end_msg

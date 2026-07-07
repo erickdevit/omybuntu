@@ -13,10 +13,11 @@ if ! dotnet --version &>/dev/null; then
 fi
 
 # 2. Spotify
+echo "  - Configuring Spotify repository..."
+curl -sS https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg || true
+echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list >/dev/null
 if ! command -v spotify &>/dev/null; then
   echo "  - Installing Spotify..."
-  curl -sS https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg | sudo gpg --dearmor --yes -o /etc/apt/trusted.gpg.d/spotify.gpg || true
-  echo "deb http://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list >/dev/null
   sudo apt-get update -qq || true
   sudo apt-get install -y -qq spotify-client || true
 fi

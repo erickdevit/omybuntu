@@ -49,7 +49,9 @@ fi
 
 mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
 cp "$ICON_PATH" ~/.local/share/icons/hicolor/48x48/apps/"$(basename "$ICON_PATH")"
-gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null
+if omybuntu-cmd-present gtk-update-icon-cache; then
+  gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null || true
+fi
 
 if [[ $WINDOW_STYLE == "float" ]]; then
   APP_CLASS="TUI.float"

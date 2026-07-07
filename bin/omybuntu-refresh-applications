@@ -6,7 +6,9 @@ OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
 
 mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
 cp "$OMYBUNTU_PATH"/applications/icons/*.png ~/.local/share/icons/hicolor/48x48/apps/
-gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null
+if omybuntu-cmd-present gtk-update-icon-cache; then
+  gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null || true
+fi
 
 # Copy .desktop declarations
 mkdir -p ~/.local/share/applications

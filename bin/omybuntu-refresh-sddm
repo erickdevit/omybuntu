@@ -9,8 +9,18 @@ theme_dir="/usr/share/sddm/themes/omybuntu"
 staging_dir=$(mktemp -d)
 trap 'rm -rf "$staging_dir"' EXIT
 
+accent_hex=f59e0b
+
 cp -a "$OMYBUNTU_PATH/default/sddm/omybuntu/." "$staging_dir/"
-omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png"
+omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png" "$accent_hex"
+omybuntu-cmd-recolor-image-assets "$staging_dir" "$accent_hex" \
+  bullet.png entry.png lock.png
+for asset in entry lock; do
+  magick "$staging_dir/$asset.png" -channel RGB +level-colors "#ef4444","#ef4444" \
+    "$staging_dir/$asset-failed.png"
+  magick "$staging_dir/lock.png" -channel RGB +level-colors "#ef4444","#ef4444" \
+    "$staging_dir/lock-failed.png"
+done
 
 sudo rm -rf "$theme_dir"
 sudo cp -a "$staging_dir/." "$theme_dir/"

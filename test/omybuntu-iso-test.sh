@@ -407,6 +407,15 @@ fi
   ok "ascii logo helper exists" || \
   nok "ascii logo helper is missing"
 
+ascii_logo_content=$(<"$ROOT/bin/omybuntu-cmd-generate-ascii-logo")
+[[ $ascii_logo_content == *f59e0b* && $ascii_logo_content == *-append* ]] && \
+  ok "ascii logo helper defaults to orange and renders line-by-line" || \
+  nok "ascii logo helper does not render orange line-by-line assets"
+
+[[ -f $ROOT/bin/omybuntu-cmd-recolor-image-assets ]] && \
+  ok "theme asset recolor helper exists" || \
+  nok "theme asset recolor helper is missing"
+
 plymouth_script_content=$(<"$ROOT/default/plymouth/omybuntu.script")
 [[ $plymouth_script_content == *'if (mode == "boot" || mode == "resume") {'* && $plymouth_script_content != *'&& global.password_shown == 1'* ]] && \
   ok "plymouth shows boot progress without LUKS password" || \

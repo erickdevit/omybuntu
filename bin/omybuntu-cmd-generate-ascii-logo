@@ -12,7 +12,7 @@ fi
 
 OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
 output_path="$1"
-text_hex="${2:-f5e6d3}"
+text_hex="${2:-f59e0b}"
 text_hex="${text_hex#\#}"
 
 logo_txt="$OMYBUNTU_PATH/logo.txt"
@@ -31,12 +31,29 @@ if ! [[ $text_hex =~ ^[0-9a-fA-F]{6}$ ]]; then
   exit 1
 fi
 
-logo_text=$(<"$logo_txt")
-font=""
-for candidate in "JetBrainsMono Nerd Font" "JetBrains Mono" "DejaVu-Sans-Mono-Bold" "DejaVu-Sans-Mono" "monospace"; do
-  if magick -font "$candidate" -pointsize 8 caption:"OMYBUNTU" null: 2>/dev/null; then
-    font="$candidate"
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
+
+probe_line=""
+while IFS= read -r line || [[ -n $line ]]; do
+  if [[ -n ${line//[[:space:]]} ]]; then
+    probe_line=$line
     break
+  fi
+done <"$logo_txt"
+
+font=""
+for candidate in "JetBrainsMono Nerd Font" "JetBrains Mono" "DejaVu-Sans-Mono" "Noto-Sans-Mono" "monospace"; do
+  probe="$tmpdir/font-probe.png"
+  probe_err="$tmpdir/font-probe.err"
+  if magick -background none -fill "#$text_hex" -font "$candidate" -pointsize 5 \
+    label:"$probe_line" "$probe" 2>"$probe_err"; then
+    probe_width=$(magick identify -format '%w' "$probe" 2>/dev/null || echo 0)
+    if [[ -s $probe ]] && ! grep -qi 'unable to read font' "$probe_err" \
+      && (( probe_width > 100 )); then
+      font="$candidate"
+      break
+    fi
   fi
 done
 
@@ -45,6 +62,21 @@ if [[ -z $font ]]; then
   exit 1
 fi
 
+line_files=()
+line_index=0
+while IFS= read -r line || [[ -n $line ]]; do
+  [[ -z ${line//[[:space:]]} ]] && continue
+  line_file="$tmpdir/line_$line_index.png"
+  magick -background none -fill "#$text_hex" -font "$font" -pointsize 5 \
+    label:"$line" "$line_file"
+  line_files+=("$line_file")
+  ((line_index++))
+done <"$logo_txt"
+
+if ((${#line_files[@]} == 0)); then
+  echo "ASCII logo source is empty: $logo_txt" >&2
+  exit 1
+fi
+
 mkdir -p "$(dirname "$output_path")"
-magick -background none -fill "#$text_hex" -font "$font" -pointsize 7 -size 900x120 \
-  caption:"$logo_text" "$output_path"
+magick "${line_files[@]}" -append "$output_path"

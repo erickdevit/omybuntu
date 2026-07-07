@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# omybuntu:summary=Recolor PNG theme assets to a single accent hex value
+# omybuntu:group=cmd
+# omybuntu:args=<directory> <accent-hex> <asset.png>...
+# omybuntu:hidden=true
+
+if (( $# < 3 )); then
+  echo "Usage: omybuntu-cmd-recolor-image-assets <directory> <accent-hex> <asset.png>..." >&2
+  exit 1
+fi
+
+asset_dir="$1"
+accent_hex="${2#\#}"
+shift 2
+
+if ! [[ $accent_hex =~ ^[0-9a-fA-F]{6}$ ]]; then
+  echo "Invalid accent color: $2 (expected #RRGGBB)" >&2
+  exit 1
+fi
+
+if ! command -v magick >/dev/null 2>&1; then
+  echo "ImageMagick (magick) is required to recolor theme assets" >&2
+  exit 1
+fi
+
+for asset in "$@"; do
+  asset_path="$asset_dir/$asset"
+  if [[ ! -f $asset_path ]]; then
+    echo "Asset not found: $asset_path" >&2
+    exit 1
+  fi
+  magick "$asset_path" -channel RGB +level-colors "#$accent_hex","#$accent_hex" "$asset_path"
+done

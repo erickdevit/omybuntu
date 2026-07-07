@@ -2,8 +2,12 @@ theme_dir="/usr/share/plymouth/themes/omybuntu"
 staging_dir=$(mktemp -d)
 trap 'rm -rf "$staging_dir"' EXIT
 
+accent_hex=f59e0b
+
 find "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/plymouth" -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
-omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png"
+omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png" "$accent_hex"
+omybuntu-cmd-recolor-image-assets "$staging_dir" "$accent_hex" \
+  bullet.png entry.png lock.png progress_bar.png progress_box.png
 
 sudo mkdir -p "$theme_dir"
 sudo cp -a "$staging_dir/." "$theme_dir/"

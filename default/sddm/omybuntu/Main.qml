@@ -6,7 +6,18 @@ Rectangle {
   anchors.fill: parent
   color: "#140a05"
 
-  property string currentUser: userModel.lastUser
+  property string currentUser: {
+    if (userModel.lastUser !== "")
+      return userModel.lastUser
+
+    for (var i = 0; i < userModel.rowCount(); i++) {
+      var userName = userModel.data(userModel.index(i, 0), Qt.UserRole + 1)
+      if (userName)
+        return userName.toString()
+    }
+
+    return "ubuntu"
+  }
   property bool loginFailed: false
   property int sessionIndex: {
     for (var i = 0; i < sessionModel.rowCount(); i++) {

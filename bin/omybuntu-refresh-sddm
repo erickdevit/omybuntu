@@ -5,5 +5,12 @@
 
 OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
 
-sudo rm -rf /usr/share/sddm/themes/omybuntu
-sudo cp -r "$OMYBUNTU_PATH/default/sddm/omybuntu" /usr/share/sddm/themes/omybuntu
+theme_dir="/usr/share/sddm/themes/omybuntu"
+staging_dir=$(mktemp -d)
+trap 'rm -rf "$staging_dir"' EXIT
+
+cp -a "$OMYBUNTU_PATH/default/sddm/omybuntu/." "$staging_dir/"
+omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png"
+
+sudo rm -rf "$theme_dir"
+sudo cp -a "$staging_dir/." "$theme_dir/"

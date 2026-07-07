@@ -109,7 +109,7 @@ bullet.image = Image("bullet.png");
 
 entry.sprite = Sprite(entry.image);
 entry.x = Window.GetWidth() / 2 - entry.image.GetWidth() / 2;
-entry.y = logo.sprite.GetY() + logo.image.GetHeight() + 40;
+entry.y = logo.sprite.GetY() + logo.image.GetHeight() + 96;
 entry.sprite.SetPosition(entry.x, entry.y, 10001);
 entry.sprite.SetOpacity(0);
 
@@ -135,8 +135,8 @@ fun display_normal_callback() {
   # Get current mode
   mode = Plymouth.GetMode();
 
-  # Only show progress bar for boot and resume modes after decryption (if LUKS is active)
-  if ((mode == "boot" || mode == "resume") && global.password_shown == 1) {
+  # Show the loading bar during boot and resume, including non-LUKS live boots.
+  if (mode == "boot" || mode == "resume") {
     show_progress_bar();
     start_fake_progress();
   }
@@ -185,7 +185,7 @@ progress_box.image = Image("progress_box.png");
 progress_box.sprite = Sprite(progress_box.image);
 
 progress_box.x = Window.GetWidth() / 2 - progress_box.image.GetWidth() / 2;
-progress_box.y = entry.y + entry.image.GetHeight() / 2 - progress_box.image.GetHeight() / 2;
+progress_box.y = logo.sprite.GetY() + logo.image.GetHeight() + 24;
 progress_box.sprite.SetPosition(progress_box.x, progress_box.y, 0);
 progress_box.sprite.SetOpacity(0);
 

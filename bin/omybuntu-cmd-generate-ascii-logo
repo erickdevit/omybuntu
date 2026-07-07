@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# omybuntu:summary=Render logo.txt ASCII art into a PNG for Plymouth and SDDM
+# omybuntu:group=cmd
+# omybuntu:args=<output-path> [text-hex]
+# omybuntu:hidden=true
+
+if [[ $# -lt 1 || $# -gt 2 ]]; then
+  echo "Usage: omybuntu-cmd-generate-ascii-logo <output-path> [text-hex]" >&2
+  exit 1
+fi
+
+OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
+output_path="$1"
+text_hex="${2:-f5e6d3}"
+text_hex="${text_hex#\#}"
+
+logo_txt="$OMYBUNTU_PATH/logo.txt"
+if [[ ! -f $logo_txt ]]; then
+  echo "ASCII logo source not found: $logo_txt" >&2
+  exit 1
+fi
+
+if ! command -v magick >/dev/null 2>&1; then
+  echo "ImageMagick (magick) is required to render the ASCII logo" >&2
+  exit 1
+fi
+
+if ! [[ $text_hex =~ ^[0-9a-fA-F]{6}$ ]]; then
+  echo "Invalid text color: $2 (expected #RRGGBB)" >&2
+  exit 1
+fi
+
+logo_text=$(<"$logo_txt")
+font=""
+for candidate in "JetBrainsMono Nerd Font" "JetBrains Mono" "DejaVu-Sans-Mono-Bold" "DejaVu-Sans-Mono" "monospace"; do
+  if magick -font "$candidate" -pointsize 8 caption:"OMYBUNTU" null: 2>/dev/null; then
+    font="$candidate"
+    break
+  fi
+done
+
+if [[ -z $font ]]; then
+  echo "No monospace font available to render the ASCII logo" >&2
+  exit 1
+fi
+
+mkdir -p "$(dirname "$output_path")"
+magick -background none -fill "#$text_hex" -font "$font" -pointsize 7 -size 900x120 \
+  caption:"$logo_text" "$output_path"

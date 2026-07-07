@@ -4,11 +4,13 @@ omybuntu-refresh-sddm
 # Setup SDDM login service
 sudo mkdir -p /usr/share/wayland-sessions
 sudo cp "$OMYBUNTU_PATH/default/wayland-sessions/omybuntu.desktop" /usr/share/wayland-sessions/omybuntu.desktop
+sudo cp "$OMYBUNTU_PATH/default/wayland-sessions/hyprland.desktop" /usr/share/wayland-sessions/hyprland.desktop
 sudo cp "$OMYBUNTU_PATH/default/sddm/hyprland.conf" /usr/share/sddm/hyprland.conf
 sudo rm -f /usr/share/sddm/hyprland.lua
 
-# Hide other desktop sessions so only Omybuntu is listed in SDDM
-for session in hyprland.desktop hyprland-uwsm.desktop ubuntu.desktop; do
+# Hide other desktop sessions so only Omybuntu is listed in SDDM.
+# Keep the hidden hyprland.desktop because uwsm still needs it as a launch target.
+for session in hyprland-uwsm.desktop ubuntu.desktop; do
   if [[ -f /usr/share/wayland-sessions/$session ]]; then
     sudo rm -f "/usr/share/wayland-sessions/$session"
   fi
@@ -30,6 +32,7 @@ CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 [Autologin]
 User=$USER
 Session=omybuntu
+Relogin=true
 
 [Theme]
 Current=omybuntu

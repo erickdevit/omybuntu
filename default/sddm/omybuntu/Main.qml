@@ -1,10 +1,9 @@
-import QtQuick 2.0
-import SddmComponents 2.0
+import QtQuick
+import SddmComponents
 
 Rectangle {
   id: root
-  width: 640
-  height: 480
+  anchors.fill: parent
   color: "#140a05"
 
   property string currentUser: userModel.lastUser
@@ -37,7 +36,7 @@ Rectangle {
     Image {
       id: logo
       source: "logo.png"
-      width: Math.min(sourceSize.width, root.width * 0.8)
+      width: Math.min(sourceSize.width, root.width * 0.85)
       height: sourceSize.width > 0 ? Math.round(width * sourceSize.height / sourceSize.width) : 0
       fillMode: Image.PreserveAspectFit
       anchors.horizontalCenter: parent.horizontalCenter

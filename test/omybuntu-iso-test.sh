@@ -382,7 +382,40 @@ echo "# SDDM, Waybar, Cursors and Installer sanity"
 
 # sddm.sh writes 99-omybuntu.conf
 sddm_content=$(<"$ROOT/install/login/sddm.sh")
+setup_iso_content=$(<"$ROOT/install/iso/setup-iso.sh")
 [[ $sddm_content == *99-omybuntu.conf* ]] && ok "sddm.sh configures 99-omybuntu.conf" || nok "sddm.sh does not configure 99-omybuntu.conf"
+
+[[ -f $ROOT/default/wayland-sessions/hyprland.desktop ]] && \
+  ok "hidden hyprland.desktop exists for uwsm" || \
+  nok "hidden hyprland.desktop is missing for uwsm"
+
+if [[ $sddm_content == *default/wayland-sessions/hyprland.desktop* ]] \
+  && ! grep -q 'for session in hyprland.desktop' <<<"$sddm_content"; then
+  ok "sddm.sh keeps hidden hyprland.desktop for uwsm"
+else
+  nok "sddm.sh still deletes hyprland.desktop"
+fi
+
+if [[ $setup_iso_content == *default/wayland-sessions/hyprland.desktop* ]] \
+  && ! grep -q 'for session in hyprland.desktop' <<<"$setup_iso_content"; then
+  ok "setup-iso.sh keeps hidden hyprland.desktop for uwsm"
+else
+  nok "setup-iso.sh still deletes hyprland.desktop"
+fi
+
+[[ -f $ROOT/bin/omybuntu-cmd-generate-ascii-logo ]] && \
+  ok "ascii logo helper exists" || \
+  nok "ascii logo helper is missing"
+
+plymouth_script_content=$(<"$ROOT/default/plymouth/omybuntu.script")
+[[ $plymouth_script_content == *'if (mode == "boot" || mode == "resume") {'* && $plymouth_script_content != *'&& global.password_shown == 1'* ]] && \
+  ok "plymouth shows boot progress without LUKS password" || \
+  nok "plymouth still gates boot progress behind LUKS password"
+
+sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
+[[ $sddm_metadata_content == *MainScript=Main.qml* && $sddm_metadata_content == *Theme-API=2.0* ]] && \
+  ok "sddm metadata declares MainScript and Theme-API" || \
+  nok "sddm metadata is incomplete"
 
 # icons.sh copies volantes cursors
 icons_content=$(<"$ROOT/install/packaging/icons.sh")
@@ -391,7 +424,6 @@ icons_content=$(<"$ROOT/install/packaging/icons.sh")
   nok "icons.sh does not copy volantes cursor themes"
 
 # setup-iso.sh blocks budgie and breeze themes
-setup_iso_content=$(<"$ROOT/install/iso/setup-iso.sh")
 [[ $setup_iso_content == *budgie-sddm-theme* && $setup_iso_content == *sddm-theme-breeze* ]] && \
   ok "setup-iso.sh blocks downstream sddm themes" || \
   nok "setup-iso.sh does not block downstream sddm themes"

@@ -1,4 +1,12 @@
-sudo cp -r "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/plymouth" /usr/share/plymouth/themes/omybuntu/
+theme_dir="/usr/share/plymouth/themes/omybuntu"
+staging_dir=$(mktemp -d)
+trap 'rm -rf "$staging_dir"' EXIT
+
+find "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/plymouth" -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
+omybuntu-cmd-generate-ascii-logo "$staging_dir/logo.png"
+
+sudo mkdir -p "$theme_dir"
+sudo cp -a "$staging_dir/." "$theme_dir/"
 
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then
   sudo plymouth-set-default-theme omybuntu

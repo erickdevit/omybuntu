@@ -219,7 +219,8 @@ DisplayServer=wayland\n\n\
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf\n\n\
 [Autologin]\n\
 User={username}\n\
-Session=omybuntu\n\n\
+Session=omybuntu\n\
+Relogin=true\n\n\
 [Theme]\n\
 Current=omybuntu\n",
     ),

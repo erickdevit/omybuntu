@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Hyprland
+Comment=Hyprland Wayland compositor (internal uwsm target)
+Exec=Hyprland
+DesktopNames=Hyprland
+Type=Application
+Hidden=true

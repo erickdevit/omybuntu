@@ -425,6 +425,10 @@ plymouth_script_content=$(<"$ROOT/default/plymouth/omybuntu.script")
   ok "plymouth shows boot progress without LUKS password" || \
   nok "plymouth still gates boot progress behind LUKS password"
 
+[[ $plymouth_script_content == *reset_progress_bar* && $plymouth_script_content == *progress_complete_threshold* ]] && \
+  ok "plymouth resets progress and ignores premature completion" || \
+  nok "plymouth can still draw a full progress bar prematurely"
+
 sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
 [[ $sddm_metadata_content == *MainScript=Main.qml* && $sddm_metadata_content == *Theme-API=2.0* ]] && \
   ok "sddm metadata declares MainScript and Theme-API" || \
@@ -435,16 +439,18 @@ sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
   nok "casper hook for live SDDM autologin is missing"
 
 casper_sddm_content=$(<"$ROOT/install/iso/casper-bottom/26omybuntu-sddm-autologin")
-if [[ $setup_iso_content == *Session=omybuntu.desktop* ]] \
-  && [[ $casper_sddm_content == *Session=omybuntu.desktop* ]]; then
-  ok "live SDDM autologin targets the omybuntu desktop file"
+if grep -q '^Session=omybuntu$' <<<"$setup_iso_content" \
+  && grep -q '^DefaultSession=omybuntu$' <<<"$setup_iso_content" \
+  && grep -q '^Session=omybuntu$' <<<"$casper_sddm_content" \
+  && grep -q '^DefaultSession=omybuntu$' <<<"$casper_sddm_content"; then
+  ok "live SDDM autologin targets the omybuntu session id"
 else
-  nok "live SDDM autologin does not target the omybuntu desktop file"
+  nok "live SDDM autologin does not target the omybuntu session id"
 fi
 
 [[ -f $ROOT/install/iso/casper-bottom/15autologin ]] \
-  && grep -q 'omybuntu.desktop' "$ROOT/install/iso/casper-bottom/15autologin" && \
-  ok "patched casper 15autologin knows the omybuntu session" || \
+  && grep -q 'sddm_session=omybuntu$' "$ROOT/install/iso/casper-bottom/15autologin" && \
+  ok "patched casper 15autologin uses the omybuntu session id" || \
   nok "patched casper 15autologin is missing omybuntu session support"
 
 if [[ $setup_iso_content == *zz-omybuntu-live.conf* && $setup_iso_content == *26omybuntu-sddm-autologin* ]] \
@@ -452,6 +458,13 @@ if [[ $setup_iso_content == *zz-omybuntu-live.conf* && $setup_iso_content == *26
   ok "setup-iso installs live autologin hooks without locking ubuntu"
 else
   nok "setup-iso live autologin setup is incomplete"
+fi
+
+if [[ $setup_iso_content == *'find /etc/skel -type l -print0'* ]] \
+  && [[ $setup_iso_content == *'/home/ubuntu/${target#/root/}'* ]]; then
+  ok "setup-iso rewrites /root symlink targets for the live user"
+else
+  nok "setup-iso does not rewrite /root symlink targets for the live user"
 fi
 
 # icons.sh copies volantes cursors

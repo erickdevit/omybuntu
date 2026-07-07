@@ -52,7 +52,7 @@ fi
 if [ -f /root/usr/bin/sddm ]; then
     # Omybuntu
     if [ -f /root/usr/share/wayland-sessions/omybuntu.desktop ]; then
-        sddm_session=omybuntu.desktop
+        sddm_session=omybuntu
     # Kubuntu
     elif [ -f /root/usr/share/wayland-sessions/kubuntu-live-environment.desktop ]; then
         sddm_session=kubuntu-live-environment.desktop

@@ -87,14 +87,14 @@ sudo rm -f /etc/sddm.conf.d/99-omybuntu.conf
 cat <<EOF | sudo tee /etc/sddm.conf.d/zz-omybuntu-live.conf > /dev/null
 [General]
 DisplayServer=wayland
-DefaultSession=omybuntu.desktop
+DefaultSession=omybuntu
 
 [Wayland]
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 
 [Autologin]
 User=ubuntu
-Session=omybuntu.desktop
+Session=omybuntu
 Relogin=true
 
 [Theme]
@@ -193,6 +193,15 @@ for dir in /etc/skel/.config /etc/skel/.local/share /etc/skel/.local/bin; do
     done < <(sudo grep -rl "/root/" "$dir" 2>/dev/null || true)
   fi
 done
+
+# The root install also creates absolute symlinks for current theme assets and
+# enabled user services. Text replacement above does not touch symlink targets.
+while IFS= read -r -d '' link; do
+  target=$(sudo readlink "$link")
+  if [[ $target == /root/* ]]; then
+    sudo ln -snf "/home/ubuntu/${target#/root/}" "$link"
+  fi
+done < <(sudo find /etc/skel -type l -print0 2>/dev/null || true)
 
 # Remove Chromium singleton lock that may have been created during install
 sudo rm -rf /etc/skel/.config/chromium/SingletonLock

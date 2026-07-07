@@ -42,14 +42,14 @@ rm -f /root/etc/sddm.conf.d/99-omybuntu.conf
 cat >/root/etc/sddm.conf.d/zz-omybuntu-live.conf <<EOF
 [General]
 DisplayServer=wayland
-DefaultSession=omybuntu.desktop
+DefaultSession=omybuntu
 
 [Wayland]
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf
 
 [Autologin]
 User=$live_user
-Session=omybuntu.desktop
+Session=omybuntu
 Relogin=true
 
 [Theme]

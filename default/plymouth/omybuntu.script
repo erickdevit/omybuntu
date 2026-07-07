@@ -28,6 +28,7 @@ global.fake_progress = 0.0;
 global.real_progress = 0.0;
 global.fake_progress_active = 0;
 global.fake_progress_start_time = 0.0;  # Track when fake progress started
+global.progress_complete_threshold = 0.98;
 global.password_shown = 0;  # Track if password dialog has been shown
 global.max_progress = 0.0;  # Track the maximum progress reached to prevent backwards movement
 
@@ -72,6 +73,12 @@ fun update_progress_bar(progress) {
   }
 }
 
+fun reset_progress_bar() {
+  global.max_progress = 0.0;
+  progress_bar.image = progress_bar.original_image.Scale(1, progress_bar.original_image.GetHeight());
+  progress_bar.sprite.SetImage(progress_bar.image);
+}
+
 fun show_progress_bar() {
   progress_box.sprite.SetOpacity(1);
   progress_bar.sprite.SetOpacity(1);
@@ -104,6 +111,7 @@ fun start_fake_progress() {
   global.max_progress = 0.0;
   global.fake_progress = 0.0;
   global.fake_progress_start_time = 0.0;
+  reset_progress_bar();
 }
 
 fun stop_fake_progress() {
@@ -214,6 +222,12 @@ fun progress_callback(duration, progress) {
   }
 
   global.real_progress = progress;
+
+  # Live boots can report completion before the compositor session is visible.
+  # Keep the timed progress running instead of drawing a full bar too early.
+  if (global.fake_progress_active == 1 && progress > global.progress_complete_threshold) {
+    return;
+  }
 
   # Use real progress once its unfrozen and exceeds fake progress
   if (duration > global.fake_progress_start_time && progress > global.fake_progress) {

@@ -24,12 +24,28 @@ sudo rm -f /etc/sddm.conf.d/50-ubuntu-budgie.conf
 sudo rm -f /etc/sddm.conf.d/zz-omybuntu-live.conf
 
 sddm_autologin_block=""
-if [[ -z ${OMYBUNTU_ISO_BUILD:-} ]]; then
-  sddm_autologin_block="
+# Live ISO uses zz-omybuntu-live.conf; chroot installs are finalized after user creation.
+if [[ -z ${OMYBUNTU_ISO_BUILD:-} && -z ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
+  omybuntu_encrypted_install=false
+  if [[ ${OMYBUNTU_ENCRYPTED_INSTALL:-} == "true" ]]; then
+    omybuntu_encrypted_install=true
+  elif [[ -f /etc/crypttab ]] && grep -qE '^[^#[:space:]]' /etc/crypttab; then
+    omybuntu_encrypted_install=true
+  fi
+
+  if [[ $omybuntu_encrypted_install == true ]]; then
+    autologin_user="${USER:-}"
+    if [[ $autologin_user == "root" && -n ${SUDO_USER:-} ]]; then
+      autologin_user="$SUDO_USER"
+    fi
+    if [[ -n $autologin_user && $autologin_user != "root" ]]; then
+      sddm_autologin_block="
 [Autologin]
-User=$USER
+User=$autologin_user
 Session=omybuntu
 Relogin=true"
+    fi
+  fi
 fi
 
 cat <<EOF | sudo tee /etc/sddm.conf.d/99-omybuntu.conf >/dev/null

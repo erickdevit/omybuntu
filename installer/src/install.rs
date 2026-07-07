@@ -207,20 +207,28 @@ fn prepare_omybuntu_source_link(target: &str) -> Result<(), String> {
     .map_err(|e| format!("Failed to link root Omybuntu source: {e}"))
 }
 
-fn configure_target_login(target: &str, username: &str) -> Result<(), String> {
+fn configure_target_login(target: &str, username: &str, encrypted: bool) -> Result<(), String> {
   std::fs::create_dir_all(format!("{target}/etc/sddm.conf.d"))
     .map_err(|e| format!("Failed to create sddm.conf.d: {e}"))?;
+  let autologin_block = if encrypted {
+    format!(
+      "[Autologin]\n\
+User={username}\n\
+Session=omybuntu\n\
+Relogin=true\n\n",
+    )
+  } else {
+    String::new()
+  };
   write_file(
     &format!("{target}/etc/sddm.conf.d/99-omybuntu.conf"),
     &format!(
       "[General]\n\
-DisplayServer=wayland\n\n\
+DisplayServer=wayland\n\
+DefaultSession=omybuntu\n\n\
 [Wayland]\n\
 CompositorCommand=start-hyprland -- --config /usr/share/sddm/hyprland.conf\n\n\
-[Autologin]\n\
-User={username}\n\
-Session=omybuntu\n\
-Relogin=true\n\n\
+{autologin_block}\
 [Theme]\n\
 Current=omybuntu\n",
     ),
@@ -560,6 +568,11 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   // ── 15. Run Omybuntu install.sh inside chroot ────────────────────────────
   prog(tx, 72, "Configuring Omybuntu system (install.sh)...");
   let target_user_env = format!("OMYBUNTU_TARGET_USER={}", cfg.username);
+  let encrypted_install_env = if cfg.encrypt {
+    "OMYBUNTU_ENCRYPTED_INSTALL=true"
+  } else {
+    "OMYBUNTU_ENCRYPTED_INSTALL=false"
+  };
   let status = Command::new("chroot")
     .arg(target)
     .arg("/usr/bin/env")
@@ -576,6 +589,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
       "OMYBUNTU_INSTALL_LOG_FILE=/var/log/omybuntu-install.log",
       "OMYBUNTU_ONLINE_INSTALL=true",
       "OMYBUNTU_CHROOT_INSTALL=true",
+      encrypted_install_env,
       "DEBIAN_FRONTEND=noninteractive",
     ])
     .arg(target_user_env)
@@ -623,7 +637,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
       &format!("/home/{}", cfg.username),
     ])
     .status().ok();
-  configure_target_login(target, &cfg.username)?;
+  configure_target_login(target, &cfg.username, cfg.encrypt)?;
 
   // ── 18. GRUB ─────────────────────────────────────────────────────────────
   prog(tx, 88, "Installing GRUB bootloader...");

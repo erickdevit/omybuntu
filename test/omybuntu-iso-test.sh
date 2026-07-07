@@ -484,8 +484,17 @@ installer_install_content=$(<"$ROOT/installer/src/install.rs")
   nok "installer target-user chroot environment is incorrect"
 
 [[ $installer_install_content == *configure_target_login* && $installer_install_content == *display-manager.service* ]] && \
-  ok "installer rewrites SDDM autologin for created user" || \
-  nok "installer does not rewrite SDDM autologin for created user"
+  ok "installer configures SDDM login for created user" || \
+  nok "installer does not configure SDDM login for created user"
+
+[[ $installer_install_content == *OMYBUNTU_ENCRYPTED_INSTALL* && $installer_install_content == *cfg.encrypt* ]] && \
+  ok "installer enables SDDM autologin only for encrypted installs" || \
+  nok "installer does not gate SDDM autologin on encryption"
+
+sddm_install_content=$(<"$ROOT/install/login/sddm.sh")
+[[ $sddm_install_content == *omybuntu_encrypted_install* && $sddm_install_content == *OMYBUNTU_CHROOT_INSTALL* ]] && \
+  ok "install/login/sddm.sh gates autologin on encryption outside live ISO" || \
+  nok "install/login/sddm.sh does not gate autologin on encryption"
 
 installer_app_content=$(<"$ROOT/installer/src/app.rs")
 [[ $installer_app_content == *valid_username* && $installer_app_content == *valid_hostname* ]] && \

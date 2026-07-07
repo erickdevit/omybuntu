@@ -1,10 +1,16 @@
 #!/bin/bash
 
 # omybuntu:summary=Launch an app or focus an existing window matching a pattern
-# omybuntu:args=<window-pattern> <launch-command>
+# omybuntu:args=[--bring] <window-pattern> <launch-command>
+
+BRING_TO_CURRENT=0
+if [[ $1 == "--bring" ]]; then
+  BRING_TO_CURRENT=1
+  shift
+fi
 
 if (($# == 0)); then
-  echo "Usage: omybuntu-launch-or-focus [window-pattern] [launch-command]"
+  echo "Usage: omybuntu-launch-or-focus [--bring] [window-pattern] [launch-command]"
   exit 1
 fi
 
@@ -13,6 +19,10 @@ LAUNCH_COMMAND="${2:-"uwsm-app -- $WINDOW_PATTERN"}"
 WINDOW_ADDRESS=$(hyprctl clients -j | jq -r --arg p "$WINDOW_PATTERN" '.[]|select((.class|test("\\b" + $p + "\\b";"i")) or (.title|test("\\b" + $p + "\\b";"i")))|.address' | head -n1)
 
 if [[ -n $WINDOW_ADDRESS ]]; then
+  if (( BRING_TO_CURRENT )); then
+    ACTIVE_WORKSPACE=$(hyprctl activeworkspace -j | jq -r .id)
+    hyprctl dispatch movetoworkspacesilent "$ACTIVE_WORKSPACE,address:$WINDOW_ADDRESS" >/dev/null 2>&1
+  fi
   hyprctl dispatch "hl.dsp.focus({ window = \"address:$WINDOW_ADDRESS\" })" >/dev/null 2>&1 || hyprctl dispatch focuswindow "address:$WINDOW_ADDRESS"
 else
   eval exec setsid $LAUNCH_COMMAND

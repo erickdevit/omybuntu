@@ -6,4 +6,4 @@
 APP_ID="org.omybuntu.$(basename "$1")"
 LAUNCH_COMMAND="omybuntu-launch-tui $@"
 
-exec omybuntu-launch-or-focus "$APP_ID" "$LAUNCH_COMMAND"
+exec omybuntu-launch-or-focus --bring "$APP_ID" "$LAUNCH_COMMAND"

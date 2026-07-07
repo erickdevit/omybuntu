@@ -4,29 +4,12 @@
 
 source "${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}/default/i18n/init.sh"
 
-flag="$HOME/.local/state/omybuntu/toggles/idle-lock-off"
-
-ensure_hypridle_running() {
-  if pgrep -x hypridle >/dev/null; then
-    return 0
-  fi
-
-  if command -v uwsm-app >/dev/null 2>&1; then
-    uwsm-app -- hypridle >/dev/null 2>&1 &
-  else
-    hypridle >/dev/null 2>&1 &
-  fi
-}
-
-if [[ -f $flag ]] || ! pgrep -x hypridle >/dev/null; then
-  rm -f "$flag"
-  ensure_hypridle_running
-  omybuntu-notification-send -g 󱫖 "$I18N_TOG_IDLE_START"
-else
-  mkdir -p "$(dirname "$flag")"
-  touch "$flag"
-  ensure_hypridle_running
+if pgrep -x hypridle >/dev/null; then
+  pkill -x hypridle
   omybuntu-notification-send -g 󱫖 "$I18N_TOG_IDLE_STOP"
+else
+  uwsm-app -- hypridle >/dev/null 2>&1 &
+  omybuntu-notification-send -g 󱫖 "$I18N_TOG_IDLE_START"
 fi
 
 pkill -RTMIN+9 waybar

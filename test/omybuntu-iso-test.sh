@@ -242,24 +242,6 @@ if [[ -f $OMYBUNTU_TOGGLES ]]; then
     nok "omybuntu-toggles.sh still references flags.lua"
 fi
 
-hypridle_content=$(<"$ROOT/config/hypr/hypridle.conf")
-[[ $hypridle_content == *'idle-lock-off || omybuntu-system-lock'* ]] && \
-  ok "hypridle idle lock respects idle-lock-off" || \
-  nok "hypridle idle lock ignores idle-lock-off"
-[[ $hypridle_content == *'suspend-off || systemctl suspend'* ]] && \
-  ok "hypridle idle suspend respects suspend-off" || \
-  nok "hypridle idle suspend ignores suspend-off"
-
-toggle_idle_content=$(<"$ROOT/bin/omybuntu-toggle-idle")
-[[ $toggle_idle_content == *idle-lock-off* && $toggle_idle_content != *'pkill -x hypridle'* ]] && \
-  ok "toggle-idle keeps hypridle running" || \
-  nok "toggle-idle still stops hypridle"
-
-idle_indicator_content=$(<"$ROOT/default/waybar/indicators/idle.sh")
-[[ $idle_indicator_content == *idle-lock-off* && $idle_indicator_content == *'Hypridle is not running'* ]] && \
-  ok "idle indicator distinguishes lock toggle from stopped daemon" || \
-  nok "idle indicator does not distinguish lock toggle from stopped daemon"
-
 # ------------------------------------------------------------------
 # build-iso.sh must have essential packages
 # ------------------------------------------------------------------

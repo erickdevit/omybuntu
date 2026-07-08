@@ -155,9 +155,19 @@ fn mount_virtual_fs(target: &str) -> Result<(), String> {
 }
 
 fn unmount_virtual_fs(target: &str) {
+  let policy_path = format!("{target}/usr/sbin/policy-rc.d");
+  let _ = std::fs::remove_file(policy_path);
+
   for mp in &["/sys", "/proc", "/dev/pts", "/dev"] {
     silent_cmd(&["umount", "-lf", &format!("{target}{mp}")]);
   }
+}
+
+fn write_policy_rc_d(target: &str) -> Result<(), String> {
+  let path = format!("{target}/usr/sbin/policy-rc.d");
+  write_file(&path, "#!/bin/sh\nexit 101\n")?;
+  cmd(&["chmod", "+x", &path])?;
+  Ok(())
 }
 
 struct TargetCleanup {
@@ -545,6 +555,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   // ── 9. Mount virtual filesystems for chroot ───────────────────────────────
   prog(tx, 60, "Mounting virtual filesystems for chroot...");
   mount_virtual_fs(target)?;
+  write_policy_rc_d(target)?;
 
   prog(tx, 61, "Installing bootstrap packages inside chroot...");
   cmd(&[

@@ -100,10 +100,10 @@ else
   nok "copies .local/state to skel"
 fi
 
-if grep -q 's|/root/|/home/ubuntu/|g' <<<"$setup_content"; then
-  ok "replaces /root/ with /home/ubuntu/"
+if grep -q 's|/root/|/home/$LIVE_USER/|g' <<<"$setup_content"; then
+  ok "replaces /root/ with the configured live user home"
 else
-  nok "replaces /root/ with /home/ubuntu/"
+  nok "replaces /root/ with the configured live user home"
 fi
 
 if [[ $setup_content == */etc/skel/.config* ]]; then
@@ -124,7 +124,7 @@ else
   nok "setup-iso.sh forces SDDM display-manager and graphical target"
 fi
 
-if [[ $setup_content == */etc/casper.conf* && $setup_content == *USERNAME=\"ubuntu\"* ]]; then
+if [[ $setup_content == */etc/casper.conf* && $setup_content == *'USERNAME="$LIVE_USER"'* ]]; then
   ok "setup-iso.sh defines the live casper user"
 else
   nok "setup-iso.sh defines the live casper user"
@@ -150,6 +150,15 @@ if [[ $setup_content == *'theme/backgrounds/omybuntu.png'* ]] \
   ok "setup-iso.sh seeds live wallpaper and GTK cursor theme"
 else
   nok "setup-iso.sh does not seed live wallpaper and GTK cursor theme"
+fi
+
+user_dirs_content=$(<"$ROOT/install/config/user-dirs.sh")
+if [[ $user_dirs_content == *Documents* ]] \
+  && [[ $user_dirs_content == *Projects* ]] \
+  && [[ $user_dirs_content != *'for dir in Downloads Projects Pictures Videos'* ]]; then
+  ok "user-dirs bookmarks Documents and removes stale Projects"
+else
+  nok "user-dirs does not replace the Projects bookmark with Documents"
 fi
 
 # ------------------------------------------------------------------
@@ -423,9 +432,13 @@ else
   nok "setup-iso.sh still deletes hyprland.desktop"
 fi
 
-[[ $setup_iso_content == *'Exec=alacritty -e omybuntu-setup-install'* ]] && \
-  ok "live installer autostart uses alacritty" || \
-  nok "live installer autostart still uses a fragile terminal"
+if [[ $setup_iso_content == *'Exec=/opt/omybuntu/bin/omybuntu-launch-tui /opt/omybuntu/bin/omybuntu-setup-install'* ]] \
+  && [[ $setup_iso_content == *'exec-once = sleep 3 && /opt/omybuntu/bin/omybuntu-launch-tui /opt/omybuntu/bin/omybuntu-setup-install'* ]] \
+  && [[ $setup_iso_content == *'99-omybuntu-live-installer'* ]]; then
+  ok "live installer autostarts through Hyprland with sudo allowance"
+else
+  nok "live installer does not autostart through Hyprland"
+fi
 
 [[ -f $ROOT/bin/omybuntu-cmd-generate-ascii-logo ]] && \
   ok "ascii logo helper exists" || \
@@ -485,7 +498,7 @@ else
 fi
 
 if [[ $setup_iso_content == *'find /etc/skel -type l -print0'* ]] \
-  && [[ $setup_iso_content == *'/home/ubuntu/${target#/root/}'* ]]; then
+  && [[ $setup_iso_content == *'/home/$LIVE_USER/${target#/root/}'* ]]; then
   ok "setup-iso rewrites /root symlink targets for the live user"
 else
   nok "setup-iso does not rewrite /root symlink targets for the live user"
@@ -567,6 +580,15 @@ plymouth_reset_content=$(<"$ROOT/bin/omybuntu-plymouth-reset")
 
 plymouth_install_content=$(<"$ROOT/install/login/plymouth.sh")
 plymouth_set_content=$(<"$ROOT/bin/omybuntu-plymouth-set")
+if [[ $refresh_plymouth_content == *track_hex* ]] \
+  && [[ $plymouth_reset_content == *track_hex* ]] \
+  && [[ $plymouth_install_content == *track_hex* ]] \
+  && ! grep -q 'progress_bar\.png progress_box\.png' <<<"$refresh_plymouth_content$plymouth_reset_content$plymouth_install_content"; then
+  ok "Plymouth default progress bar keeps a contrasting track color"
+else
+  nok "Plymouth default progress bar still recolors track and fill together"
+fi
+
 if [[ $plymouth_install_content == *'chown -R root:root'* ]] \
   && [[ $plymouth_reset_content == *'chown -R root:root'* ]] \
   && [[ $plymouth_set_content == *'chown -R root:root'* ]]; then
@@ -741,8 +763,13 @@ done
 
 packaging_all_content=$(<"$ROOT/install/packaging/all.sh")
 [[ $packaging_all_content == *OMYBUNTU_ISO_BUILD* && $packaging_all_content == *packaging/ghostty.sh* && $packaging_all_content == *packaging/chrome.sh* ]] && \
-  ok "ISO build skips default Ghostty and Chrome installers" || \
-  nok "ISO build still installs Ghostty or Chrome by default"
+  ok "ISO build skips Ghostty but keeps Chrome installed" || \
+  nok "ISO build does not keep the intended browser/terminal package policy"
+
+chrome_install_content=$(<"$ROOT/install/packaging/chrome.sh")
+[[ $chrome_install_content == *patch_chrome_desktop_file* && $chrome_install_content == *google-chrome.desktop* && $chrome_install_content == *chrome-flags.conf* ]] && \
+  ok "Chrome install patches the live launcher with Omybuntu flags" || \
+  nok "Chrome install does not patch the live launcher with Omybuntu flags"
 
 tuis_content=$(<"$ROOT/install/packaging/tuis.sh")
 [[ $tuis_content == *'omybuntu-tui-install "Disk Usage" "gdu"'* && $tuis_content != *'omybuntu-tui-install "Docker"'* ]] && \

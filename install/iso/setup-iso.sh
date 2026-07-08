@@ -64,7 +64,7 @@ cat <<EOF | sudo tee /etc/skel/.config/autostart/omybuntu-installer.desktop > /d
 [Desktop Entry]
 Type=Application
 Name=Install Omybuntu
-Exec=omybuntu-launch-tui omybuntu-setup-install
+Exec=/opt/omybuntu/bin/omybuntu-launch-tui /opt/omybuntu/bin/omybuntu-setup-install
 Icon=system-software-install
 Categories=System;
 Terminal=false
@@ -80,6 +80,11 @@ Terminal=false
 EOF
 
 sudo ln -snf /opt/omybuntu/bin/omybuntu-live-session-setup /usr/local/bin/omybuntu-live-session-setup
+
+cat <<EOF | sudo tee /etc/sudoers.d/99-omybuntu-live-installer > /dev/null
+$LIVE_USER ALL=(ALL) NOPASSWD: /usr/local/bin/omybuntu-installer
+EOF
+sudo chmod 0440 /etc/sudoers.d/99-omybuntu-live-installer
 
 # Ensure SDDM assets, session, and greeter compositor are present even if
 # package postinst scripts skipped display-manager setup inside the chroot.
@@ -245,6 +250,17 @@ for gtk_version in gtk-3.0 gtk-4.0; do
     rm -f "$bookmark_tmp"
   fi
 done
+
+live_hypr_autostart="/etc/skel/.config/hypr/autostart.conf"
+sudo mkdir -p /etc/skel/.config/hypr
+sudo touch "$live_hypr_autostart"
+sudo sed -i '/^# Live ISO startup$/d;/omybuntu-live-session-setup/d;/omybuntu-setup-install/d' "$live_hypr_autostart"
+cat <<EOF | sudo tee -a "$live_hypr_autostart" >/dev/null
+
+# Live ISO startup
+exec-once = /usr/local/bin/omybuntu-live-session-setup
+exec-once = sleep 3 && /opt/omybuntu/bin/omybuntu-launch-tui /opt/omybuntu/bin/omybuntu-setup-install
+EOF
 
 # The live username can vary by casper boot path. Keep theme-owned assets
 # relative inside the profile so wallpaper startup does not depend on a fixed home path.

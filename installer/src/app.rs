@@ -91,6 +91,7 @@ pub enum Step {
 }
 
 impl Step {
+    #[allow(dead_code)]
     pub fn index(&self) -> usize {
         match self {
             Step::Welcome     => 0,

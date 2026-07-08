@@ -12,12 +12,14 @@ use crate::theme;
 // ─── Welcome logo ─────────────────────────────────────────────────────────────
 
 const LOGO: &[&str] = &[
-    r" ██████╗ ███╗   ███╗██╗   ██╗██████╗ ██╗   ██╗███╗   ██╗████████╗██╗   ██╗",
-    r"██╔═══██╗████╗ ████║╚██╗ ██╔╝██╔══██╗██║   ██║████╗  ██║╚══██╔══╝██║   ██║",
-    r"██║   ██║██╔████╔██║ ╚████╔╝ ██████╔╝██║   ██║██╔██╗ ██║   ██║   ██║   ██║",
-    r"██║   ██║██║╚██╔╝██║  ╚██╔╝  ██╔══██╗██║   ██║██║╚██╗██║   ██║   ██║   ██║",
-    r"╚██████╔╝██║ ╚═╝ ██║   ██║   ██████╔╝╚██████╔╝██║ ╚████║   ██║   ╚██████╔╝",
-    r" ╚═════╝ ╚═╝     ╚═╝   ╚═╝   ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝   ╚═╝    ╚═════╝",
+    r" ▄██████▄    ▄▄▄▄███▄▄▄▄   ▄██   ▄   ▀█████████▄  ███    █▄  ███▄▄▄▄       ███     ███    █▄ ",
+    r"███    ███ ▄██▀▀▀███▀▀▀██▄ ███   ██▄   ███    ███ ███    ███ ███▀▀▀██▄ ▀█████████▄ ███    ███",
+    r"███    ███ ███   ███   ███ ███▄▄▄███   ███    ███ ███    ███ ███   ███    ▀███▀▀██ ███    ███",
+    r"███    ███ ███   ███   ███ ▀▀▀▀▀▀███  ▄███▄▄▄██▀  ███    ███ ███   ███     ███   ▀ ███    ███",
+    r"███    ███ ███   ███   ███ ▄██   ███ ▀▀███▀▀▀██▄  ███    ███ ███   ███     ███     ███    ███",
+    r"███    ███ ███   ███   ███ ███   ███   ███    ██▄ ███    ███ ███   ███     ███     ███    ███",
+    r"███    ███ ███   ███   ███ ███   ███   ███    ███ ███    ███ ███   ███     ███     ███    ███",
+    r" ▀██████▀   ▀█   ███   █▀   ▀█████▀  ▄█████████▀  ████████▀   ▀█   █▀     ▄████▀   ████████▀",
 ];
 
 // ─── Main draw ────────────────────────────────────────────────────────────────
@@ -84,13 +86,8 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         Step::Done        => "[←→] Choose  [Enter] Confirm",
     };
 
-    let progress = match app.step {
-        Step::Installing => app.install_progress,
-        Step::Done       => 100,
-        other            => other.index() as u16 * 100 / 8,
-    };
-
     if app.step == Step::Installing {
+        let progress = app.install_progress;
         frame.render_widget(
             Gauge::default()
                 .block(
@@ -104,7 +101,8 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
                 .label(format!("{progress}%")),
             area,
         );
-    } else {
+    } else if app.step == Step::Done {
+        let progress = 100;
         let cols = Layout::horizontal([Constraint::Percentage(70), Constraint::Percentage(30)])
             .split(area);
 
@@ -133,6 +131,19 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
                 .style(theme::muted())
                 .alignment(Alignment::Center),
             cols[1],
+        );
+    } else {
+        frame.render_widget(
+            Paragraph::new(hints)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Rounded)
+                        .border_style(theme::normal_border()),
+                )
+                .style(theme::muted())
+                .alignment(Alignment::Center),
+            area,
         );
     }
 }

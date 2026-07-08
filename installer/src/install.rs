@@ -56,12 +56,17 @@ fn prog(tx: &Sender<InstallMessage>, percent: u16, msg: &str) {
 }
 
 fn cmd(args: &[&str]) -> Result<(), String> {
-  let status = Command::new(args[0])
+  let output = Command::new(args[0])
     .args(&args[1..])
-    .status()
+    .output()
     .map_err(|e| format!("Failed to run '{}': {}", args[0], e))?;
-  if !status.success() {
-    return Err(format!("Command failed: {}", args.join(" ")));
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if !stderr.is_empty() {
+      return Err(format!("Command failed: {}\nError: {}", args.join(" "), stderr));
+    } else {
+      return Err(format!("Command failed: {}", args.join(" ")));
+    }
   }
   Ok(())
 }
@@ -70,18 +75,33 @@ fn cmd_stdin(args: &[&str], input: &[u8]) -> Result<(), String> {
   let mut child = Command::new(args[0])
     .args(&args[1..])
     .stdin(Stdio::piped())
+    .stdout(Stdio::piped())
+    .stderr(Stdio::piped())
     .spawn()
     .map_err(|e| format!("Failed to spawn '{}': {}", args[0], e))?;
-  if let Some(stdin) = child.stdin.as_mut() {
+  if let Some(mut stdin) = child.stdin.take() {
     stdin.write_all(input)
       .map_err(|e| format!("Failed to write stdin: {e}"))?;
   }
-  let status = child.wait()
+  let output = child.wait_with_output()
     .map_err(|e| format!("Failed to wait for '{}': {}", args[0], e))?;
-  if !status.success() {
-    return Err(format!("Command failed: {}", args.join(" ")));
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if !stderr.is_empty() {
+      return Err(format!("Command failed: {}\nError: {}", args.join(" "), stderr));
+    } else {
+      return Err(format!("Command failed: {}", args.join(" ")));
+    }
   }
   Ok(())
+}
+
+fn silent_cmd(args: &[&str]) {
+  let _ = Command::new(args[0])
+    .args(&args[1..])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .status();
 }
 
 fn write_file(path: &str, content: &str) -> Result<(), String> {
@@ -136,7 +156,7 @@ fn mount_virtual_fs(target: &str) -> Result<(), String> {
 
 fn unmount_virtual_fs(target: &str) {
   for mp in &["/sys", "/proc", "/dev/pts", "/dev"] {
-    let _ = Command::new("umount").args(["-lf", &format!("{target}{mp}")]).status();
+    silent_cmd(&["umount", "-lf", &format!("{target}{mp}")]);
   }
 }
 
@@ -159,10 +179,10 @@ impl Drop for TargetCleanup {
     unmount_virtual_fs(&self.target);
     for mp in &["/boot/efi", "/home", "/.snapshots", ""] {
       let path = format!("{}{}", self.target, mp);
-      let _ = Command::new("umount").args(["-lf", &path]).status();
+      silent_cmd(&["umount", "-lf", &path]);
     }
     if self.encrypted {
-      let _ = Command::new("cryptsetup").args(["close", "omybuntu_crypt"]).status();
+      silent_cmd(&["cryptsetup", "close", "omybuntu_crypt"]);
     }
   }
 }
@@ -278,7 +298,7 @@ Current=omybuntu\n",
 
 fn clean_disk_mounts(disk: &str) -> Result<(), String> {
   // 0. Deactivate LVM volume groups to avoid locked partitions
-  let _ = Command::new("vgchange").args(["-an"]).status();
+  silent_cmd(&["vgchange", "-an"]);
 
   // 1. Run swapoff on any partition of the disk
   if let Ok(file) = std::fs::File::open("/proc/swaps") {
@@ -286,7 +306,7 @@ fn clean_disk_mounts(disk: &str) -> Result<(), String> {
     for line in reader.lines().map_while(Result::ok) {
       let parts: Vec<&str> = line.split_whitespace().collect();
       if !parts.is_empty() && (parts[0].starts_with(disk) || parts[0] == disk) {
-        let _ = Command::new("swapoff").arg(parts[0]).status();
+        silent_cmd(&["swapoff", parts[0]]);
       }
     }
   }
@@ -305,7 +325,7 @@ fn clean_disk_mounts(disk: &str) -> Result<(), String> {
   // Sort mounts by mount point path length descending to unmount nested mounts first
   mounts.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
   for (_, mp) in &mounts {
-    let _ = Command::new("umount").args(["-lf", mp]).status();
+    silent_cmd(&["umount", "-lf", mp]);
   }
 
   // 3. Check for any holder device mapper (LUKS) mappings.
@@ -322,7 +342,7 @@ fn clean_disk_mounts(disk: &str) -> Result<(), String> {
             if let Ok(crypt_name) = std::fs::read_to_string(&crypt_name_path) {
               let crypt_name = crypt_name.trim();
               if !crypt_name.is_empty() {
-                let _ = Command::new("cryptsetup").args(["close", crypt_name]).status();
+                silent_cmd(&["cryptsetup", "close", crypt_name]);
               }
             }
           }
@@ -397,13 +417,15 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     eprintln!("Trying to wipe partition headers with dd...");
     let dd_res = Command::new("dd")
       .args(["if=/dev/zero", &format!("of={}", cfg.disk), "bs=1M", "count=10", "oflag=direct"])
+      .stdout(Stdio::null())
+      .stderr(Stdio::null())
       .status();
     if let Err(ref dd_err) = dd_res {
       eprintln!("dd fallback failed: {}", dd_err);
     }
     
     // Rerun partprobe
-    let _ = Command::new("partprobe").arg(&cfg.disk).status();
+    silent_cmd(&["partprobe", &cfg.disk]);
     std::thread::sleep(std::time::Duration::from_millis(500));
 
     // Try sgdisk --zap-all again
@@ -420,7 +442,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     "-n", "2:0:0",     "-t", "2:8300",
     &cfg.disk,
   ])?;
-  Command::new("partprobe").arg(&cfg.disk).status().ok();
+  silent_cmd(&["partprobe", &cfg.disk]);
   std::thread::sleep(std::time::Duration::from_secs(1));
 
   // ── 2. Format EFI ─────────────────────────────────────────────────────────
@@ -472,7 +494,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   let mut debootstrap = Command::new("debootstrap")
     .args(["--arch=amd64", "--verbose", UBUNTU_CODENAME, target, UBUNTU_MIRROR])
     .stdout(Stdio::piped())
-    .stderr(Stdio::inherit())
+    .stderr(Stdio::null())
     .spawn()
     .map_err(|e| format!("debootstrap: {e}"))?;
 
@@ -495,7 +517,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   // ── 8. Copy Omybuntu codebase to target ───────────────────────────────────
   prog(tx, 58, "Copying Omybuntu to target system...");
   cmd(&["mkdir", "-p", &format!("{target}/opt/omybuntu")])?;
-  let status = Command::new("rsync")
+  let output = Command::new("rsync")
     .args([
       "-a", "--delete",
       "--exclude=build/",
@@ -507,10 +529,15 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
       "/opt/omybuntu/",
       &format!("{target}/opt/omybuntu/"),
     ])
-    .status()
+    .output()
     .map_err(|e| format!("rsync copy omybuntu: {e}"))?;
-  if !status.success() {
-    return Err("Failed to copy Omybuntu to target".into());
+  if !output.status.success() {
+    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    if !stderr.is_empty() {
+      return Err(format!("Failed to copy Omybuntu to target: {}", stderr));
+    } else {
+      return Err("Failed to copy Omybuntu to target".into());
+    }
   }
   prepare_omybuntu_source_link(target)?;
   write_omybuntu_apt_pins(target)?;
@@ -577,9 +604,11 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   )?;
 
   // Generate locale
-  Command::new("chroot")
+  let _ = Command::new("chroot")
     .args([target, "locale-gen", &cfg.locale])
-    .status().ok();
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .status();
 
   // ── 14. Timezone ──────────────────────────────────────────────────────────
   prog(tx, 70, "Setting timezone...");
@@ -623,6 +652,8 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
       "/bin/bash", "-e", "-c",
       "cd /opt/omybuntu && ./install.sh",
     ])
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
     .status()
     .map_err(|e| format!("chroot install.sh: {e}"))?;
   if !status.success() {
@@ -636,6 +667,8 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   for group in &["sudo", "audio", "video", "users", "input", "render", "docker"] {
     let status = Command::new("chroot")
       .args([target, "getent", "group", group])
+      .stdout(Stdio::null())
+      .stderr(Stdio::null())
       .status()
       .map_err(|e| format!("Failed to check group {group}: {e}"))?;
     if status.success() {
@@ -657,12 +690,14 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   let cfg_dir = format!("{target}/home/{}/.config/omybuntu", cfg.username);
   std::fs::create_dir_all(&cfg_dir).ok();
   write_file(&format!("{cfg_dir}/language"), &cfg.language)?;
-  Command::new("chroot")
+  let _ = Command::new("chroot")
     .args([target, "chown", "-R",
       &format!("{}:{}", cfg.username, cfg.username),
       &format!("/home/{}", cfg.username),
     ])
-    .status().ok();
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .status();
   configure_target_login(target, &cfg.username, cfg.encrypt)?;
 
   // ── 18. GRUB ─────────────────────────────────────────────────────────────
@@ -701,10 +736,10 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   unmount_virtual_fs(target);
   for mp in &["/boot/efi", "/home", "/.snapshots", ""] {
     let path = format!("{target}{mp}");
-    let _ = Command::new("umount").args(["-lf", &path]).status();
+    silent_cmd(&["umount", "-lf", &path]);
   }
   if cfg.encrypt {
-    Command::new("cryptsetup").args(["close", "omybuntu_crypt"]).status().ok();
+    silent_cmd(&["cryptsetup", "close", "omybuntu_crypt"]);
   }
 
   prog(tx, 100, "Installation complete!");

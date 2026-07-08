@@ -526,7 +526,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   ])?;
   cmd(&[
     "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
-    "apt-get", "install", "-y", "curl", "gpg", "ca-certificates", "sudo", "software-properties-common", "git", "wget"
+    "apt-get", "install", "-y", "curl", "gpg", "ca-certificates", "sudo", "software-properties-common", "git", "wget", "gum"
   ])?;
 
   // ── 10. Generate fstab ───────────────────────────────────────────────────

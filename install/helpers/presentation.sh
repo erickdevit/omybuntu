@@ -1,3 +1,8 @@
+# Ensure we have gum available
+if ! command -v gum &>/dev/null; then
+  omybuntu-pkg-add gum
+fi
+
 # In chroot/ISO builds there is no proper controlling terminal — accessing
 # /dev/tty from a background process group triggers SIGTTOU and hangs.
 # Use safe defaults for everything.
@@ -5,11 +10,6 @@ if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
   export TERM_WIDTH=80
   export TERM_HEIGHT=24
 else
-  # Ensure we have gum available
-  if ! command -v gum &>/dev/null; then
-    omybuntu-pkg-add gum
-  fi
-
   # Get terminal size from /dev/tty (works in all scenarios: direct, sourced, or piped)
   if [[ -e /dev/tty ]]; then
     TERM_SIZE=$(stty size 2>/dev/null </dev/tty)

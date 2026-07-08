@@ -93,7 +93,7 @@ catch_errors() {
   restore_outputs
 
   # In ISO/chroot builds, bail out immediately without interactive UI
-  if [[ -n ${OMYBUNTU_ISO_BUILD:-} ]]; then
+  if [[ -n ${OMYBUNTU_ISO_BUILD:-} || -n ${OMYBUNTU_CHROOT_INSTALL:-} ]]; then
     clear_logo
     echo "Omybuntu installation failed with exit code $exit_code." >&2
     exit 1

@@ -10,7 +10,9 @@ if [[ -n ${OMYBUNTU_ONLINE_INSTALL:-} ]]; then
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting: online preflight" >> "$OMYBUNTU_INSTALL_LOG_FILE"
 
   {
-    sudo add-apt-repository universe -y
+    if omybuntu-cmd-present add-apt-repository; then
+      sudo add-apt-repository universe -y
+    fi
 
     # Add official mise repository
     sudo install -dm 755 /etc/apt/keyrings

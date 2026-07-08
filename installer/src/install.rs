@@ -198,6 +198,18 @@ fn write_omybuntu_apt_pins(target: &str) -> Result<(), String> {
   )
 }
 
+fn write_omybuntu_sources_list(target: &str) -> Result<(), String> {
+  let content = format!(
+    "deb {mirror} {codename} main restricted universe multiverse\n\
+     deb {mirror} {codename}-updates main restricted universe multiverse\n\
+     deb {mirror} {codename}-backports main restricted universe multiverse\n\
+     deb http://security.ubuntu.com/ubuntu/ {codename}-security main restricted universe multiverse\n",
+    mirror = UBUNTU_MIRROR,
+    codename = UBUNTU_CODENAME
+  );
+  write_file(&format!("{target}/etc/apt/sources.list"), &content)
+}
+
 fn prepare_omybuntu_source_link(target: &str) -> Result<(), String> {
   std::fs::create_dir_all(format!("{target}/root/.local/share"))
     .map_err(|e| format!("Failed to create root local share: {e}"))?;
@@ -478,6 +490,8 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     return Err("debootstrap failed — check network mirror and target disk".into());
   }
 
+  write_omybuntu_sources_list(target)?;
+
   // ── 8. Copy Omybuntu codebase to target ───────────────────────────────────
   prog(tx, 58, "Copying Omybuntu to target system...");
   cmd(&["mkdir", "-p", &format!("{target}/opt/omybuntu")])?;
@@ -504,6 +518,16 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   // ── 9. Mount virtual filesystems for chroot ───────────────────────────────
   prog(tx, 60, "Mounting virtual filesystems for chroot...");
   mount_virtual_fs(target)?;
+
+  prog(tx, 61, "Installing bootstrap packages inside chroot...");
+  cmd(&[
+    "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
+    "apt-get", "update"
+  ])?;
+  cmd(&[
+    "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
+    "apt-get", "install", "-y", "curl", "gpg", "ca-certificates", "sudo", "software-properties-common", "git", "wget"
+  ])?;
 
   // ── 10. Generate fstab ───────────────────────────────────────────────────
   prog(tx, 62, "Generating /etc/fstab...");

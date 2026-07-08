@@ -90,35 +90,51 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         other            => other.index() as u16 * 100 / 8,
     };
 
-    let cols = Layout::horizontal([Constraint::Percentage(70), Constraint::Percentage(30)])
-        .split(area);
+    if app.step == Step::Installing {
+        frame.render_widget(
+            Gauge::default()
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Rounded)
+                        .border_style(theme::normal_border()),
+                )
+                .gauge_style(Style::default().fg(theme::accent_color()).bg(theme::surface()))
+                .percent(progress)
+                .label(format!("{progress}%")),
+            area,
+        );
+    } else {
+        let cols = Layout::horizontal([Constraint::Percentage(70), Constraint::Percentage(30)])
+            .split(area);
 
-    frame.render_widget(
-        Gauge::default()
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
-                    .border_style(theme::normal_border()),
-            )
-            .gauge_style(Style::default().fg(theme::accent_color()).bg(theme::surface()))
-            .percent(progress)
-            .label(format!("{progress}%")),
-        cols[0],
-    );
+        frame.render_widget(
+            Gauge::default()
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Rounded)
+                        .border_style(theme::normal_border()),
+                )
+                .gauge_style(Style::default().fg(theme::accent_color()).bg(theme::surface()))
+                .percent(progress)
+                .label(format!("{progress}%")),
+            cols[0],
+        );
 
-    frame.render_widget(
-        Paragraph::new(hints)
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
-                    .border_style(theme::normal_border()),
-            )
-            .style(theme::muted())
-            .alignment(Alignment::Center),
-        cols[1],
-    );
+        frame.render_widget(
+            Paragraph::new(hints)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Rounded)
+                        .border_style(theme::normal_border()),
+                )
+                .style(theme::muted())
+                .alignment(Alignment::Center),
+            cols[1],
+        );
+    }
 }
 
 // ─── Body dispatcher ──────────────────────────────────────────────────────────
@@ -540,8 +556,6 @@ fn render_installing(frame: &mut Frame, app: &App, area: Rect) {
     let rows = Layout::vertical([
         Constraint::Length(1), // spinner + current op
         Constraint::Length(1), // gap
-        Constraint::Length(3), // gauge
-        Constraint::Length(1), // gap
         Constraint::Min(0),    // log / error
     ])
     .split(inner);
@@ -555,21 +569,6 @@ fn render_installing(frame: &mut Frame, app: &App, area: Rect) {
         rows[0],
     );
 
-    // Gauge
-    frame.render_widget(
-        Gauge::default()
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
-                    .border_style(theme::normal_border()),
-            )
-            .gauge_style(Style::default().fg(theme::accent_color()).bg(theme::surface()))
-            .percent(app.install_progress)
-            .label(format!("{}%", app.install_progress)),
-        rows[2],
-    );
-
     // Error or log
     if let Some(err) = &app.install_error {
         frame.render_widget(
@@ -580,13 +579,13 @@ fn render_installing(frame: &mut Frame, app: &App, area: Rect) {
                 Line::from(Span::styled("  Press Ctrl+C to exit.", theme::muted())),
             ])
             .wrap(Wrap { trim: false }),
-            rows[4],
+            rows[2],
         );
     } else {
         let log_items: Vec<ListItem> = app.install_log.iter().rev()
             .map(|l| ListItem::new(Line::from(Span::styled(format!("  {l}"), theme::muted()))))
             .collect();
-        frame.render_widget(List::new(log_items), rows[4]);
+        frame.render_widget(List::new(log_items), rows[2]);
     }
 }
 

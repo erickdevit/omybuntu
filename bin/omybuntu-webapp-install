@@ -18,7 +18,7 @@ install_launcher_icon() {
   mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
   cp "$icon_path" ~/.local/share/icons/hicolor/48x48/apps/"$(basename "$icon_path")"
   if omybuntu-cmd-present gtk-update-icon-cache; then
-    gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null || true
+    gtk-update-icon-cache --ignore-theme-index ~/.local/share/icons/hicolor &>/dev/null || true
   fi
   LAUNCHER_ICON_FIELD="$icon_field"
 }

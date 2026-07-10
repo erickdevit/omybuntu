@@ -790,7 +790,7 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   nok "ISO build does not write casper checksum manifest"
 
 webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")
-[[ $webapp_install_content == *LAUNCHER_ICON_FIELD* && $webapp_install_content == *hicolor/48x48/apps* ]] && \
+[[ $webapp_install_content == *LAUNCHER_ICON_FIELD* && $webapp_install_content == *hicolor/48x48/apps* && $webapp_install_content == *'gtk-update-icon-cache --ignore-theme-index'* ]] && \
   ok "webapp launchers register icons in the icon theme" || \
   nok "webapp launchers do not register icons in the icon theme"
 

@@ -1,7 +1,9 @@
 use std::process::{Command, Stdio};
 use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Write, Seek, SeekFrom};
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
@@ -403,6 +405,48 @@ fn run_diagnostic_commands(disk: &str) -> Result<(), String> {
   Ok(())
 }
 
+fn spawn_log_tailer(target: &str, tx: Sender<InstallMessage>, done: Arc<AtomicBool>) {
+  let log_path = format!("{target}/var/log/omybuntu-install.log");
+  thread::spawn(move || {
+    // Wait for the file to exist
+    let mut file = loop {
+      if done.load(Ordering::Relaxed) {
+        return;
+      }
+      if let Ok(f) = std::fs::File::open(&log_path) {
+        break f;
+      }
+      thread::sleep(std::time::Duration::from_millis(100));
+    };
+
+    // Seek to start
+    let _ = file.seek(SeekFrom::Start(0));
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+
+    loop {
+      if done.load(Ordering::Relaxed) {
+        break;
+      }
+      line.clear();
+      match reader.read_line(&mut line) {
+        Ok(0) => {
+          thread::sleep(std::time::Duration::from_millis(100));
+        }
+        Ok(_) => {
+          let clean_line = line.trim().to_string();
+          if !clean_line.is_empty() {
+            prog(&tx, 72, &clean_line);
+          }
+        }
+        Err(_) => {
+          thread::sleep(std::time::Duration::from_millis(100));
+        }
+      }
+    }
+  });
+}
+
 // ─── Installation ─────────────────────────────────────────────────────────────
 
 fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), String> {
@@ -631,6 +675,9 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
 
   // ── 15. Run Omybuntu install.sh inside chroot ────────────────────────────
   prog(tx, 72, "Configuring Omybuntu system (install.sh)...");
+
+  let done_flag = Arc::new(AtomicBool::new(false));
+  spawn_log_tailer(target, tx.clone(), done_flag.clone());
   let target_user_env = format!("OMYBUNTU_TARGET_USER={}", cfg.username);
   let language_env = format!("OMYBUNTU_LANGUAGE={}", cfg.language);
   let encrypted_install_env = if cfg.encrypt {
@@ -638,7 +685,7 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   } else {
     "OMYBUNTU_ENCRYPTED_INSTALL=false"
   };
-  let status = Command::new("chroot")
+  let status_res = Command::new("chroot")
     .arg(target)
     .arg("/usr/bin/env")
     .arg("-i")
@@ -665,8 +712,10 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     ])
     .stdout(Stdio::null())
     .stderr(Stdio::null())
-    .status()
-    .map_err(|e| format!("chroot install.sh: {e}"))?;
+    .status();
+
+  done_flag.store(true, Ordering::Relaxed);
+  let status = status_res.map_err(|e| format!("chroot install.sh: {e}"))?;
   if !status.success() {
     return Err("Omybuntu install.sh failed inside chroot".into());
   }

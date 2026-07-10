@@ -9,7 +9,27 @@ set -euo pipefail
 trap 'echo -e "\n❌ Error: Installation failed at line $LINENO." >&2' ERR
 trap 'echo -e "\n❌ Cancelled by user." >&2; exit 130' INT
 
+# 1. Collect all missing packages
+missing_pkgs=()
 for pkg in "$@"; do
+  if omybuntu-pkg-missing "$pkg"; then
+    missing_pkgs+=("$pkg")
+  fi
+done
+
+if (( ${#missing_pkgs[@]} == 0 )); then
+  exit 0
+fi
+
+# 2. Try to install all missing packages in a single batch via apt-get
+echo "Installing packages in batch: ${missing_pkgs[*]}..."
+if sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${missing_pkgs[@]}" 2>/dev/null; then
+  exit 0
+fi
+
+# 3. Fallback: if batch install fails, install one-by-one
+echo "Batch install failed or some packages are unavailable in APT. Falling back to individual installation..."
+for pkg in "${missing_pkgs[@]}"; do
   if omybuntu-pkg-missing "$pkg"; then
     echo "Installing $pkg..."
     if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg" 2>/dev/null; then

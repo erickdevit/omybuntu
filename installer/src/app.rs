@@ -81,6 +81,7 @@ pub const TIMEZONES: &[&str] = &[
 pub enum Step {
     Welcome,
     Language,
+    InstallMode,
     Keyboard,
     Timezone,
     Credentials,
@@ -96,13 +97,14 @@ impl Step {
         match self {
             Step::Welcome     => 0,
             Step::Language    => 1,
-            Step::Keyboard    => 2,
-            Step::Timezone    => 3,
-            Step::Credentials => 4,
-            Step::Disk        => 5,
-            Step::Summary     => 6,
-            Step::Installing  => 7,
-            Step::Done        => 8,
+            Step::InstallMode => 2,
+            Step::Keyboard    => 3,
+            Step::Timezone    => 4,
+            Step::Credentials => 5,
+            Step::Disk        => 6,
+            Step::Summary     => 7,
+            Step::Installing  => 8,
+            Step::Done        => 9,
         }
     }
 
@@ -110,6 +112,7 @@ impl Step {
         match self {
             Step::Welcome     => "Welcome",
             Step::Language    => "Language",
+            Step::InstallMode => "Installation Mode",
             Step::Keyboard    => "Keyboard Layout",
             Step::Timezone    => "Timezone",
             Step::Credentials => "User Credentials",
@@ -123,12 +126,13 @@ impl Step {
     /// Returns (current, total) wizard step numbers for config steps, None otherwise.
     pub fn wizard_step(&self) -> Option<(usize, usize)> {
         match self {
-            Step::Language    => Some((1, 6)),
-            Step::Keyboard    => Some((2, 6)),
-            Step::Timezone    => Some((3, 6)),
-            Step::Credentials => Some((4, 6)),
-            Step::Disk        => Some((5, 6)),
-            Step::Summary     => Some((6, 6)),
+            Step::Language    => Some((1, 7)),
+            Step::InstallMode => Some((2, 7)),
+            Step::Keyboard    => Some((3, 7)),
+            Step::Timezone    => Some((4, 7)),
+            Step::Credentials => Some((5, 7)),
+            Step::Disk        => Some((6, 7)),
+            Step::Summary     => Some((7, 7)),
             _                 => None,
         }
     }
@@ -136,7 +140,8 @@ impl Step {
     pub fn next(&self) -> Step {
         match self {
             Step::Welcome     => Step::Language,
-            Step::Language    => Step::Keyboard,
+            Step::Language    => Step::InstallMode,
+            Step::InstallMode => Step::Keyboard,
             Step::Keyboard    => Step::Timezone,
             Step::Timezone    => Step::Credentials,
             Step::Credentials => Step::Disk,
@@ -150,7 +155,8 @@ impl Step {
     pub fn prev(&self) -> Step {
         match self {
             Step::Language    => Step::Welcome,
-            Step::Keyboard    => Step::Language,
+            Step::InstallMode => Step::Language,
+            Step::Keyboard    => Step::InstallMode,
             Step::Timezone    => Step::Keyboard,
             Step::Credentials => Step::Timezone,
             Step::Disk        => Step::Credentials,
@@ -234,6 +240,9 @@ pub struct App {
     // Language
     pub language_idx: usize,
 
+    // Installation Mode
+    pub offline_mode: bool,
+
     // Keyboard
     pub keyboard_idx: usize,
 
@@ -282,6 +291,7 @@ impl App {
             tick:        0,
 
             language_idx: 0,
+            offline_mode: true,
             keyboard_idx: 0,
 
             timezone_search:   String::new(),
@@ -398,6 +408,7 @@ impl App {
             locale:        locale.to_string(),
             keymap:        keymap.to_string(),
             timezone:      self.current_timezone().to_string(),
+            offline:       self.offline_mode,
         };
 
         self.install_rx = Some(spawn_install(config));
@@ -437,6 +448,7 @@ impl App {
         match self.step {
             Step::Welcome     => self.key_welcome(key),
             Step::Language    => self.key_language(key),
+            Step::InstallMode => self.key_install_mode(key),
             Step::Keyboard    => self.key_keyboard(key),
             Step::Timezone    => self.key_timezone(key),
             Step::Credentials => self.key_credentials(key),
@@ -458,6 +470,17 @@ impl App {
         match key.code {
             KeyCode::Up    => { self.language_idx = self.language_idx.saturating_sub(1); }
             KeyCode::Down  => { self.language_idx = (self.language_idx + 1).min(LANGUAGES.len() - 1); }
+            KeyCode::Enter => { self.step = self.step.next(); }
+            KeyCode::Esc   => { self.step = self.step.prev(); }
+            _ => {}
+        }
+    }
+
+    fn key_install_mode(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right | KeyCode::Tab => {
+                self.offline_mode = !self.offline_mode;
+            }
             KeyCode::Enter => { self.step = self.step.next(); }
             KeyCode::Esc   => { self.step = self.step.prev(); }
             _ => {}

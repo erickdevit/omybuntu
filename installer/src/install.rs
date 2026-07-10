@@ -29,6 +29,7 @@ pub struct InstallConfig {
   pub locale:        String,
   pub keymap:        String,
   pub timezone:      String,
+  pub offline:       bool,
 }
 
 const UBUNTU_CODENAME: &str = "resolute"; // 26.04
@@ -447,6 +448,57 @@ fn spawn_log_tailer(target: &str, tx: Sender<InstallMessage>, done: Arc<AtomicBo
   });
 }
 
+fn parse_rsync_percentage(line: &str) -> Option<u16> {
+  if let Some(pos) = line.find('%') {
+    let part = &line[..pos];
+    if let Some(start_pos) = part.rfind(|c: char| c.is_whitespace()) {
+      let num_str = part[start_pos..].trim();
+      if let Ok(val) = num_str.parse::<u16>() {
+        return Some(val);
+      }
+    }
+  }
+  None
+}
+
+fn run_rsync_copy(target: &str, tx: &Sender<InstallMessage>) -> Result<(), String> {
+  let mut child = Command::new("rsync")
+    .args([
+      "-aAX",
+      "--info=progress2",
+      "--exclude=/dev/*",
+      "--exclude=/proc/*",
+      "--exclude=/sys/*",
+      "--exclude=/tmp/*",
+      "--exclude=/run/*",
+      "--exclude=/mnt/*",
+      "--exclude=/media/*",
+      "--exclude=/lost+found",
+      "/",
+      &format!("{target}/"),
+    ])
+    .stdout(Stdio::piped())
+    .stderr(Stdio::null())
+    .spawn()
+    .map_err(|e| format!("Failed to spawn rsync: {e}"))?;
+
+  if let Some(stdout) = child.stdout.take() {
+    let reader = BufReader::new(stdout);
+    for line in reader.lines().map_while(Result::ok) {
+      if let Some(pct) = parse_rsync_percentage(&line) {
+        let mapped_pct = 40 + (pct * 30 / 100);
+        prog(tx, mapped_pct, &format!("Copying system files: {pct}%"));
+      }
+    }
+  }
+
+  let status = child.wait().map_err(|e| format!("rsync wait: {e}"))?;
+  if !status.success() {
+    return Err("rsync copy failed".into());
+  }
+  Ok(())
+}
+
 // ─── Installation ─────────────────────────────────────────────────────────────
 
 fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), String> {
@@ -543,73 +595,82 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   cmd(&["mount", &part_efi, &format!("{target}/boot/efi")])?;
   let _target_cleanup = TargetCleanup::new(target, cfg.encrypt);
 
-  // ── 7. Debootstrap Ubuntu base ────────────────────────────────────────────
-  prog(tx, 40, "Installing Ubuntu base system via debootstrap...");
-  let mut debootstrap = Command::new("debootstrap")
-    .args(["--arch=amd64", "--verbose", UBUNTU_CODENAME, target, UBUNTU_MIRROR])
-    .stdout(Stdio::piped())
-    .stderr(Stdio::null())
-    .spawn()
-    .map_err(|e| format!("debootstrap: {e}"))?;
+  if cfg.offline {
+    prog(tx, 40, "Copying system files from Live ISO (offline)...");
+    run_rsync_copy(target, tx)?;
 
-  if let Some(stdout) = debootstrap.stdout.take() {
-    let reader = BufReader::new(stdout);
-    for line in reader.lines().map_while(Result::ok) {
-      if let Some(pct) = debootstrap_progress(tx, &line) {
-        let label = line.trim().trim_start_matches("I: ").to_string();
-        prog(tx, pct, if label.is_empty() { "Debootstrap in progress..." } else { &label });
+    prog(tx, 70, "Mounting virtual filesystems for chroot...");
+    mount_virtual_fs(target)?;
+    write_policy_rc_d(target)?;
+  } else {
+    // ── 7. Debootstrap Ubuntu base ────────────────────────────────────────────
+    prog(tx, 40, "Installing Ubuntu base system via debootstrap...");
+    let mut debootstrap = Command::new("debootstrap")
+      .args(["--arch=amd64", "--verbose", UBUNTU_CODENAME, target, UBUNTU_MIRROR])
+      .stdout(Stdio::piped())
+      .stderr(Stdio::null())
+      .spawn()
+      .map_err(|e| format!("debootstrap: {e}"))?;
+
+    if let Some(stdout) = debootstrap.stdout.take() {
+      let reader = BufReader::new(stdout);
+      for line in reader.lines().map_while(Result::ok) {
+        if let Some(pct) = debootstrap_progress(tx, &line) {
+          let label = line.trim().trim_start_matches("I: ").to_string();
+          prog(tx, pct, if label.is_empty() { "Debootstrap in progress..." } else { &label });
+        }
       }
     }
-  }
-  let status = debootstrap.wait().map_err(|e| format!("debootstrap wait: {e}"))?;
-  if !status.success() {
-    return Err("debootstrap failed — check network mirror and target disk".into());
-  }
-
-  write_omybuntu_sources_list(target)?;
-
-  // ── 8. Copy Omybuntu codebase to target ───────────────────────────────────
-  prog(tx, 58, "Copying Omybuntu to target system...");
-  cmd(&["mkdir", "-p", &format!("{target}/opt/omybuntu")])?;
-  let output = Command::new("rsync")
-    .args([
-      "-a", "--delete",
-      "--exclude=build/",
-      "--exclude=.git/",
-      "--exclude=installer/target/",
-      "--exclude=*.iso",
-      "--exclude=.iso-cache/",
-      "--exclude=ubuntu-base.tar.gz",
-      "/opt/omybuntu/",
-      &format!("{target}/opt/omybuntu/"),
-    ])
-    .output()
-    .map_err(|e| format!("rsync copy omybuntu: {e}"))?;
-  if !output.status.success() {
-    let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-    if !stderr.is_empty() {
-      return Err(format!("Failed to copy Omybuntu to target: {}", stderr));
-    } else {
-      return Err("Failed to copy Omybuntu to target".into());
+    let status = debootstrap.wait().map_err(|e| format!("debootstrap wait: {e}"))?;
+    if !status.success() {
+      return Err("debootstrap failed — check network mirror and target disk".into());
     }
+
+    write_omybuntu_sources_list(target)?;
+
+    // ── 8. Copy Omybuntu codebase to target ───────────────────────────────────
+    prog(tx, 58, "Copying Omybuntu to target system...");
+    cmd(&["mkdir", "-p", &format!("{target}/opt/omybuntu")])?;
+    let output = Command::new("rsync")
+      .args([
+        "-a", "--delete",
+        "--exclude=build/",
+        "--exclude=.git/",
+        "--exclude=installer/target/",
+        "--exclude=*.iso",
+        "--exclude=.iso-cache/",
+        "--exclude=ubuntu-base.tar.gz",
+        "/opt/omybuntu/",
+        &format!("{target}/opt/omybuntu/"),
+      ])
+      .output()
+      .map_err(|e| format!("rsync copy omybuntu: {e}"))?;
+    if !output.status.success() {
+      let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+      if !stderr.is_empty() {
+        return Err(format!("Failed to copy Omybuntu to target: {}", stderr));
+      } else {
+        return Err("Failed to copy Omybuntu to target".into());
+      }
+    }
+    prepare_omybuntu_source_link(target)?;
+    write_omybuntu_apt_pins(target)?;
+
+    // ── 9. Mount virtual filesystems for chroot ───────────────────────────────
+    prog(tx, 60, "Mounting virtual filesystems for chroot...");
+    mount_virtual_fs(target)?;
+    write_policy_rc_d(target)?;
+
+    prog(tx, 61, "Installing bootstrap packages inside chroot...");
+    cmd(&[
+      "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
+      "apt-get", "update"
+    ])?;
+    cmd(&[
+      "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
+      "apt-get", "install", "-y", "curl", "gpg", "ca-certificates", "sudo", "software-properties-common", "git", "wget", "gum", "zstd"
+    ])?;
   }
-  prepare_omybuntu_source_link(target)?;
-  write_omybuntu_apt_pins(target)?;
-
-  // ── 9. Mount virtual filesystems for chroot ───────────────────────────────
-  prog(tx, 60, "Mounting virtual filesystems for chroot...");
-  mount_virtual_fs(target)?;
-  write_policy_rc_d(target)?;
-
-  prog(tx, 61, "Installing bootstrap packages inside chroot...");
-  cmd(&[
-    "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
-    "apt-get", "update"
-  ])?;
-  cmd(&[
-    "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
-    "apt-get", "install", "-y", "curl", "gpg", "ca-certificates", "sudo", "software-properties-common", "git", "wget", "gum"
-  ])?;
 
   // ── 10. Generate fstab ───────────────────────────────────────────────────
   prog(tx, 62, "Generating /etc/fstab...");
@@ -673,51 +734,53 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     "/etc/localtime",
   ])?;
 
-  // ── 15. Run Omybuntu install.sh inside chroot ────────────────────────────
-  prog(tx, 72, "Configuring Omybuntu system (install.sh)...");
+  if !cfg.offline {
+    // ── 15. Run Omybuntu install.sh inside chroot ────────────────────────────
+    prog(tx, 72, "Configuring Omybuntu system (install.sh)...");
 
-  let done_flag = Arc::new(AtomicBool::new(false));
-  spawn_log_tailer(target, tx.clone(), done_flag.clone());
-  let target_user_env = format!("OMYBUNTU_TARGET_USER={}", cfg.username);
-  let language_env = format!("OMYBUNTU_LANGUAGE={}", cfg.language);
-  let encrypted_install_env = if cfg.encrypt {
-    "OMYBUNTU_ENCRYPTED_INSTALL=true"
-  } else {
-    "OMYBUNTU_ENCRYPTED_INSTALL=false"
-  };
-  let status_res = Command::new("chroot")
-    .arg(target)
-    .arg("/usr/bin/env")
-    .arg("-i")
-    .args([
-      "HOME=/root",
-      "USER=root",
-      "LOGNAME=root",
-      "SHELL=/bin/bash",
-      "TERM=linux",
-      "PATH=/opt/omybuntu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-      "OMYBUNTU_PATH=/opt/omybuntu",
-      "OMYBUNTU_INSTALL=/opt/omybuntu/install",
-      "OMYBUNTU_INSTALL_LOG_FILE=/var/log/omybuntu-install.log",
-      "OMYBUNTU_ONLINE_INSTALL=true",
-      "OMYBUNTU_CHROOT_INSTALL=true",
-      encrypted_install_env,
-      "DEBIAN_FRONTEND=noninteractive",
-    ])
-    .arg(&language_env)
-    .arg(target_user_env)
-    .args([
-      "/bin/bash", "-e", "-c",
-      "cd /opt/omybuntu && ./install.sh",
-    ])
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .status();
+    let done_flag = Arc::new(AtomicBool::new(false));
+    spawn_log_tailer(target, tx.clone(), done_flag.clone());
+    let target_user_env = format!("OMYBUNTU_TARGET_USER={}", cfg.username);
+    let language_env = format!("OMYBUNTU_LANGUAGE={}", cfg.language);
+    let encrypted_install_env = if cfg.encrypt {
+      "OMYBUNTU_ENCRYPTED_INSTALL=true"
+    } else {
+      "OMYBUNTU_ENCRYPTED_INSTALL=false"
+    };
+    let status_res = Command::new("chroot")
+      .arg(target)
+      .arg("/usr/bin/env")
+      .arg("-i")
+      .args([
+        "HOME=/root",
+        "USER=root",
+        "LOGNAME=root",
+        "SHELL=/bin/bash",
+        "TERM=linux",
+        "PATH=/opt/omybuntu/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "OMYBUNTU_PATH=/opt/omybuntu",
+        "OMYBUNTU_INSTALL=/opt/omybuntu/install",
+        "OMYBUNTU_INSTALL_LOG_FILE=/var/log/omybuntu-install.log",
+        "OMYBUNTU_ONLINE_INSTALL=true",
+        "OMYBUNTU_CHROOT_INSTALL=true",
+        encrypted_install_env,
+        "DEBIAN_FRONTEND=noninteractive",
+      ])
+      .arg(&language_env)
+      .arg(target_user_env)
+      .args([
+        "/bin/bash", "-e", "-c",
+        "cd /opt/omybuntu && ./install.sh",
+      ])
+      .stdout(Stdio::null())
+      .stderr(Stdio::null())
+      .status();
 
-  done_flag.store(true, Ordering::Relaxed);
-  let status = status_res.map_err(|e| format!("chroot install.sh: {e}"))?;
-  if !status.success() {
-    return Err("Omybuntu install.sh failed inside chroot".into());
+    done_flag.store(true, Ordering::Relaxed);
+    let status = status_res.map_err(|e| format!("chroot install.sh: {e}"))?;
+    if !status.success() {
+      return Err("Omybuntu install.sh failed inside chroot".into());
+    }
   }
 
   // ── 16. Create user account ──────────────────────────────────────────────

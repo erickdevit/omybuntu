@@ -77,6 +77,7 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
     let hints = match app.step {
         Step::Welcome     => "[Enter] Begin  [Ctrl+C] Quit",
         Step::Language
+        | Step::InstallMode
         | Step::Keyboard  => "[↑↓] Navigate  [Enter] Select  [Esc] Back",
         Step::Timezone    => "Type to search  [↑↓] List  [Enter] Confirm  [Esc] Back",
         Step::Credentials => "[Tab/↑↓] Switch field  [Enter] Confirm  [F1] Toggle password  [Esc] Back",
@@ -154,6 +155,7 @@ fn render_body(frame: &mut Frame, app: &mut App, area: Rect) {
     match app.step {
         Step::Welcome     => render_welcome(frame, area),
         Step::Language    => render_language(frame, app, area),
+        Step::InstallMode => render_install_mode(frame, app, area),
         Step::Keyboard    => render_keyboard(frame, app, area),
         Step::Timezone    => render_timezone(frame, app, area),
         Step::Credentials => render_credentials(frame, app, area),
@@ -223,6 +225,37 @@ fn render_language(frame: &mut Frame, app: &App, area: Rect) {
     state.select(Some(app.language_idx));
     let list_area = v_center(inner, LANGUAGES.len() as u16);
     frame.render_stateful_widget(List::new(items), list_area, &mut state);
+}
+
+// ─── Install Mode ─────────────────────────────────────────────────────────────
+
+fn render_install_mode(frame: &mut Frame, app: &App, area: Rect) {
+    let outer = titled_block(" Select Installation Mode ");
+    let inner = outer.inner(area);
+    frame.render_widget(outer, area);
+
+    let offline_sym = if app.offline_mode { "●" } else { "○" };
+    let online_sym  = if !app.offline_mode { "●" } else { "○" };
+
+    let offline_style = if app.offline_mode { theme::selected() } else { theme::base() };
+    let online_style  = if !app.offline_mode { theme::selected() } else { theme::base() };
+
+    let items = vec![
+        ListItem::new(vec![
+            Line::from(Span::styled(format!("  {}  Offline Installation (Recommended / Faster)", offline_sym), offline_style)),
+            Line::from(Span::styled("      Installs directly from the Live ISO without downloading anything.", theme::muted())),
+            Line::from(Span::styled("      Takes 1-2 minutes to complete.", theme::muted())),
+            Line::from(""),
+        ]),
+        ListItem::new(vec![
+            Line::from(Span::styled(format!("  {}  Online Installation (Slower)", online_sym), online_style)),
+            Line::from(Span::styled("      Downloads the latest packages and updates from Ubuntu servers.", theme::muted())),
+            Line::from(Span::styled("      Requires internet and takes 10-30 minutes.", theme::muted())),
+        ]),
+    ];
+
+    let list_area = v_center(inner, 7);
+    frame.render_widget(List::new(items), list_area);
 }
 
 // ─── Keyboard ─────────────────────────────────────────────────────────────────

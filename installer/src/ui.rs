@@ -34,7 +34,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     let root = Layout::vertical([
         Constraint::Length(3), // header
         Constraint::Min(0),    // body
-        Constraint::Length(4), // footer
+        Constraint::Length(5), // footer
     ])
     .split(frame.area());
 
@@ -121,31 +121,9 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
             cols[0],
         );
 
-        frame.render_widget(
-            Paragraph::new(hints)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .border_type(BorderType::Rounded)
-                        .border_style(theme::normal_border()),
-                )
-                .style(theme::muted())
-                .alignment(Alignment::Center),
-            cols[1],
-        );
+        render_centered_hint(frame, hints, cols[1]);
     } else {
-        frame.render_widget(
-            Paragraph::new(hints)
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .border_type(BorderType::Rounded)
-                        .border_style(theme::normal_border()),
-                )
-                .style(theme::muted())
-                .alignment(Alignment::Center),
-            area,
-        );
+        render_centered_hint(frame, hints, area);
     }
 }
 
@@ -697,29 +675,47 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
     let btns = Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(rows[1]);
 
-    frame.render_widget(
-        Paragraph::new("  ↺  Reboot now")
-            .style(if app.done_focus == 0 {
-                Style::default().fg(theme::bg()).bg(theme::success_color()).add_modifier(Modifier::BOLD)
-            } else {
-                theme::muted()
-            })
-            .alignment(Alignment::Center),
-        btns[0],
-    );
-    frame.render_widget(
-        Paragraph::new("  ✕  Exit installer")
-            .style(if app.done_focus == 1 {
-                Style::default().fg(theme::bg()).bg(theme::muted_color()).add_modifier(Modifier::BOLD)
-            } else {
-                theme::muted()
-            })
-            .alignment(Alignment::Center),
-        btns[1],
-    );
+    let reboot_style = if app.done_focus == 0 {
+        Style::default().fg(theme::bg()).bg(theme::success_color()).add_modifier(Modifier::BOLD)
+    } else {
+        theme::muted()
+    };
+    let exit_style = if app.done_focus == 1 {
+        Style::default().fg(theme::bg()).bg(theme::muted_color()).add_modifier(Modifier::BOLD)
+    } else {
+        theme::muted()
+    };
+
+    render_centered_button(frame, "↺  Reboot now", btns[0], reboot_style);
+    render_centered_button(frame, "✕  Exit installer", btns[1], exit_style);
 }
 
 // ─── UI helpers ───────────────────────────────────────────────────────────────
+
+fn render_centered_hint(frame: &mut Frame, text: &str, area: Rect) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(theme::normal_border());
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+    frame.render_widget(
+        Paragraph::new(text)
+            .style(theme::muted())
+            .alignment(Alignment::Center),
+        v_center(inner, 1),
+    );
+}
+
+fn render_centered_button(frame: &mut Frame, text: &str, area: Rect, style: Style) {
+    frame.render_widget(Block::default().style(style), area);
+    frame.render_widget(
+        Paragraph::new(text)
+            .style(style)
+            .alignment(Alignment::Center),
+        v_center(area, 1),
+    );
+}
 
 fn titled_block(title: &'static str) -> Block<'static> {
     Block::default()

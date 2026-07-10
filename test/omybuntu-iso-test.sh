@@ -577,6 +577,14 @@ else
   nok "installer disk encryption choices or password visibility controls are incomplete"
 fi
 
+if [[ $installer_ui_content == *'Constraint::Length(5), // footer'* \
+  && $installer_ui_content == *render_centered_hint* \
+  && $installer_ui_content == *render_centered_button* ]]; then
+  ok "installer footer labels and completion buttons are centered vertically and horizontally"
+else
+  nok "installer footer labels or completion buttons are not centered in their containers"
+fi
+
 if [[ $installer_install_content == *'--out-format=Copying: %n%L'* \
   && $installer_install_content == *'System files copied successfully.'* \
   && $installer_install_content != *'(offline)'* ]]; then

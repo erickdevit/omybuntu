@@ -794,6 +794,11 @@ webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")
   ok "webapp launchers register icons in the icon theme" || \
   nok "webapp launchers do not register icons in the icon theme"
 
+restart_walker_content=$(<"$ROOT/bin/omybuntu-restart-walker")
+[[ $restart_walker_content == *'systemctl --user cat app-walker@autostart.service'* && $restart_walker_content == *'pgrep -x walker'* && $restart_walker_content == *'kill "${walker_pids[@]}"'* && $restart_walker_content == *'setsid uwsm-app -- env GSK_RENDERER=cairo'* ]] && \
+  ok "Walker restart falls back to its UWSM process without a systemd unit" || \
+  nok "Walker restart lacks the UWSM process fallback"
+
 # Summary
 # ------------------------------------------------------------------
 echo

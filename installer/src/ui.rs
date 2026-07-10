@@ -81,7 +81,7 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         | Step::Keyboard  => "[↑↓] Navigate  [Enter] Select  [Esc] Back",
         Step::Timezone    => "Type to search  [↑↓] List  [Enter] Confirm  [Esc] Back",
         Step::Credentials => "[Tab/↑↓] Switch field  [Enter] Confirm  [F1] Toggle password  [Esc] Back",
-        Step::Disk        => "[↑↓] Navigate  [Space] Toggle encrypt  [Tab] Next field  [Enter] Confirm",
+        Step::Disk        => "[↑↓] Navigate  [Space] Select  [Tab] Next field  [F1] Toggle password  [Enter] Confirm",
         Step::Summary     => "[←→] Choose  [Enter] Confirm  [Esc] Back",
         Step::Installing  => "Installing — please wait…",
         Step::Done        => "[←→] Choose  [Enter] Confirm",
@@ -390,7 +390,7 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
     let luks_h: u16 = if app.encrypt { 7 } else { 0 };
     let rows = Layout::vertical([
         Constraint::Min(0),
-        Constraint::Length(3),
+        Constraint::Length(6),
         Constraint::Length(luks_h),
         Constraint::Length(2),
     ])
@@ -431,16 +431,22 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
         );
     }
 
-    // ── Encrypt toggle
+    // ── Encryption choice
+    let encryption_rows = Layout::vertical([
+        Constraint::Length(3),
+        Constraint::Length(3),
+    ])
+    .split(rows[1]);
+
     let enc_border = if app.disk_focus == 1 { theme::focused_border() } else { theme::normal_border() };
-    let check = if app.encrypt { "●" } else { "○" };
+    let enc_check = if app.encrypt { "●" } else { "○" };
     let enc_style = if app.disk_focus == 1 {
         Style::default().fg(theme::accent_color()).add_modifier(Modifier::BOLD)
     } else {
         theme::base()
     };
     frame.render_widget(
-        Paragraph::new(format!("  [{check}] Encrypt disk with LUKS  (Space to toggle)"))
+        Paragraph::new(format!("  {enc_check}  Encrypt disk with LUKS"))
             .block(
                 Block::default()
                     .borders(Borders::ALL)
@@ -448,7 +454,26 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
                     .border_style(enc_border),
             )
             .style(enc_style),
-        rows[1],
+        encryption_rows[0],
+    );
+
+    let plain_border = if app.disk_focus == 2 { theme::focused_border() } else { theme::normal_border() };
+    let plain_check = if app.encrypt { "○" } else { "●" };
+    let plain_style = if app.disk_focus == 2 {
+        Style::default().fg(theme::accent_color()).add_modifier(Modifier::BOLD)
+    } else {
+        theme::base()
+    };
+    frame.render_widget(
+        Paragraph::new(format!("  {plain_check}  Do not encrypt disk"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .border_style(plain_border),
+            )
+            .style(plain_style),
+        encryption_rows[1],
     );
 
     // ── LUKS fields
@@ -461,16 +486,17 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
         .split(rows[2]);
 
         let luks_fields: [(&str, &str, usize); 2] = [
-            ("Encryption Password",         &app.luks_pass,  2),
-            ("Confirm Encryption Password", &app.luks_pass2, 3),
+            ("Encryption Password",         &app.luks_pass,  3),
+            ("Confirm Encryption Password", &app.luks_pass2, 4),
         ];
 
         for (i, (label, val, focus_id)) in luks_fields.iter().enumerate() {
             let focused = app.disk_focus == *focus_id;
             let border  = if focused { theme::focused_border() } else { theme::normal_border() };
+            let display = if app.show_pass { (*val).to_string() } else { "●".repeat(val.len()) };
             let cursor  = if focused { "▏" } else { "" };
             frame.render_widget(
-                Paragraph::new(format!("  {}{}  [{}]", "●".repeat(val.len()), cursor, label))
+                Paragraph::new(format!("  {display}{cursor}  [{label}]"))
                     .block(
                         Block::default()
                             .borders(Borders::ALL)
@@ -487,6 +513,11 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
     if let Some(err) = &app.disk_error {
         frame.render_widget(
             Paragraph::new(format!("  ✕  {err}")).style(theme::error_style()),
+            rows[3],
+        );
+    } else if app.encrypt && !app.show_pass {
+        frame.render_widget(
+            Paragraph::new("  [F1] Show/hide passwords").style(theme::muted()),
             rows[3],
         );
     }

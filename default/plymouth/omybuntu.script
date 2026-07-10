@@ -223,9 +223,10 @@ fun progress_callback(duration, progress) {
 
   global.real_progress = progress;
 
-  # Live boots can report completion before the compositor session is visible.
-  # Keep the timed progress running instead of drawing a full bar too early.
+  # A completed boot must leave the bar visibly full before Plymouth exits.
   if (global.fake_progress_active == 1 && progress > global.progress_complete_threshold) {
+    stop_fake_progress();
+    update_progress_bar(1.0);
     return;
   }
 

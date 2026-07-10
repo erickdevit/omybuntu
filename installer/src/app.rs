@@ -266,7 +266,7 @@ pub struct App {
     pub encrypt:    bool,
     pub luks_pass:  String,
     pub luks_pass2: String,
-    pub disk_focus: usize, // 0=list, 1=encrypt toggle, 2=luks_pass, 3=luks_pass2
+    pub disk_focus: usize, // 0=list, 1=encrypt, 2=no encryption, 3=luks_pass, 4=luks_pass2
     pub disk_error: Option<String>,
 
     // Summary
@@ -578,39 +578,61 @@ impl App {
                 KeyCode::Esc => { self.step = self.step.prev(); }
                 _ => {}
             },
-            // 1: encrypt toggle
+            // 1: encrypt option
             1 => match key.code {
-                KeyCode::Char(' ') | KeyCode::Enter => {
-                    self.encrypt = !self.encrypt;
-                    self.disk_focus = if self.encrypt { 2 } else { 1 };
+                KeyCode::Char(' ') => {
+                    self.encrypt = true;
                 }
-                KeyCode::Tab | KeyCode::Down => {
-                    if self.encrypt { self.disk_focus = 2; } else {
-                        // No LUKS fields: confirm step
-                        if let Some(err) = self.validate_disk() {
-                            self.disk_error = Some(err);
-                        } else {
-                            self.step = self.step.next();
-                        }
-                    }
+                KeyCode::Enter => {
+                    self.encrypt = true;
+                    self.disk_focus = 3;
                 }
+                KeyCode::Tab => { self.disk_focus = if self.encrypt { 3 } else { 2 }; }
+                KeyCode::Down => { self.disk_focus = 2; }
                 KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 0; }
                 KeyCode::Esc => { self.step = self.step.prev(); }
                 _ => {}
             },
-            // 2: LUKS password
+            // 2: no-encryption option
             2 => match key.code {
-                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
-                    self.luks_pass.push(c);
+                KeyCode::Char(' ') => {
+                    self.encrypt = false;
                 }
-                KeyCode::Backspace => { self.luks_pass.pop(); }
-                KeyCode::Tab | KeyCode::Down | KeyCode::Enter => { self.disk_focus = 3; }
+                KeyCode::Enter => {
+                    self.encrypt = false;
+                    if let Some(err) = self.validate_disk() {
+                        self.disk_error = Some(err);
+                    } else {
+                        self.step = self.step.next();
+                    }
+                }
+                KeyCode::Tab | KeyCode::Down => {
+                    if self.encrypt {
+                        self.disk_focus = 3;
+                    } else if let Some(err) = self.validate_disk() {
+                        self.disk_error = Some(err);
+                    } else {
+                        self.step = self.step.next();
+                    }
+                }
                 KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 1; }
                 KeyCode::Esc => { self.step = self.step.prev(); }
                 _ => {}
             },
-            // 3: LUKS password confirm
+            // 3: LUKS password
             3 => match key.code {
+                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    self.luks_pass.push(c);
+                }
+                KeyCode::Backspace => { self.luks_pass.pop(); }
+                KeyCode::Tab | KeyCode::Down | KeyCode::Enter => { self.disk_focus = 4; }
+                KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 1; }
+                KeyCode::F(1) => { self.show_pass = !self.show_pass; }
+                KeyCode::Esc => { self.step = self.step.prev(); }
+                _ => {}
+            },
+            // 4: LUKS password confirm
+            4 => match key.code {
                 KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
                     self.luks_pass2.push(c);
                 }
@@ -622,7 +644,8 @@ impl App {
                         self.step = self.step.next();
                     }
                 }
-                KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 2; }
+                KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 3; }
+                KeyCode::F(1) => { self.show_pass = !self.show_pass; }
                 KeyCode::Esc => { self.step = self.step.prev(); }
                 _ => {}
             },

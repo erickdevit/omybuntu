@@ -463,8 +463,13 @@ plymouth_script_content=$(<"$ROOT/default/plymouth/omybuntu.script")
   nok "plymouth still gates boot progress behind LUKS password"
 
 [[ $plymouth_script_content == *reset_progress_bar* && $plymouth_script_content == *progress_complete_threshold* ]] && \
-  ok "plymouth resets progress and ignores premature completion" || \
-  nok "plymouth can still draw a full progress bar prematurely"
+  ok "plymouth resets progress and recognizes the completion threshold" || \
+  nok "plymouth progress reset or completion threshold is missing"
+
+[[ $plymouth_script_content == *'progress > global.progress_complete_threshold'* \
+  && $plymouth_script_content == *'update_progress_bar(1.0);'* ]] && \
+  ok "plymouth fills boot progress completely when boot finishes" || \
+  nok "plymouth does not fill boot progress completely at boot completion"
 
 sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
 [[ $sddm_metadata_content == *MainScript=Main.qml* && $sddm_metadata_content == *Theme-API=2.0* ]] && \
@@ -562,6 +567,23 @@ installer_app_content=$(<"$ROOT/installer/src/app.rs")
 [[ $installer_app_content == *valid_username* && $installer_app_content == *valid_hostname* ]] && \
   ok "installer validates system username and hostname format" || \
   nok "installer does not validate system username and hostname format"
+
+installer_ui_content=$(<"$ROOT/installer/src/ui.rs")
+if [[ $installer_ui_content == *'Do not encrypt disk'* \
+  && $installer_ui_content == *'app.show_pass'* \
+  && $installer_ui_content == *'[F1] Show/hide passwords'* ]]; then
+  ok "installer offers explicit no-encryption and LUKS password visibility controls"
+else
+  nok "installer disk encryption choices or password visibility controls are incomplete"
+fi
+
+if [[ $installer_install_content == *'--out-format=Copying: %n%L'* \
+  && $installer_install_content == *'System files copied successfully.'* \
+  && $installer_install_content != *'(offline)'* ]]; then
+  ok "offline installer streams copy details without offline tags"
+else
+  nok "offline installer copy logs are unclear or still include offline tags"
+fi
 
 # ------------------------------------------------------------------
 # Plymouth and Hibernation Ubuntu port checks

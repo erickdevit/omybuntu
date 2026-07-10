@@ -453,7 +453,7 @@ fn parse_rsync_percentage(line: &str) -> Option<u16> {
     let part = &line[..pos];
     if let Some(start_pos) = part.rfind(|c: char| c.is_whitespace()) {
       let num_str = part[start_pos..].trim();
-      if let Ok(val) = num_str.parse::<u16>() {
+      if let Ok(val @ 0..=100) = num_str.parse::<u16>() {
         return Some(val);
       }
     }
@@ -466,6 +466,7 @@ fn run_rsync_copy(target: &str, tx: &Sender<InstallMessage>) -> Result<(), Strin
     .args([
       "-aAX",
       "--info=progress2",
+      "--out-format=Copying: %n%L",
       "--exclude=/dev/*",
       "--exclude=/proc/*",
       "--exclude=/sys/*",
@@ -482,12 +483,19 @@ fn run_rsync_copy(target: &str, tx: &Sender<InstallMessage>) -> Result<(), Strin
     .spawn()
     .map_err(|e| format!("Failed to spawn rsync: {e}"))?;
 
+  let mut current_percent = 0;
   if let Some(stdout) = child.stdout.take() {
     let reader = BufReader::new(stdout);
     for line in reader.lines().map_while(Result::ok) {
-      if let Some(pct) = parse_rsync_percentage(&line) {
-        let mapped_pct = 40 + (pct * 30 / 100);
-        prog(tx, mapped_pct, &format!("Copying system files: {pct}%"));
+      for record in line.split('\r').map(str::trim).filter(|record| !record.is_empty()) {
+        if let Some(pct) = parse_rsync_percentage(record) {
+          current_percent = pct;
+          let mapped_pct = 40 + (pct * 30 / 100);
+          prog(tx, mapped_pct, &format!("Copying system files: {pct}%"));
+        } else if record.starts_with("Copying: ") {
+          let mapped_pct = 40 + (current_percent * 30 / 100);
+          prog(tx, mapped_pct, record);
+        }
       }
     }
   }
@@ -596,8 +604,9 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
   let _target_cleanup = TargetCleanup::new(target, cfg.encrypt);
 
   if cfg.offline {
-    prog(tx, 40, "Copying system files from Live ISO (offline)...");
+    prog(tx, 40, "Copying system files from Live ISO...");
     run_rsync_copy(target, tx)?;
+    prog(tx, 70, "System files copied successfully.");
 
     prog(tx, 70, "Mounting virtual filesystems for chroot...");
     mount_virtual_fs(target)?;

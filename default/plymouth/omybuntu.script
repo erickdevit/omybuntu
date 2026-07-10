@@ -263,3 +263,11 @@ fun hide_message_callback(text) {
 
 Plymouth.SetDisplayMessageFunction(display_message_callback);
 Plymouth.SetHideMessageFunction(hide_message_callback);
+
+#----------------------------------------- Quit ------------------------------------
+
+fun quit_callback() {
+  update_progress_bar(1.0);
+}
+
+Plymouth.SetQuitFunction(quit_callback);

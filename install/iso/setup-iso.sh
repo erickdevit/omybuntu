@@ -68,6 +68,7 @@ Exec=/opt/omybuntu/bin/omybuntu-launch-tui /opt/omybuntu/bin/omybuntu-setup-inst
 Icon=system-software-install
 Categories=System;
 Terminal=false
+NotShowIn=Hyprland;
 EOF
 
 cat <<EOF | sudo tee /etc/skel/.config/autostart/omybuntu-live-session-setup.desktop > /dev/null

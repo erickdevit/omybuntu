@@ -853,6 +853,32 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   ok "ISO build writes casper checksum manifest" || \
   nok "ISO build does not write casper checksum manifest"
 
+gitlab_ci_content=$(<"$ROOT/.gitlab-ci.yml")
+if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]/'* ]] \
+  && [[ $gitlab_ci_content == *'CI_PIPELINE_SOURCE == "web"'* ]] \
+  && [[ $gitlab_ci_content == *'when: never'* ]]; then
+  ok "GitLab creates ISO pipelines only for version tags and manual runs"
+else
+  nok "GitLab pipeline rules allow unintended automatic ISO builds"
+fi
+
+if [[ $gitlab_ci_content == *'./install/iso/build-iso.sh --clean'* ]] \
+  && [[ $gitlab_ci_content == *saas-linux-medium-amd64* ]] \
+  && [[ $gitlab_ci_content == *'resource_group: omybuntu-iso'* ]]; then
+  ok "GitLab serializes clean ISO builds on the medium privileged runner"
+else
+  nok "GitLab ISO build runner or serialization is incomplete"
+fi
+
+if [[ $gitlab_ci_content == *'/packages/generic/omybuntu/'* ]] \
+  && [[ $gitlab_ci_content == *'JOB-TOKEN: ${CI_JOB_TOKEN}'* ]] \
+  && [[ $gitlab_ci_content == *'sha256sum "$package_file"'* ]] \
+  && [[ $gitlab_ci_content == *'"*.iso.sha256"'* ]]; then
+  ok "GitLab publishes the ISO and checksum through the Generic Package Registry"
+else
+  nok "GitLab ISO publication or checksum handling is incomplete"
+fi
+
 webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")
 [[ $webapp_install_content == *LAUNCHER_ICON_FIELD* && $webapp_install_content == *hicolor/48x48/apps* && $webapp_install_content == *'gtk-update-icon-cache --ignore-theme-index'* ]] && \
   ok "webapp launchers register icons in the icon theme" || \

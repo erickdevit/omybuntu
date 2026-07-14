@@ -112,6 +112,10 @@ For a streamlined bare-metal deployment, we are building a custom Omybuntu ISO i
 * **Rapid Deployment**: Incorporates custom chroot scripts to prepare system storage quickly.
 * **Status**: The ISO generation scripts are in active development and testing. The official .iso image will be made available for download very soon.
 
+#### GitLab ISO Builds
+
+ISO builds run on the [Omybuntu GitLab project](https://gitlab.com/erickwornex/omybuntu). Maintainers can start a pipeline manually from the `dev` branch, while version tags matching `v*` start a build automatically. Successful pipelines publish the ISO and its SHA-256 checksum to the GitLab Generic Package Registry.
+
 ---
 
 ## Acknowledgements & Origin (Créditos)

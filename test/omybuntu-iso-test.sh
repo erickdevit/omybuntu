@@ -418,6 +418,14 @@ else
   nok "hyprland.desktop is hidden from uwsm or visible in menus"
 fi
 
+if [[ $hyprland_desktop_content == *Exec=start-hyprland* ]] \
+  && [[ $hyprland_desktop_content == *TryExec=start-hyprland* ]] \
+  && [[ $hyprland_desktop_content != *$'Exec=Hyprland\n'* ]]; then
+  ok "hyprland.desktop launches through the recommended watchdog wrapper"
+else
+  nok "hyprland.desktop still bypasses start-hyprland"
+fi
+
 if [[ $sddm_content == *default/wayland-sessions/hyprland.desktop* ]] \
   && ! grep -q 'for session in hyprland.desktop' <<<"$sddm_content"; then
   ok "sddm.sh keeps hyprland.desktop for uwsm"
@@ -458,18 +466,31 @@ ascii_logo_content=$(<"$ROOT/bin/omybuntu-cmd-generate-ascii-logo")
   nok "theme asset recolor helper is missing"
 
 plymouth_script_content=$(<"$ROOT/default/plymouth/omybuntu.script")
-[[ $plymouth_script_content == *'if (mode == "boot" || mode == "resume") {'* && $plymouth_script_content != *'&& global.password_shown == 1'* ]] && \
-  ok "plymouth shows boot progress without LUKS password" || \
-  nok "plymouth still gates boot progress behind LUKS password"
+if [[ $plymouth_script_content == *'Image("spinner.png")'* ]] \
+  && [[ $plymouth_script_content == *'spinner.turns_per_cycle = 3;'* ]] \
+  && [[ $plymouth_script_content == *'spinner.pause_frames = 20;'* ]] \
+  && [[ $plymouth_script_content == *'spinner.image.Rotate(angle)'* ]]; then
+  ok "plymouth boot indicator rotates the distro icon in three-turn cycles"
+else
+  nok "plymouth boot indicator is missing the requested icon rotation cycle"
+fi
 
-[[ $plymouth_script_content == *reset_progress_bar* && $plymouth_script_content == *progress_complete_threshold* ]] && \
-  ok "plymouth resets progress and recognizes the completion threshold" || \
-  nok "plymouth progress reset or completion threshold is missing"
+if [[ $plymouth_script_content == *'Window.GetWidth() / 2 - image.GetWidth() / 2'* ]] \
+  && [[ $plymouth_script_content == *'Window.GetHeight() / 2 - image.GetHeight() / 2'* ]] \
+  && [[ $plymouth_script_content == *'if (spinner.size < 96)'* ]] \
+  && [[ $plymouth_script_content == *'if (spinner.size > 320)'* ]]; then
+  ok "plymouth spinner remains centered with bounded responsive scaling"
+else
+  nok "plymouth spinner centering or responsive scaling is incomplete"
+fi
 
-[[ $plymouth_script_content == *'progress > global.progress_complete_threshold'* \
-  && $plymouth_script_content == *'update_progress_bar(1.0);'* ]] && \
-  ok "plymouth fills boot progress completely when boot finishes" || \
-  nok "plymouth does not fill boot progress completely at boot completion"
+if [[ $plymouth_script_content == *'if (mode == "boot" || mode == "resume") {'* ]] \
+  && [[ $plymouth_script_content != *progress_box* ]] \
+  && [[ $plymouth_script_content != *progress_bar* ]]; then
+  ok "plymouth replaces the boot progress bar in live and installed boot modes"
+else
+  nok "plymouth still uses the progress bar or misses a boot mode"
+fi
 
 sddm_metadata_content=$(<"$ROOT/default/sddm/omybuntu/metadata.desktop")
 [[ $sddm_metadata_content == *MainScript=Main.qml* && $sddm_metadata_content == *Theme-API=2.0* ]] && \
@@ -610,13 +631,17 @@ plymouth_reset_content=$(<"$ROOT/bin/omybuntu-plymouth-reset")
 
 plymouth_install_content=$(<"$ROOT/install/login/plymouth.sh")
 plymouth_set_content=$(<"$ROOT/bin/omybuntu-plymouth-set")
-if [[ $refresh_plymouth_content == *track_hex* ]] \
-  && [[ $plymouth_reset_content == *track_hex* ]] \
-  && [[ $plymouth_install_content == *track_hex* ]] \
-  && ! grep -q 'progress_bar\.png progress_box\.png' <<<"$refresh_plymouth_content$plymouth_reset_content$plymouth_install_content"; then
-  ok "Plymouth default progress bar keeps a contrasting track color"
+if [[ $refresh_plymouth_content == *'icon.png" -bordercolor none -border 40x40'* ]] \
+  && [[ $plymouth_reset_content == *'icon.png" -bordercolor none -border 40x40'* ]] \
+  && [[ $plymouth_install_content == *'icon.png" -bordercolor none -border 40x40'* ]] \
+  && [[ $plymouth_set_content == *'icon.png" -bordercolor none -border 40x40'* ]] \
+  && [[ $refresh_plymouth_content == *spinner.png* ]] \
+  && [[ $plymouth_reset_content == *spinner.png* ]] \
+  && [[ $plymouth_install_content == *spinner.png* ]] \
+  && [[ $plymouth_set_content == *spinner.png* ]]; then
+  ok "all Plymouth writers stage a padded distro icon for rotation"
 else
-  nok "Plymouth default progress bar still recolors track and fill together"
+  nok "one or more Plymouth writers omit the padded spinner asset"
 fi
 
 if [[ $plymouth_install_content == *'chown -R root:root'* ]] \
@@ -758,6 +783,15 @@ sddm_migration_content=$(<"$ROOT/migrations/1778148645.sh")
 [[ $sddm_migration_content == *99-omybuntu.conf* && $sddm_migration_content != *10-wayland.conf* ]] && \
   ok "sddm legacy migration points to 99-omybuntu.conf" || \
   nok "sddm legacy migration still points to 10-wayland.conf"
+
+boot_visual_migration_content=$(<"$ROOT/migrations/1783719444.sh")
+if [[ $boot_visual_migration_content == *omybuntu-refresh-plymouth* ]] \
+  && [[ $boot_visual_migration_content == *default/wayland-sessions/omybuntu.desktop* ]] \
+  && [[ $boot_visual_migration_content == *default/wayland-sessions/hyprland.desktop* ]]; then
+  ok "boot visual migration updates Plymouth and both UWSM session entries"
+else
+  nok "boot visual migration does not fully update installed systems"
+fi
 
 # Launcher hygiene: Ghostty-only terminal and hidden clutter apps
 base_packages_content=$(<"$ROOT/install/omybuntu-base.packages")

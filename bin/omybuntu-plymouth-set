@@ -46,13 +46,14 @@ trap 'rm -rf "$staging_dir"' EXIT
 
 find "$OMYBUNTU_PATH/default/plymouth" -maxdepth 1 -type f -exec cp -t "$staging_dir/" {} +
 cp "$logo_path" "$staging_dir/logo.png"
+magick "$OMYBUNTU_PATH/icon.png" -bordercolor none -border 40x40 "$staging_dir/spinner.png"
 
 sed -i \
   -e "s/^Window.SetBackgroundTopColor.*/Window.SetBackgroundTopColor($bg_r, $bg_g, $bg_b);/" \
   -e "s/^Window.SetBackgroundBottomColor.*/Window.SetBackgroundBottomColor($bg_r, $bg_g, $bg_b);/" \
   "$staging_dir/omybuntu.script"
 
-for asset in bullet.png entry.png lock.png progress_bar.png; do
+for asset in bullet.png entry.png lock.png; do
   magick "$staging_dir/$asset" -channel RGB +level-colors "#$text_hex","#$text_hex" "$staging_dir/$asset"
 done
 

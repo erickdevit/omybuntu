@@ -1,7 +1,8 @@
 [Desktop Entry]
 Name=Hyprland
 Comment=Hyprland Wayland compositor (internal uwsm target)
-Exec=Hyprland
+Exec=start-hyprland
+TryExec=start-hyprland
 DesktopNames=Hyprland
 Type=Application
 NoDisplay=true

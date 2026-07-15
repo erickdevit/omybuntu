@@ -14,7 +14,17 @@ WORKSPACE=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 BUILD_DIR="$WORKSPACE/build"
 CHROOT_DIR="$BUILD_DIR/chroot"
 IMAGE_DIR="$BUILD_DIR/image"
-ISO_OUT="$WORKSPACE/omybuntu.iso"
+ISO_VERSION="${OMYBUNTU_ISO_VERSION:-}"
+if [[ -n $ISO_VERSION && ! $ISO_VERSION =~ ^[0-9A-Za-z][0-9A-Za-z._+-]*$ ]]; then
+  echo "Error: OMYBUNTU_ISO_VERSION contains characters that are unsafe for an ISO filename: $ISO_VERSION" >&2
+  exit 1
+fi
+
+if [[ -n $ISO_VERSION ]]; then
+  ISO_OUT="$WORKSPACE/omybuntu-${ISO_VERSION}-amd64.iso"
+else
+  ISO_OUT="$WORKSPACE/omybuntu.iso"
+fi
 
 CACHE_DIR="$WORKSPACE/.iso-cache"
 CACHE_MANIFEST="$CACHE_DIR/manifest.sh"
@@ -227,6 +237,7 @@ sudo rsync -a \
 build_branch=$(git -C "$WORKSPACE" branch --show-current 2>/dev/null || echo "unknown")
 build_commit=$(git -C "$WORKSPACE" rev-parse --short HEAD 2>/dev/null || echo "unknown")
 build_describe=$(git -C "$WORKSPACE" describe --tags --always --dirty 2>/dev/null || cat "$WORKSPACE/version")
+build_version="${ISO_VERSION:-$build_describe}"
 build_channel="$build_branch"
 if [[ $build_branch == "main" || $build_branch == "master" ]]; then
   build_channel="stable"
@@ -239,11 +250,14 @@ elif [[ -z $build_branch ]]; then
   build_channel="unknown"
 fi
 
+printf '%s\n' "${build_version#v}" | sudo tee "$CHROOT_DIR/opt/omybuntu/version" >/dev/null
+
 cat <<EOF | sudo tee "$CHROOT_DIR/opt/omybuntu/.build-info" >/dev/null
 OMYBUNTU_BUILD_BRANCH=$build_branch
 OMYBUNTU_BUILD_CHANNEL=$build_channel
 OMYBUNTU_BUILD_COMMIT=$build_commit
-OMYBUNTU_BUILD_DESCRIBE=$build_describe
+OMYBUNTU_BUILD_DESCRIBE=$build_version
+OMYBUNTU_BUILD_VERSION=$build_version
 EOF
 
 sudo mkdir -p "$CHROOT_DIR/root/.local/share"

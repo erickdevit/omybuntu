@@ -845,16 +845,20 @@ tuis_content=$(<"$ROOT/install/packaging/tuis.sh")
   nok "base packages do not install gdu for Disk Usage"
 
 build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
-[[ $build_iso_content == *'.build-info'* && $build_iso_content == *OMYBUNTU_BUILD_BRANCH* ]] && \
+[[ $build_iso_content == *'.build-info'* && $build_iso_content == *OMYBUNTU_BUILD_BRANCH* && $build_iso_content == *OMYBUNTU_BUILD_VERSION* ]] && \
   ok "ISO build writes Omybuntu build metadata for fastfetch" || \
   nok "ISO build does not write Omybuntu build metadata"
+
+[[ $build_iso_content == *'OMYBUNTU_ISO_VERSION'* && $build_iso_content == *'omybuntu-${ISO_VERSION}-amd64.iso'* && $build_iso_content == *'${build_version#v}'* ]] && \
+  ok "ISO build inherits its filename and embedded version from the requested version" || \
+  nok "ISO build does not propagate the requested version"
 
 [[ $build_iso_content == *'md5sum.txt'* && $build_iso_content == *'xargs -0 md5sum'* ]] && \
   ok "ISO build writes casper checksum manifest" || \
   nok "ISO build does not write casper checksum manifest"
 
 gitlab_ci_content=$(<"$ROOT/.gitlab-ci.yml")
-if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]/'* ]] \
+if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9][0-9A-Za-z._+-]*$/'* ]] \
   && [[ $gitlab_ci_content == *'CI_PIPELINE_SOURCE == "web"'* ]] \
   && [[ $gitlab_ci_content == *'when: never'* ]]; then
   ok "GitLab creates ISO pipelines only for version tags and manual runs"
@@ -862,12 +866,14 @@ else
   nok "GitLab pipeline rules allow unintended automatic ISO builds"
 fi
 
-if [[ $gitlab_ci_content == *'./install/iso/build-iso.sh --clean'* ]] \
+if [[ $gitlab_ci_content == *'export OMYBUNTU_ISO_VERSION="$package_version"'* ]] \
+  && [[ $gitlab_ci_content == *'./install/iso/build-iso.sh --clean'* ]] \
+  && [[ $gitlab_ci_content == *'test -s "$package_file"'* ]] \
   && [[ $gitlab_ci_content == *saas-linux-medium-amd64* ]] \
   && [[ $gitlab_ci_content == *'resource_group: omybuntu-iso'* ]]; then
-  ok "GitLab serializes clean ISO builds on the medium privileged runner"
+  ok "GitLab serializes versioned ISO builds on the medium privileged runner"
 else
-  nok "GitLab ISO build runner or serialization is incomplete"
+  nok "GitLab ISO version propagation, runner, or serialization is incomplete"
 fi
 
 if [[ $gitlab_ci_content == *'/packages/generic/omybuntu/'* ]] \
@@ -877,6 +883,17 @@ if [[ $gitlab_ci_content == *'/packages/generic/omybuntu/'* ]] \
   ok "GitLab publishes the ISO and checksum through the Generic Package Registry"
 else
   nok "GitLab ISO publication or checksum handling is incomplete"
+fi
+
+if [[ $gitlab_ci_content == *'stage: release'* ]] \
+  && [[ $gitlab_ci_content == *'registry.gitlab.com/gitlab-org/cli:latest'* ]] \
+  && [[ $gitlab_ci_content == *'GLAB_ENABLE_CI_AUTOLOGIN: "true"'* ]] \
+  && [[ $gitlab_ci_content == *'glab release view "$CI_COMMIT_TAG"'* ]] \
+  && [[ $gitlab_ci_content == *'glab release create "$CI_COMMIT_TAG"'* ]] \
+  && [[ $gitlab_ci_content == *'"link_type":"package"'* ]]; then
+  ok "GitLab creates or updates a tag release with versioned ISO links"
+else
+  nok "GitLab release publication is incomplete"
 fi
 
 webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")

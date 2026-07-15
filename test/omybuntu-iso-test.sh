@@ -874,21 +874,49 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   ok "ISO build writes Omybuntu build metadata for fastfetch" || \
   nok "ISO build does not write Omybuntu build metadata"
 
-[[ $build_iso_content == *'OMYBUNTU_ISO_VERSION'* && $build_iso_content == *'omybuntu-${ISO_VERSION}-amd64.iso'* && $build_iso_content == *'${build_version#v}'* ]] && \
-  ok "ISO build inherits its filename and embedded version from the requested version" || \
+version_content=$(<"$ROOT/version")
+release_tag_pattern='^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]*)?$'
+[[ $version_content =~ $release_tag_pattern ]] && \
+  ok "source version uses the vX.Y.Z_dev convention" || \
+  nok "source version does not use the expected release convention"
+
+if [[ v1.1.6_dev =~ $release_tag_pattern ]] \
+  && [[ v1.1.6 =~ $release_tag_pattern ]] \
+  && [[ ! v0.0.1.5-dev1 =~ $release_tag_pattern ]] \
+  && [[ ! v1.1.6.1_dev =~ $release_tag_pattern ]]; then
+  ok "release convention accepts exactly three numeric components"
+else
+  nok "release convention accepts a legacy or malformed tag"
+fi
+
+[[ $build_iso_content == *'OMYBUNTU_ISO_VERSION'* && $build_iso_content == *'omybuntu-${ISO_VERSION}-amd64.iso'* && $build_iso_content == *'printf '\''%s\n'\'' "$build_version"'* ]] && \
+  ok "ISO preserves the complete requested version in its filename and embedded metadata" || \
   nok "ISO build does not propagate the requested version"
+
+[[ $build_iso_content == *'_dev[0-9]*$'*dev* && $build_iso_content == *'_rc[0-9]*$'*rc* ]] && \
+  ok "tagged ISO builds infer their update channel from the version suffix" || \
+  nok "tagged ISO builds do not infer dev and rc channels"
 
 [[ $build_iso_content == *'md5sum.txt'* && $build_iso_content == *'xargs -0 md5sum'* ]] && \
   ok "ISO build writes casper checksum manifest" || \
   nok "ISO build does not write casper checksum manifest"
 
 gitlab_ci_content=$(<"$ROOT/.gitlab-ci.yml")
-if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9][0-9A-Za-z._+-]*$/'* ]] \
+if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]*)?$/'* ]] \
   && [[ $gitlab_ci_content == *'CI_PIPELINE_SOURCE == "web"'* ]] \
   && [[ $gitlab_ci_content == *'when: never'* ]]; then
-  ok "GitLab creates ISO pipelines only for version tags and manual runs"
+  ok "GitLab creates ISO pipelines only for three-part version tags and manual runs"
 else
   nok "GitLab pipeline rules allow unintended automatic ISO builds"
+fi
+
+update_available_content=$(<"$ROOT/bin/omybuntu-update-available")
+if [[ $update_available_content == *'v[0-9]+\.[0-9]+\.[0-9]+'* ]] \
+  && [[ $update_available_content == *'_${version_pattern}_dev'* || $update_available_content == *'${version_pattern}_dev'* ]] \
+  && [[ $update_available_content == *'${version_pattern}_rc'* ]]; then
+  ok "update discovery follows stable, dev, and rc three-part tags"
+else
+  nok "update discovery still depends on the legacy tag convention"
 fi
 
 if [[ $gitlab_ci_content == *'export OMYBUNTU_ISO_VERSION="$package_version"'* ]] \

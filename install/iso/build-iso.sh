@@ -239,7 +239,13 @@ build_commit=$(git -C "$WORKSPACE" rev-parse --short HEAD 2>/dev/null || echo "u
 build_describe=$(git -C "$WORKSPACE" describe --tags --always --dirty 2>/dev/null || cat "$WORKSPACE/version")
 build_version="${ISO_VERSION:-$build_describe}"
 build_channel="$build_branch"
-if [[ $build_branch == "main" || $build_branch == "master" ]]; then
+if [[ $build_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+_dev[0-9]*$ ]]; then
+  build_channel="dev"
+elif [[ $build_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+_rc[0-9]*$ ]]; then
+  build_channel="rc"
+elif [[ $build_version =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  build_channel="stable"
+elif [[ $build_branch == "main" || $build_branch == "master" ]]; then
   build_channel="stable"
 elif [[ $build_branch == "rc" ]]; then
   build_channel="rc"
@@ -250,7 +256,7 @@ elif [[ -z $build_branch ]]; then
   build_channel="unknown"
 fi
 
-printf '%s\n' "${build_version#v}" | sudo tee "$CHROOT_DIR/opt/omybuntu/version" >/dev/null
+printf '%s\n' "$build_version" | sudo tee "$CHROOT_DIR/opt/omybuntu/version" >/dev/null
 
 cat <<EOF | sudo tee "$CHROOT_DIR/opt/omybuntu/.build-info" >/dev/null
 OMYBUNTU_BUILD_BRANCH=$build_branch

@@ -45,6 +45,13 @@ else
     exit 1
   fi
 
+  if omybuntu-cmd-present mokutil && mokutil --sb-state 2>/dev/null | grep -qi "SecureBoot enabled"; then
+    if omybuntu-cmd-missing sbverify || ! sbverify --list "/boot/EFI/Linux/$uki_file" >/dev/null 2>&1; then
+      echo "$I18N_DIRECT_BOOT_ERR_UNSIGNED_UKI" >&2
+      exit 1
+    fi
+  fi
+
   boot_source=$(findmnt -n -o SOURCE /boot)
   disk=$(echo "$boot_source" | sed 's/p\?[0-9]*$//')
   part=$(echo "$boot_source" | grep -o 'p\?[0-9]*$' | sed 's/^p//')

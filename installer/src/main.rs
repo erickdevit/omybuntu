@@ -9,6 +9,7 @@ use ratatui::{backend::CrosstermBackend, Terminal};
 
 mod app;
 mod install;
+mod storage;
 mod theme;
 mod ui;
 

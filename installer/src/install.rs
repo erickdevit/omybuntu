@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::io::{BufRead, BufReader, Write, Seek, SeekFrom};
+use crate::storage::{StoragePlan, validate_alongside_plan};
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
@@ -16,9 +17,9 @@ pub enum InstallMessage {
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct InstallConfig {
-  pub disk:          String,
+  pub storage:       StoragePlan,
   pub encrypt:       bool,
   pub luks_pass:     String,
   pub hostname:      String,
@@ -30,6 +31,27 @@ pub struct InstallConfig {
   pub keymap:        String,
   pub timezone:      String,
   pub offline:       bool,
+  pub mok_password:  String,
+}
+
+impl std::fmt::Debug for InstallConfig {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_struct("InstallConfig")
+      .field("storage", &self.storage)
+      .field("encrypt", &self.encrypt)
+      .field("hostname", &self.hostname)
+      .field("username", &self.username)
+      .field("language", &self.language)
+      .field("locale", &self.locale)
+      .field("keymap", &self.keymap)
+      .field("timezone", &self.timezone)
+      .field("offline", &self.offline)
+      .field("password", &"[REDACTED]")
+      .field("root_password", &"[REDACTED]")
+      .field("luks_pass", &"[REDACTED]")
+      .field("mok_password", &"[REDACTED]")
+      .finish()
+  }
 }
 
 const UBUNTU_CODENAME: &str = "resolute"; // 26.04
@@ -122,6 +144,77 @@ fn get_uuid(device: &str) -> Result<String, String> {
     return Err(format!("Could not get UUID for {device}"));
   }
   Ok(uuid)
+}
+
+fn ensure_secure_boot_packages(target: &str, offline: bool) -> Result<(), String> {
+  let packages = [
+    "shim-signed",
+    "grub-efi-amd64-signed",
+    "mokutil",
+    "sbsigntool",
+    "efibootmgr",
+  ];
+  if offline {
+    for package in packages {
+      cmd(&["chroot", target, "dpkg-query", "-W", "-f=${Status}", package])?;
+    }
+  } else {
+    let mut args = vec![
+      "chroot", target, "env", "DEBIAN_FRONTEND=noninteractive",
+      "apt-get", "install", "-y",
+    ];
+    args.extend(packages);
+    cmd(&args)?;
+  }
+  Ok(())
+}
+
+fn configure_windows_grub(target: &str, esp_uuid: &str) -> Result<(), String> {
+  let path = format!("{target}/etc/grub.d/35_omybuntu_windows");
+  let script = format!(
+    "#!/bin/sh\n\
+     cat <<'OMYBUNTU_WINDOWS_ENTRY'\n\
+     menuentry 'Windows Boot Manager' --class windows --class os {{\n\
+       insmod part_gpt\n\
+       insmod fat\n\
+       insmod chain\n\
+       search --no-floppy --fs-uuid --set=windows_esp {esp_uuid}\n\
+       chainloader ($windows_esp)/EFI/Microsoft/Boot/bootmgfw.efi\n\
+     }}\n\
+     OMYBUNTU_WINDOWS_ENTRY\n"
+  );
+  write_file(&path, &script)?;
+  cmd(&["chmod", "0755", &path])
+}
+
+fn configure_mok(target: &str, password: &str) -> Result<(), String> {
+  if password.is_empty() {
+    return Ok(());
+  }
+  let mok_der = format!("{target}/var/lib/shim-signed/mok/MOK.der");
+  if !std::path::Path::new(&mok_der).exists() {
+    cmd(&["chroot", target, "update-secureboot-policy", "--new-key"])?;
+  }
+  if std::path::Path::new(&format!("{target}/usr/sbin/dkms")).exists() {
+    cmd(&["chroot", target, "dkms", "autoinstall", "--force"])?;
+  }
+  let enrollment_input = format!("{password}\n{password}\n");
+  cmd_stdin(
+    &["chroot", target, "mokutil", "--import", "/var/lib/shim-signed/mok/MOK.der"],
+    enrollment_input.as_bytes(),
+  )
+}
+
+fn verify_signed_boot_chain(target: &str) -> Result<(), String> {
+  let efi_dir = format!("{target}/boot/efi/EFI/Omybuntu");
+  for file in ["shimx64.efi", "grubx64.efi"] {
+    let path = format!("{efi_dir}/{file}");
+    if !std::path::Path::new(&path).is_file() {
+      return Err(format!("Secure Boot file missing after GRUB installation: {path}"));
+    }
+    cmd(&["sbverify", "--list", &path])?;
+  }
+  Ok(())
 }
 
 fn debootstrap_progress(_tx: &Sender<InstallMessage>, line: &str) -> Option<u16> {
@@ -336,7 +429,7 @@ fn clean_disk_mounts(disk: &str) -> Result<(), String> {
     }
   }
   // Sort mounts by mount point path length descending to unmount nested mounts first
-  mounts.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+  mounts.sort_by_key(|mount| std::cmp::Reverse(mount.1.len()));
   for (_, mp) in &mounts {
     silent_cmd(&["umount", "-lf", mp]);
   }
@@ -510,58 +603,77 @@ fn run_rsync_copy(target: &str, tx: &Sender<InstallMessage>) -> Result<(), Strin
 // ─── Installation ─────────────────────────────────────────────────────────────
 
 fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), String> {
-  let suffix = if cfg.disk.contains("nvme") || cfg.disk.contains("mmcblk") { "p" } else { "" };
-  let part_efi  = format!("{}{suffix}1", cfg.disk);
-  let part_root = format!("{}{suffix}2", cfg.disk);
-
   let target = "/mnt";
+  let disk = cfg.storage.disk().to_string();
+  let (part_efi, part_root) = match &cfg.storage {
+    StoragePlan::EraseDisk { .. } => {
+      let suffix = if disk.contains("nvme") || disk.contains("mmcblk") { "p" } else { "" };
+      let part_efi = format!("{disk}{suffix}1");
+      let part_root = format!("{disk}{suffix}2");
 
-  // ── 1. Partition ──────────────────────────────────────────────────────────
-  prog(tx, 5, "Partitioning disk...");
-  if let Err(e) = clean_disk_mounts(&cfg.disk) {
-    eprintln!("Warning while cleaning disk mounts: {}", e);
-  }
-
-  // Attempt to zap-all, with fallback and logging
-  if let Err(e) = cmd(&["sgdisk", "--zap-all", &cfg.disk]) {
-    eprintln!("Initial sgdisk --zap-all failed: {}. Running diagnostics...", e);
-    let _ = run_diagnostic_commands(&cfg.disk);
-
-    // Try a quick dd fallback to wipe the partition headers (first 10MB)
-    eprintln!("Trying to wipe partition headers with dd...");
-    let dd_res = Command::new("dd")
-      .args(["if=/dev/zero", &format!("of={}", cfg.disk), "bs=1M", "count=10", "oflag=direct"])
-      .stdout(Stdio::null())
-      .stderr(Stdio::null())
-      .status();
-    if let Err(ref dd_err) = dd_res {
-      eprintln!("dd fallback failed: {}", dd_err);
+      prog(tx, 5, "Partitioning disk...");
+      if let Err(e) = clean_disk_mounts(&disk) {
+        eprintln!("Warning while cleaning disk mounts: {e}");
+      }
+      if let Err(e) = cmd(&["sgdisk", "--zap-all", &disk]) {
+        eprintln!("Initial sgdisk --zap-all failed: {e}. Running diagnostics...");
+        let _ = run_diagnostic_commands(&disk);
+        eprintln!("Trying to wipe partition headers with dd...");
+        let _ = Command::new("dd")
+          .args(["if=/dev/zero", &format!("of={disk}"), "bs=1M", "count=10", "oflag=direct"])
+          .stdout(Stdio::null())
+          .stderr(Stdio::null())
+          .status();
+        silent_cmd(&["partprobe", &disk]);
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        if let Err(retry_err) = cmd(&["sgdisk", "--zap-all", &disk]) {
+          eprintln!("sgdisk --zap-all failed again: {retry_err}. Trying parted...");
+          cmd(&["parted", "-s", &disk, "mklabel", "gpt"])
+            .map_err(|final_err| format!("Partitioning failed: {final_err}"))?;
+        }
+      }
+      cmd(&[
+        "sgdisk",
+        "-n", "1:0:+512M", "-t", "1:ef00",
+        "-n", "2:0:0", "-t", "2:8300",
+        &disk,
+      ])?;
+      silent_cmd(&["partprobe", &disk]);
+      silent_cmd(&["udevadm", "settle"]);
+      prog(tx, 10, "Formatting EFI partition...");
+      cmd(&["mkfs.vfat", "-F32", &part_efi])?;
+      (part_efi, part_root)
     }
-    
-    // Rerun partprobe
-    silent_cmd(&["partprobe", &cfg.disk]);
-    std::thread::sleep(std::time::Duration::from_millis(500));
+    StoragePlan::AlongsideWindows {
+      esp_partition,
+      root_partition_number,
+      free_region,
+      ..
+    } => {
+      prog(tx, 3, "Revalidating the Windows disk layout...");
+      validate_alongside_plan(&cfg.storage)?;
+      std::fs::create_dir_all("/run/omybuntu-installer").ok();
+      let backup = "/run/omybuntu-installer/partition-table.gpt";
+      let _ = cmd(&["sgdisk", &format!("--backup={backup}"), &disk]);
 
-    // Try sgdisk --zap-all again
-    eprintln!("Retrying sgdisk --zap-all after dd...");
-    if let Err(retry_err) = cmd(&["sgdisk", "--zap-all", &cfg.disk]) {
-      eprintln!("sgdisk --zap-all failed again: {}. Trying parted label creation as a fallback...", retry_err);
-      cmd(&["parted", "-s", &cfg.disk, "mklabel", "gpt"])
-        .map_err(|final_err| format!("Partitioning failed. sgdisk and parted both failed. Parted error: {}", final_err))?;
+      prog(tx, 6, "Creating Omybuntu in the selected unallocated region...");
+      let number = root_partition_number.to_string();
+      let range = format!("{}:{}:{}", root_partition_number, free_region.start_sector, free_region.end_sector);
+      let type_code = format!("{root_partition_number}:8300");
+      let label = format!("{root_partition_number}:Omybuntu");
+      cmd(&["sgdisk", "-n", &range, "-t", &type_code, "-c", &label, &disk])?;
+      silent_cmd(&["partprobe", &disk]);
+      silent_cmd(&["udevadm", "settle"]);
+      std::thread::sleep(std::time::Duration::from_secs(1));
+      let suffix = if disk.chars().last().is_some_and(|c| c.is_ascii_digit()) { "p" } else { "" };
+      let root = format!("{disk}{suffix}{number}");
+      if !std::path::Path::new(&root).exists() {
+        let _ = cmd(&["sgdisk", "-d", &number, &disk]);
+        return Err(format!("The new Omybuntu partition {root} did not appear; the partition was rolled back"));
+      }
+      (esp_partition.clone(), root)
     }
-  }
-  cmd(&[
-    "sgdisk",
-    "-n", "1:0:+512M", "-t", "1:ef00",
-    "-n", "2:0:0",     "-t", "2:8300",
-    &cfg.disk,
-  ])?;
-  silent_cmd(&["partprobe", &cfg.disk]);
-  std::thread::sleep(std::time::Duration::from_secs(1));
-
-  // ── 2. Format EFI ─────────────────────────────────────────────────────────
-  prog(tx, 10, "Formatting EFI partition...");
-  cmd(&["mkfs.vfat", "-F32", &part_efi])?;
+  };
 
   // ── 3. LUKS or direct ─────────────────────────────────────────────────────
   let root_dev = if cfg.encrypt {
@@ -831,9 +943,26 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     .stderr(Stdio::null())
     .status();
   configure_target_login(target, &cfg.username, cfg.encrypt)?;
+  if std::path::Path::new("/run/omybuntu-installer/partition-table.gpt").is_file() {
+    std::fs::create_dir_all(format!("{target}/var/log")).ok();
+    let _ = std::fs::copy(
+      "/run/omybuntu-installer/partition-table.gpt",
+      format!("{target}/var/log/omybuntu-partition-table.gpt"),
+    );
+  }
 
   // ── 18. GRUB ─────────────────────────────────────────────────────────────
-  prog(tx, 88, "Installing GRUB bootloader...");
+  prog(tx, 87, "Preparing the signed Secure Boot chain...");
+  ensure_secure_boot_packages(target, cfg.offline)?;
+  if let StoragePlan::AlongsideWindows { esp_uuid, .. } = &cfg.storage {
+    configure_windows_grub(target, esp_uuid)?;
+  }
+  if !cfg.mok_password.is_empty() {
+    prog(tx, 88, "Preparing Machine Owner Key enrollment...");
+    configure_mok(target, &cfg.mok_password)?;
+  }
+
+  prog(tx, 89, "Installing signed GRUB bootloader...");
   if cfg.encrypt {
     let grub_default = std::fs::read_to_string(format!("{target}/etc/default/grub")).unwrap_or_default();
     if !grub_default.contains("GRUB_ENABLE_CRYPTODISK") {
@@ -848,10 +977,12 @@ fn run_install(cfg: &InstallConfig, tx: &Sender<InstallMessage>) -> Result<(), S
     "--target=x86_64-efi",
     "--efi-directory=/boot/efi",
     "--bootloader-id=Omybuntu",
+    "--uefi-secure-boot",
     "--recheck",
   ])?;
+  verify_signed_boot_chain(target)?;
 
-  prog(tx, 91, "Applying GRUB theme in selected language...");
+  prog(tx, 92, "Applying GRUB theme in selected language...");
   let refresh_grub = format!(
     "OMYBUNTU_LANGUAGE={} OMYBUNTU_PATH=/opt/omybuntu /opt/omybuntu/bin/omybuntu-refresh-grub",
     cfg.language,

@@ -560,6 +560,7 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
 
 # Installer TUI uses a clean chroot install environment and final user autologin
 installer_install_content=$(<"$ROOT/installer/src/install.rs")
+installer_storage_content=$(<"$ROOT/installer/src/storage.rs")
 [[ $installer_install_content == *TargetCleanup* && $installer_install_content == *unmount_virtual_fs* ]] && \
   ok "installer cleans target mounts on failure" || \
   nok "installer does not clean target mounts on failure"
@@ -583,6 +584,49 @@ installer_install_content=$(<"$ROOT/installer/src/install.rs")
 [[ $installer_install_content == *OMYBUNTU_ENCRYPTED_INSTALL* && $installer_install_content == *cfg.encrypt* ]] && \
   ok "installer enables SDDM autologin only for encrypted installs" || \
   nok "installer does not gate SDDM autologin on encryption"
+
+if [[ $installer_storage_content == *MIN_ALONGSIDE_BYTES* \
+  && $installer_storage_content == *'64 * 1024 * 1024 * 1024'* \
+  && $installer_storage_content == *'EFI/Microsoft/Boot/bootmgfw.efi'* \
+  && $installer_storage_content == *validate_alongside_plan* ]]; then
+  ok "installer discovers and revalidates eligible Windows alongside layouts"
+else
+  nok "installer alongside layout discovery or revalidation is incomplete"
+fi
+
+if [[ $installer_install_content == *'StoragePlan::AlongsideWindows'* \
+  && $installer_install_content == *'Creating Omybuntu in the selected unallocated region'* \
+  && $installer_install_content == *'esp_partition.clone()'* \
+  && $installer_install_content == *'35_omybuntu_windows'* ]]; then
+  ok "installer creates only the alongside root partition and preserves the Windows ESP"
+else
+  nok "installer alongside partition or Windows boot integration is incomplete"
+fi
+
+if [[ $installer_install_content == *grub-efi-amd64-signed* \
+  && $installer_install_content == *shim-signed* \
+  && $installer_install_content == *'--uefi-secure-boot'* \
+  && $installer_install_content == *verify_signed_boot_chain* ]]; then
+  ok "installed system uses and verifies the Ubuntu signed Secure Boot chain"
+else
+  nok "installed Secure Boot chain is incomplete"
+fi
+
+secure_iso_boot_content=$(<"$ROOT/install/iso/build-bootable-iso.sh")
+if [[ $secure_iso_boot_content == *shimx64.efi.signed.latest* \
+  && $secure_iso_boot_content == *mmx64.efi* \
+  && $secure_iso_boot_content == *grubx64.efi.signed* \
+  && $secure_iso_boot_content == *sbverify* \
+  && $secure_iso_boot_content == *appended_partition_2* ]]; then
+  ok "live ISO embeds and verifies signed shim and GRUB in its EFI image"
+else
+  nok "live ISO Secure Boot image is incomplete"
+fi
+
+direct_boot_content=$(<"$ROOT/bin/omybuntu-config-direct-boot")
+[[ $direct_boot_content == *'SecureBoot enabled'* && $direct_boot_content == *sbverify* ]] && \
+  ok "direct UKI boot rejects unsigned images while Secure Boot is enabled" || \
+  nok "direct UKI boot does not enforce Secure Boot signatures"
 
 sddm_install_content=$(<"$ROOT/install/login/sddm.sh")
 [[ $sddm_install_content == *omybuntu_encrypted_install* && $sddm_install_content == *OMYBUNTU_CHROOT_INSTALL* ]] && \

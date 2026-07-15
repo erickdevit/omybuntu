@@ -29,8 +29,8 @@ build_iso:
     - apt-get update
     - >
       apt-get install -y --no-install-recommends
-      ca-certificates curl git grub-efi-amd64-bin grub-pc-bin imagemagick
-      mtools rsync squashfs-tools sudo wget xorriso
+      ca-certificates curl dosfstools git grub-efi-amd64-bin grub-pc-bin imagemagick
+      mtools rsync sbsigntool squashfs-tools sudo wget xorriso
   script:
     - |
       if [[ -n ${CI_COMMIT_TAG:-} ]]; then

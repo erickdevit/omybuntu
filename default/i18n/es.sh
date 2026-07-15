@@ -278,6 +278,7 @@ export I18N_HIBERNATION_SETUP_WARN="¿Usar %s en el disco de arranque para habil
 export I18N_HIBERNATION_REBOOT_WARN="¿Reiniciar para habilitar la hibernación?"
 export I18N_DIRECT_BOOT_DISABLE="¿Desactivar direct boot (eliminar entrada EFI de Omybuntu)?"
 export I18N_DIRECT_BOOT_SETUP="¿Configurar direct boot (el arranque por snapshot se deberá realizar mediante bios)?"
+export I18N_DIRECT_BOOT_ERR_UNSIGNED_UKI="Direct boot no puede usar una UKI sin firmar mientras Secure Boot está activado."
 export I18N_GPU_HYBRID_ENABLE="¿Activar GPU dedicada y reiniciar?"
 export I18N_GPU_INTEGRATED_ENABLE="¿Usar solo GPU integrada y reiniciar?"
 export I18N_THEME_REMOVE_HEADER="Eliminar tema extra"

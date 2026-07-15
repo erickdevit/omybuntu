@@ -278,6 +278,7 @@ export I18N_HIBERNATION_SETUP_WARN="Use %s on boot drive to make hibernation ava
 export I18N_HIBERNATION_REBOOT_WARN="Reboot to enable hibernation?"
 export I18N_DIRECT_BOOT_DISABLE="Disable direct boot (remove Omybuntu EFI entry)?"
 export I18N_DIRECT_BOOT_SETUP="Setup direct boot (so snapshot booting must be done via bios)?"
+export I18N_DIRECT_BOOT_ERR_UNSIGNED_UKI="Direct boot cannot use an unsigned UKI while Secure Boot is enabled."
 export I18N_GPU_HYBRID_ENABLE="Enable dedicated GPU and reboot?"
 export I18N_GPU_INTEGRATED_ENABLE="Use only integrated GPU and reboot?"
 export I18N_THEME_REMOVE_HEADER="Remove extra theme"

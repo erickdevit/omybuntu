@@ -7,6 +7,7 @@ use ratatui::{
 };
 
 use crate::app::{App, Step, KEYBOARDS, LANGUAGES};
+use crate::storage::StorageMode;
 use crate::theme;
 
 // ─── Welcome logo ─────────────────────────────────────────────────────────────
@@ -78,7 +79,8 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         Step::Welcome     => "[Enter] Begin  [Ctrl+C] Quit",
         Step::Language
         | Step::InstallMode
-        | Step::Keyboard  => "[↑↓] Navigate  [Enter] Select  [Esc] Back",
+        | Step::Keyboard
+        | Step::StorageMode => "[↑↓] Navigate  [Enter] Select  [Esc] Back",
         Step::Timezone    => "Type to search  [↑↓] List  [Enter] Confirm  [Esc] Back",
         Step::Credentials => "[Tab/↑↓] Switch field  [Enter] Confirm  [F1] Toggle password  [Esc] Back",
         Step::Disk        => "[↑↓] Navigate  [Space] Select  [Tab] Next field  [F1] Toggle password  [Enter] Confirm",
@@ -137,6 +139,7 @@ fn render_body(frame: &mut Frame, app: &mut App, area: Rect) {
         Step::Keyboard    => render_keyboard(frame, app, area),
         Step::Timezone    => render_timezone(frame, app, area),
         Step::Credentials => render_credentials(frame, app, area),
+        Step::StorageMode => render_storage_mode(frame, app, area),
         Step::Disk        => render_disk(frame, app, area),
         Step::Summary     => render_summary(frame, app, area),
         Step::Installing  => render_installing(frame, app, area),
@@ -234,6 +237,81 @@ fn render_install_mode(frame: &mut Frame, app: &App, area: Rect) {
 
     let list_area = v_center(inner, 7);
     frame.render_widget(List::new(items), list_area);
+}
+
+// ─── Storage Mode ────────────────────────────────────────────────────────────
+
+fn render_storage_mode(frame: &mut Frame, app: &App, area: Rect) {
+    let outer = titled_block(app.tr(
+        " Select Installation Type ",
+        " Selecione o tipo de instalação ",
+        " Seleccione el tipo de instalación ",
+    ));
+    let inner = outer.inner(area);
+    frame.render_widget(outer, area);
+
+    let alongside_selected = app.storage_mode == StorageMode::AlongsideWindows;
+    let erase_selected = app.storage_mode == StorageMode::EraseDisk;
+    let alongside_available = !app.alongside_candidates.is_empty();
+    let alongside_style = if alongside_selected && alongside_available {
+        theme::selected()
+    } else if alongside_available {
+        theme::base()
+    } else {
+        theme::muted()
+    };
+    let erase_style = if erase_selected { theme::selected() } else { theme::base() };
+    let alongside_detail = if alongside_available {
+        let template = app.tr(
+            "eligible Windows layout(s) found with at least 64 GiB free",
+            "layout(s) Windows elegível(is) encontrado(s) com pelo menos 64 GiB livres",
+            "diseño(s) de Windows compatible(s) encontrado(s) con al menos 64 GiB libres",
+        );
+        format!("      {} {template}.", app.alongside_candidates.len())
+    } else {
+        app.tr(
+            "      Requires UEFI/GPT Windows and at least 64 GiB of unallocated space.",
+            "      Requer Windows UEFI/GPT e pelo menos 64 GiB de espaço não alocado.",
+            "      Requiere Windows UEFI/GPT y al menos 64 GiB de espacio no asignado.",
+        ).to_string()
+    };
+
+    let items = vec![
+        ListItem::new(vec![
+            Line::from(Span::styled(
+                format!("  {}  {}", if alongside_selected { "●" } else { "○" }, app.tr(
+                    "Install alongside Windows (Recommended)",
+                    "Instalar ao lado do Windows (Recomendado)",
+                    "Instalar junto a Windows (Recomendado)",
+                )),
+                alongside_style,
+            )),
+            Line::from(Span::styled(app.tr(
+                "      Preserves Windows, reuses its EFI partition, and creates one Omybuntu partition.",
+                "      Preserva o Windows, reutiliza sua partição EFI e cria uma partição Omybuntu.",
+                "      Conserva Windows, reutiliza su partición EFI y crea una partición Omybuntu.",
+            ), theme::muted())),
+            Line::from(Span::styled(alongside_detail, theme::muted())),
+            Line::from(""),
+        ]),
+        ListItem::new(vec![
+            Line::from(Span::styled(
+                format!("  {}  {}", if erase_selected { "●" } else { "○" }, app.tr(
+                    "Erase the entire selected disk",
+                    "Apagar todo o disco selecionado",
+                    "Borrar todo el disco seleccionado",
+                )),
+                erase_style,
+            )),
+            Line::from(Span::styled(app.tr(
+                "      Deletes every partition and all data on the selected disk.",
+                "      Exclui todas as partições e dados do disco selecionado.",
+                "      Elimina todas las particiones y datos del disco seleccionado.",
+            ), theme::warning_style())),
+        ]),
+    ];
+
+    frame.render_widget(List::new(items), v_center(inner, 8));
 }
 
 // ─── Keyboard ─────────────────────────────────────────────────────────────────
@@ -366,23 +444,58 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(outer, area);
 
     let luks_h: u16 = if app.encrypt { 7 } else { 0 };
+    let bitlocker_h: u16 = if app.storage_mode == StorageMode::AlongsideWindows
+        && app.current_alongside_candidate().is_some_and(|candidate| candidate.bitlocker_detected)
+    {
+        4
+    } else {
+        0
+    };
+    let mok_h: u16 = if app.secure_boot_enabled { 7 } else { 0 };
     let rows = Layout::vertical([
         Constraint::Min(0),
         Constraint::Length(6),
         Constraint::Length(luks_h),
+        Constraint::Length(bitlocker_h),
+        Constraint::Length(mok_h),
         Constraint::Length(2),
     ])
     .split(inner);
 
     // ── Disk list
-    if app.disks.is_empty() {
+    let item_count = if app.storage_mode == StorageMode::EraseDisk {
+        app.disks.len()
+    } else {
+        app.alongside_candidates.len()
+    };
+    if item_count == 0 {
         frame.render_widget(
-            Paragraph::new("  No disks detected. Boot with a target disk connected.")
+            Paragraph::new(if app.storage_mode == StorageMode::EraseDisk {
+                "  No disks detected. Boot with a target disk connected."
+            } else {
+                app.tr(
+                    "  No eligible Windows UEFI/GPT installation with 64 GiB unallocated was found.",
+                    "  Nenhuma instalação Windows UEFI/GPT com 64 GiB não alocados foi encontrada.",
+                    "  No se encontró una instalación Windows UEFI/GPT con 64 GiB sin asignar.",
+                )
+            })
                 .style(theme::error_style()),
             rows[0],
         );
     } else {
-        let items: Vec<ListItem> = app.disks.iter().enumerate().map(|(i, d)| {
+        let labels: Vec<String> = if app.storage_mode == StorageMode::EraseDisk {
+            app.disks.iter().map(|disk| disk.display()).collect()
+        } else {
+            app.alongside_candidates.iter().map(|candidate| {
+                format!(
+                    "{}  ESP {}  free region {}",
+                    candidate.display(),
+                    candidate.esp_partition,
+                    candidate.free_region.display_size()
+                )
+            }).collect()
+        };
+        let items: Vec<ListItem> = labels.iter().enumerate().map(|(i, label)| {
             let sym = if i == app.disk_idx { "●" } else { "○" };
             let style = if i == app.disk_idx && app.disk_focus == 0 {
                 theme::selected()
@@ -391,7 +504,7 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
             } else {
                 theme::base()
             };
-            ListItem::new(Line::from(Span::styled(format!("  {sym}  {}", d.display()), style)))
+            ListItem::new(Line::from(Span::styled(format!("  {sym}  {label}"), style)))
         }).collect();
 
         let border = if app.disk_focus == 0 { theme::focused_border() } else { theme::normal_border() };
@@ -487,16 +600,82 @@ fn render_disk(frame: &mut Frame, app: &App, area: Rect) {
         }
     }
 
+    if bitlocker_h > 0 {
+        let focused = app.disk_focus == 5;
+        let check = if app.bitlocker_ack { "☑" } else { "☐" };
+        frame.render_widget(
+            Paragraph::new(vec![
+                Line::from(Span::styled(
+                    format!("  {check}  {}", app.tr(
+                        "I saved the BitLocker recovery key and suspended protection in Windows",
+                        "Salvei a chave de recuperação do BitLocker e suspendi a proteção no Windows",
+                        "Guardé la clave de recuperación de BitLocker y suspendí la protección en Windows",
+                    )),
+                    if focused { theme::selected() } else { theme::warning_style() },
+                )),
+                Line::from(Span::styled(app.tr(
+                    "      Omybuntu will not mount or modify the Windows data partition.",
+                    "      A Omybuntu não montará nem modificará a partição de dados do Windows.",
+                    "      Omybuntu no montará ni modificará la partición de datos de Windows.",
+                ), theme::muted())),
+            ])
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .border_style(if focused { theme::focused_border() } else { theme::normal_border() }),
+            ),
+            rows[3],
+        );
+    }
+
+    if mok_h > 0 {
+        let mok_rows = Layout::vertical([
+            Constraint::Length(1),
+            Constraint::Length(3),
+            Constraint::Length(3),
+        ]).split(rows[4]);
+        frame.render_widget(
+            Paragraph::new(app.tr(
+                "  Secure Boot: choose a one-time password for MOK enrollment after reboot",
+                "  Secure Boot: escolha uma senha temporária para cadastrar a MOK após reiniciar",
+                "  Secure Boot: elija una contraseña temporal para registrar la MOK al reiniciar",
+            ))
+                .style(theme::muted()),
+            mok_rows[0],
+        );
+        let fields: [(&str, &str, usize); 2] = [
+            ("MOK Enrollment Password", &app.mok_pass, 6),
+            ("Confirm MOK Password", &app.mok_pass2, 7),
+        ];
+        for (index, (label, value, focus_id)) in fields.iter().enumerate() {
+            let focused = app.disk_focus == *focus_id;
+            let display = if app.show_pass { (*value).to_string() } else { "●".repeat(value.len()) };
+            let cursor = if focused { "▏" } else { "" };
+            frame.render_widget(
+                Paragraph::new(format!("  {display}{cursor}  [{label}]"))
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .border_type(BorderType::Rounded)
+                            .border_style(if focused { theme::focused_border() } else { theme::normal_border() }),
+                    )
+                    .style(theme::base()),
+                mok_rows[index + 1],
+            );
+        }
+    }
+
     // ── Error
     if let Some(err) = &app.disk_error {
         frame.render_widget(
             Paragraph::new(format!("  ✕  {err}")).style(theme::error_style()),
-            rows[3],
+            rows[5],
         );
     } else if app.encrypt && !app.show_pass {
         frame.render_widget(
             Paragraph::new("  [F1] Show/hide passwords").style(theme::muted()),
-            rows[3],
+            rows[5],
         );
     }
 }
@@ -518,10 +697,8 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
     let (lang_name, _, locale) = app.current_language();
     let (kb_label, _)          = app.current_keyboard();
-    let disk_info = app
-        .current_disk()
-        .map(|d| d.display())
-        .unwrap_or_else(|| "None selected".to_string());
+    let disk_info = app.current_storage_display();
+    let install_type = app.storage_mode.label();
 
     let table: &[(&str, &dyn Fn() -> String)] = &[
         ("Language",   &|| format!("{} ({})", lang_name, locale)),
@@ -529,8 +706,10 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
         ("Timezone",   &|| app.current_timezone().to_string()),
         ("Hostname",   &|| app.hostname.clone()),
         ("Username",   &|| app.username.clone()),
+        ("Install type", &|| install_type.to_string()),
         ("Disk",       &|| disk_info.clone()),
         ("Encryption", &|| if app.encrypt { "LUKS (enabled)".into() } else { "None".into() }),
+        ("Secure Boot", &|| if app.secure_boot_enabled { "Enabled; MOK enrollment queued".into() } else { "Disabled".into() }),
     ];
 
     let lines: Vec<Line> = table
@@ -545,9 +724,22 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
 
     frame.render_widget(Paragraph::new(lines), rows_layout[0]);
 
+    let warning = if app.storage_mode == StorageMode::EraseDisk {
+        app.tr(
+            "  ⚠  This will ERASE ALL DATA on the selected disk!",
+            "  ⚠  Isto APAGARÁ TODOS OS DADOS do disco selecionado!",
+            "  ⚠  ¡Esto BORRARÁ TODOS LOS DATOS del disco seleccionado!",
+        )
+    } else {
+        app.tr(
+            "  Windows partitions will be preserved; only the selected free region will be formatted.",
+            "  As partições do Windows serão preservadas; apenas a região livre será formatada.",
+            "  Las particiones de Windows se conservarán; solo se formateará la región libre.",
+        )
+    };
     frame.render_widget(
-        Paragraph::new("  ⚠  This will ERASE ALL DATA on the selected disk!")
-            .style(theme::warning_style())
+        Paragraph::new(warning)
+            .style(if app.storage_mode == StorageMode::EraseDisk { theme::warning_style() } else { theme::accent() })
             .alignment(Alignment::Center),
         rows_layout[1],
     );
@@ -655,8 +847,7 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
 
     let rows = Layout::vertical([Constraint::Min(0), Constraint::Length(3)]).split(inner);
 
-    frame.render_widget(
-        Paragraph::new(vec![
+    let mut done_lines = vec![
             Line::from(""),
             Line::from(Span::styled(
                 "  ✓  Installation Complete!",
@@ -668,7 +859,24 @@ fn render_done(frame: &mut Frame, app: &App, area: Rect) {
                 "  Remove the installation media and reboot into your new system.",
                 theme::muted(),
             )),
-        ]),
+        ];
+    if app.secure_boot_enabled {
+        done_lines.extend([
+            Line::from(""),
+            Line::from(Span::styled(app.tr(
+                "  Secure Boot: on the blue MokManager screen select Enroll MOK, confirm, and reboot.",
+                "  Secure Boot: na tela azul do MokManager, selecione Enroll MOK, confirme e reinicie.",
+                "  Secure Boot: en MokManager, seleccione Enroll MOK, confirme y reinicie.",
+            ), theme::warning_style())),
+            Line::from(Span::styled(app.tr(
+                "  Use the one-time MOK password entered during installation.",
+                "  Use a senha temporária de MOK informada durante a instalação.",
+                "  Use la contraseña temporal de MOK indicada durante la instalación.",
+            ), theme::muted())),
+        ]);
+    }
+    frame.render_widget(
+        Paragraph::new(done_lines),
         rows[0],
     );
 
@@ -730,4 +938,80 @@ fn titled_block(title: &'static str) -> Block<'static> {
 fn v_center(area: Rect, content_h: u16) -> Rect {
     let y = area.height.saturating_sub(content_h) / 2;
     Rect { x: area.x, y: area.y + y, width: area.width, height: content_h.min(area.height) }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{Terminal, backend::TestBackend};
+
+    fn rendered_text(app: &mut App) -> String {
+        let backend = TestBackend::new(120, 36);
+        let mut terminal = Terminal::new(backend).expect("test terminal");
+        terminal.draw(|frame| draw(frame, app)).expect("render installer");
+        let buffer = terminal.backend().buffer();
+        (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer[(x, y)].symbol().to_string())
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    #[test]
+    fn storage_mode_screen_renders_safe_choices_and_requirements() {
+        let mut app = App::new();
+        app.step = Step::StorageMode;
+        app.storage_mode = StorageMode::AlongsideWindows;
+        let output = rendered_text(&mut app);
+        if std::env::var_os("OMYBUNTU_RENDER_SNAPSHOT").is_some() {
+            std::fs::write("/tmp/omybuntu-storage-screen.txt", &output).expect("write TUI snapshot");
+        }
+        assert!(output.contains("Install alongside Windows"));
+        assert!(output.contains("64 GiB"));
+        assert!(output.contains("Erase the entire selected disk"));
+    }
+
+    #[test]
+    fn alongside_summary_does_not_show_the_erase_disk_warning() {
+        let mut app = App::new();
+        app.step = Step::Summary;
+        app.storage_mode = StorageMode::AlongsideWindows;
+        let output = rendered_text(&mut app);
+        assert!(output.contains("Windows partitions will be preserved"));
+        assert!(!output.contains("ERASE ALL DATA"));
+    }
+
+    #[test]
+    fn alongside_disk_screen_fits_luks_bitlocker_and_mok_controls() {
+        let mut app = App::new();
+        app.step = Step::Disk;
+        app.storage_mode = StorageMode::AlongsideWindows;
+        app.encrypt = true;
+        app.secure_boot_enabled = true;
+        app.alongside_candidates = vec![crate::storage::AlongsideCandidate {
+            disk: crate::storage::DiskInfo {
+                path: "/dev/nvme0n1".into(),
+                size: "512.0 GiB".into(),
+                size_bytes: 512 * 1024 * 1024 * 1024,
+                model: "Test SSD".into(),
+            },
+            esp_partition: "/dev/nvme0n1p1".into(),
+            esp_uuid: "ABCD-1234".into(),
+            root_partition_number: 4,
+            free_region: crate::storage::FreeRegion {
+                start_sector: 1_000_000,
+                end_sector: 300_000_000,
+                size_bytes: 140 * 1024 * 1024 * 1024,
+            },
+            bitlocker_detected: true,
+            secure_boot_enabled: true,
+        }];
+        let output = rendered_text(&mut app);
+        assert!(output.contains("BitLocker recovery key"));
+        assert!(output.contains("MOK Enrollment Password"));
+        assert!(output.contains("Confirm MOK Password"));
+    }
 }

@@ -1,6 +1,10 @@
 use std::sync::mpsc::Receiver;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use crate::install::{InstallConfig, InstallMessage, spawn_install};
+use crate::storage::{
+    AlongsideCandidate, DiskInfo, StorageMode, StoragePlan,
+    detect_disks, discover_alongside_candidates, is_secure_boot_enabled,
+};
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -85,6 +89,7 @@ pub enum Step {
     Keyboard,
     Timezone,
     Credentials,
+    StorageMode,
     Disk,
     Summary,
     Installing,
@@ -101,10 +106,11 @@ impl Step {
             Step::Keyboard    => 3,
             Step::Timezone    => 4,
             Step::Credentials => 5,
-            Step::Disk        => 6,
-            Step::Summary     => 7,
-            Step::Installing  => 8,
-            Step::Done        => 9,
+            Step::StorageMode => 6,
+            Step::Disk        => 7,
+            Step::Summary     => 8,
+            Step::Installing  => 9,
+            Step::Done        => 10,
         }
     }
 
@@ -116,6 +122,7 @@ impl Step {
             Step::Keyboard    => "Keyboard Layout",
             Step::Timezone    => "Timezone",
             Step::Credentials => "User Credentials",
+            Step::StorageMode => "Installation Type",
             Step::Disk        => "Target Disk",
             Step::Summary     => "Summary",
             Step::Installing  => "Installing",
@@ -126,13 +133,14 @@ impl Step {
     /// Returns (current, total) wizard step numbers for config steps, None otherwise.
     pub fn wizard_step(&self) -> Option<(usize, usize)> {
         match self {
-            Step::Language    => Some((1, 7)),
-            Step::InstallMode => Some((2, 7)),
-            Step::Keyboard    => Some((3, 7)),
-            Step::Timezone    => Some((4, 7)),
-            Step::Credentials => Some((5, 7)),
-            Step::Disk        => Some((6, 7)),
-            Step::Summary     => Some((7, 7)),
+            Step::Language    => Some((1, 8)),
+            Step::InstallMode => Some((2, 8)),
+            Step::Keyboard    => Some((3, 8)),
+            Step::Timezone    => Some((4, 8)),
+            Step::Credentials => Some((5, 8)),
+            Step::StorageMode => Some((6, 8)),
+            Step::Disk        => Some((7, 8)),
+            Step::Summary     => Some((8, 8)),
             _                 => None,
         }
     }
@@ -144,7 +152,8 @@ impl Step {
             Step::InstallMode => Step::Keyboard,
             Step::Keyboard    => Step::Timezone,
             Step::Timezone    => Step::Credentials,
-            Step::Credentials => Step::Disk,
+            Step::Credentials => Step::StorageMode,
+            Step::StorageMode => Step::Disk,
             Step::Disk        => Step::Summary,
             Step::Summary     => Step::Installing,
             Step::Installing  => Step::Done,
@@ -159,55 +168,12 @@ impl Step {
             Step::Keyboard    => Step::InstallMode,
             Step::Timezone    => Step::Keyboard,
             Step::Credentials => Step::Timezone,
-            Step::Disk        => Step::Credentials,
+            Step::StorageMode => Step::Credentials,
+            Step::Disk        => Step::StorageMode,
             Step::Summary     => Step::Disk,
             other             => *other,
         }
     }
-}
-
-// ─── DiskInfo ─────────────────────────────────────────────────────────────────
-
-#[derive(Debug, Clone)]
-pub struct DiskInfo {
-    pub path:  String,
-    pub size:  String,
-    pub model: String,
-}
-
-impl DiskInfo {
-    pub fn display(&self) -> String {
-        format!("{}  {}  {}", self.path, self.size, self.model)
-    }
-}
-
-fn detect_disks() -> Vec<DiskInfo> {
-    let output = std::process::Command::new("lsblk")
-        .args(["-d", "-n", "-p", "-o", "NAME,SIZE,MODEL,TYPE", "--pairs"])
-        .output();
-
-    match output {
-        Ok(out) => String::from_utf8_lossy(&out.stdout)
-            .lines()
-            .filter(|l| !l.contains("TYPE=\"loop\"") && !l.contains("TYPE=\"rom\""))
-            .filter_map(parse_lsblk_pairs)
-            .collect(),
-        Err(_) => vec![],
-    }
-}
-
-fn parse_lsblk_pairs(line: &str) -> Option<DiskInfo> {
-    let get = |key: &str| -> Option<String> {
-        let search = format!("{}=\"", key);
-        let start  = line.find(&search)? + search.len();
-        let end    = line[start..].find('"')? + start;
-        Some(line[start..end].to_string())
-    };
-    Some(DiskInfo {
-        path:  get("NAME")?,
-        size:  get("SIZE").unwrap_or_default(),
-        model: get("MODEL").unwrap_or_else(|| "Unknown".to_string()),
-    })
 }
 
 fn valid_hostname(hostname: &str) -> bool {
@@ -261,13 +227,19 @@ pub struct App {
     pub show_pass:        bool,
 
     // Disk
-    pub disks:      Vec<DiskInfo>,
-    pub disk_idx:   usize,
-    pub encrypt:    bool,
-    pub luks_pass:  String,
-    pub luks_pass2: String,
-    pub disk_focus: usize, // 0=list, 1=encrypt, 2=no encryption, 3=luks_pass, 4=luks_pass2
-    pub disk_error: Option<String>,
+    pub storage_mode:         StorageMode,
+    pub disks:                Vec<DiskInfo>,
+    pub alongside_candidates: Vec<AlongsideCandidate>,
+    pub disk_idx:             usize,
+    pub encrypt:              bool,
+    pub luks_pass:            String,
+    pub luks_pass2:           String,
+    pub bitlocker_ack:        bool,
+    pub secure_boot_enabled:  bool,
+    pub mok_pass:             String,
+    pub mok_pass2:            String,
+    pub disk_focus:           usize, // 0=list, 1=encrypt, 2=no encryption, 3-4=LUKS, 5=BitLocker, 6-7=MOK
+    pub disk_error:           Option<String>,
 
     // Summary
     pub summary_yes: bool,
@@ -285,6 +257,12 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
+        let alongside_candidates = discover_alongside_candidates();
+        let storage_mode = if alongside_candidates.is_empty() {
+            StorageMode::EraseDisk
+        } else {
+            StorageMode::AlongsideWindows
+        };
         Self {
             step:        Step::Welcome,
             should_quit: false,
@@ -306,13 +284,19 @@ impl App {
             credential_error: None,
             show_pass:        false,
 
-            disks:      detect_disks(),
-            disk_idx:   0,
-            encrypt:    false,
-            luks_pass:  String::new(),
-            luks_pass2: String::new(),
-            disk_focus: 0,
-            disk_error: None,
+            storage_mode,
+            disks:                detect_disks(),
+            alongside_candidates,
+            disk_idx:             0,
+            encrypt:              false,
+            luks_pass:            String::new(),
+            luks_pass2:           String::new(),
+            bitlocker_ack:        false,
+            secure_boot_enabled:  is_secure_boot_enabled(),
+            mok_pass:             String::new(),
+            mok_pass2:            String::new(),
+            disk_focus:           0,
+            disk_error:           None,
 
             summary_yes: true,
 
@@ -345,6 +329,26 @@ impl App {
 
     pub fn current_disk(&self) -> Option<&DiskInfo> {
         self.disks.get(self.disk_idx)
+    }
+
+    pub fn tr<'a>(&self, en: &'a str, pt_br: &'a str, es: &'a str) -> &'a str {
+        match self.current_language().1 {
+            "pt-br" => pt_br,
+            "es" => es,
+            _ => en,
+        }
+    }
+
+    pub fn current_alongside_candidate(&self) -> Option<&AlongsideCandidate> {
+        self.alongside_candidates.get(self.disk_idx)
+    }
+
+    pub fn current_storage_display(&self) -> String {
+        match self.storage_mode {
+            StorageMode::EraseDisk => self.current_disk().map(DiskInfo::display),
+            StorageMode::AlongsideWindows => self.current_alongside_candidate().map(AlongsideCandidate::display),
+        }
+        .unwrap_or_else(|| "None selected".to_string())
     }
 
     // ── Timezone filtering ────────────────────────────────────────────────────
@@ -381,10 +385,28 @@ impl App {
     }
 
     fn validate_disk(&self) -> Option<String> {
-        if self.disks.is_empty() { return Some("No disks detected".into()); }
+        match self.storage_mode {
+            StorageMode::EraseDisk if self.disks.is_empty() => return Some("No disks detected".into()),
+            StorageMode::AlongsideWindows if self.alongside_candidates.is_empty() => {
+                return Some("No eligible Windows installation with at least 64 GiB unallocated was found".into());
+            }
+            StorageMode::AlongsideWindows => {
+                let candidate = self.current_alongside_candidate()?;
+                if candidate.bitlocker_detected && !self.bitlocker_ack {
+                    return Some("Confirm that the BitLocker recovery key is saved and protection is suspended".into());
+                }
+            }
+            _ => {}
+        }
         if self.encrypt {
             if self.luks_pass.len() < 8   { return Some("LUKS password must be at least 8 characters".into()); }
             if self.luks_pass != self.luks_pass2 { return Some("LUKS passwords do not match".into()); }
+        }
+        if self.secure_boot_enabled {
+            if self.mok_pass.len() < 8 || self.mok_pass.len() > 16 || !self.mok_pass.is_ascii() {
+                return Some("Secure Boot enrollment password must contain 8-16 ASCII characters".into());
+            }
+            if self.mok_pass != self.mok_pass2 { return Some("Secure Boot enrollment passwords do not match".into()); }
         }
         None
     }
@@ -392,12 +414,29 @@ impl App {
     // ── Install ───────────────────────────────────────────────────────────────
 
     fn start_install(&mut self) {
-        let disk = self.current_disk().map(|d| d.path.clone()).unwrap_or_default();
+        let storage = match self.storage_mode {
+            StorageMode::EraseDisk => StoragePlan::EraseDisk {
+                disk: self.current_disk().map(|d| d.path.clone()).unwrap_or_default(),
+            },
+            StorageMode::AlongsideWindows => {
+                let candidate = self.current_alongside_candidate().expect("validated alongside candidate");
+                StoragePlan::AlongsideWindows {
+                    disk: candidate.disk.path.clone(),
+                    disk_size_bytes: candidate.disk.size_bytes,
+                    esp_partition: candidate.esp_partition.clone(),
+                    esp_uuid: candidate.esp_uuid.clone(),
+                    root_partition_number: candidate.root_partition_number,
+                    free_region: candidate.free_region.clone(),
+                    bitlocker_detected: candidate.bitlocker_detected,
+                    secure_boot_enabled: candidate.secure_boot_enabled,
+                }
+            }
+        };
         let (_, lang, locale)  = self.current_language();
         let (_, keymap)        = self.current_keyboard();
 
         let config = InstallConfig {
-            disk,
+            storage,
             encrypt:       self.encrypt,
             luks_pass:     self.luks_pass.clone(),
             hostname:      self.hostname.clone(),
@@ -409,6 +448,7 @@ impl App {
             keymap:        keymap.to_string(),
             timezone:      self.current_timezone().to_string(),
             offline:       self.offline_mode,
+            mok_password:  self.mok_pass.clone(),
         };
 
         self.install_rx = Some(spawn_install(config));
@@ -452,6 +492,7 @@ impl App {
             Step::Keyboard    => self.key_keyboard(key),
             Step::Timezone    => self.key_timezone(key),
             Step::Credentials => self.key_credentials(key),
+            Step::StorageMode => self.key_storage_mode(key),
             Step::Disk        => self.key_disk(key),
             Step::Summary     => self.key_summary(key),
             Step::Installing  => {}
@@ -563,6 +604,29 @@ impl App {
         }
     }
 
+    fn key_storage_mode(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right | KeyCode::Tab => {
+                self.storage_mode = match self.storage_mode {
+                    StorageMode::EraseDisk => StorageMode::AlongsideWindows,
+                    StorageMode::AlongsideWindows => StorageMode::EraseDisk,
+                };
+                self.disk_idx = 0;
+                self.disk_focus = 0;
+            }
+            KeyCode::Enter => {
+                if self.storage_mode == StorageMode::AlongsideWindows && self.alongside_candidates.is_empty() {
+                    self.disk_error = Some("No eligible Windows installation was found".into());
+                } else {
+                    self.disk_idx = 0;
+                    self.step = self.step.next();
+                }
+            }
+            KeyCode::Esc => { self.step = self.step.prev(); }
+            _ => {}
+        }
+    }
+
     fn key_disk(&mut self, key: KeyEvent) {
         self.disk_error = None;
         match self.disk_focus {
@@ -570,8 +634,13 @@ impl App {
             0 => match key.code {
                 KeyCode::Up    => { self.disk_idx = self.disk_idx.saturating_sub(1); }
                 KeyCode::Down  => {
-                    if !self.disks.is_empty() {
-                        self.disk_idx = (self.disk_idx + 1).min(self.disks.len() - 1);
+                    let item_count = if self.storage_mode == StorageMode::EraseDisk {
+                        self.disks.len()
+                    } else {
+                        self.alongside_candidates.len()
+                    };
+                    if item_count > 0 {
+                        self.disk_idx = (self.disk_idx + 1).min(item_count - 1);
                     }
                 }
                 KeyCode::Tab | KeyCode::Enter => { self.disk_focus = 1; }
@@ -600,7 +669,13 @@ impl App {
                 }
                 KeyCode::Enter => {
                     self.encrypt = false;
-                    if let Some(err) = self.validate_disk() {
+                    if self.storage_mode == StorageMode::AlongsideWindows
+                        && self.current_alongside_candidate().is_some_and(|candidate| candidate.bitlocker_detected)
+                    {
+                        self.disk_focus = 5;
+                    } else if self.secure_boot_enabled {
+                        self.disk_focus = 6;
+                    } else if let Some(err) = self.validate_disk() {
                         self.disk_error = Some(err);
                     } else {
                         self.step = self.step.next();
@@ -609,6 +684,12 @@ impl App {
                 KeyCode::Tab | KeyCode::Down => {
                     if self.encrypt {
                         self.disk_focus = 3;
+                    } else if self.storage_mode == StorageMode::AlongsideWindows
+                        && self.current_alongside_candidate().is_some_and(|candidate| candidate.bitlocker_detected)
+                    {
+                        self.disk_focus = 5;
+                    } else if self.secure_boot_enabled {
+                        self.disk_focus = 6;
                     } else if let Some(err) = self.validate_disk() {
                         self.disk_error = Some(err);
                     } else {
@@ -638,13 +719,67 @@ impl App {
                 }
                 KeyCode::Backspace => { self.luks_pass2.pop(); }
                 KeyCode::Tab | KeyCode::Down | KeyCode::Enter => {
-                    if let Some(err) = self.validate_disk() {
+                    if self.storage_mode == StorageMode::AlongsideWindows
+                        && self.current_alongside_candidate().is_some_and(|candidate| candidate.bitlocker_detected)
+                    {
+                        self.disk_focus = 5;
+                    } else if self.secure_boot_enabled {
+                        self.disk_focus = 6;
+                    } else if let Some(err) = self.validate_disk() {
                         self.disk_error = Some(err);
                     } else {
                         self.step = self.step.next();
                     }
                 }
                 KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 3; }
+                KeyCode::F(1) => { self.show_pass = !self.show_pass; }
+                KeyCode::Esc => { self.step = self.step.prev(); }
+                _ => {}
+            },
+            // 5: mandatory BitLocker acknowledgement
+            5 => match key.code {
+                KeyCode::Char(' ') => { self.bitlocker_ack = !self.bitlocker_ack; }
+                KeyCode::Enter => {
+                    if self.bitlocker_ack && self.secure_boot_enabled {
+                        self.disk_focus = 6;
+                    } else if let Some(err) = self.validate_disk() {
+                        self.disk_error = Some(err);
+                    } else {
+                        self.step = self.step.next();
+                    }
+                }
+                KeyCode::Up | KeyCode::BackTab => {
+                    self.disk_focus = if self.encrypt { 4 } else { 2 };
+                }
+                KeyCode::Esc => { self.step = self.step.prev(); }
+                _ => {}
+            },
+            // 6: MOK enrollment password
+            6 => match key.code {
+                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => self.mok_pass.push(c),
+                KeyCode::Backspace => { self.mok_pass.pop(); }
+                KeyCode::Tab | KeyCode::Down | KeyCode::Enter => { self.disk_focus = 7; }
+                KeyCode::Up | KeyCode::BackTab => {
+                    self.disk_focus = if self.storage_mode == StorageMode::AlongsideWindows
+                        && self.current_alongside_candidate().is_some_and(|candidate| candidate.bitlocker_detected)
+                    { 5 } else if self.encrypt { 4 } else { 2 };
+                }
+                KeyCode::F(1) => { self.show_pass = !self.show_pass; }
+                KeyCode::Esc => { self.step = self.step.prev(); }
+                _ => {}
+            },
+            // 7: MOK enrollment password confirmation
+            7 => match key.code {
+                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => self.mok_pass2.push(c),
+                KeyCode::Backspace => { self.mok_pass2.pop(); }
+                KeyCode::Enter | KeyCode::Tab | KeyCode::Down => {
+                    if let Some(err) = self.validate_disk() {
+                        self.disk_error = Some(err);
+                    } else {
+                        self.step = self.step.next();
+                    }
+                }
+                KeyCode::Up | KeyCode::BackTab => { self.disk_focus = 6; }
                 KeyCode::F(1) => { self.show_pass = !self.show_pass; }
                 KeyCode::Esc => { self.step = self.step.prev(); }
                 _ => {}

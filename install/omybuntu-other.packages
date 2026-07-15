@@ -31,6 +31,11 @@ pipewire-jack
 pipewire-pulse
 qt6-wayland
 firmware-sof-signed
+grub-efi-amd64-signed
+shim-signed
+mokutil
+sbsigntool
+efibootmgr
 thermald
 webp-pixbuf-loader
 tuxedo-keyboard-dkms

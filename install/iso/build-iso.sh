@@ -114,10 +114,10 @@ fi
 
 # --- Pre-build cleanup & extraction -----------------------------------------
 
-for tool in wget tar mksquashfs xorriso grub-mkrescue mformat rsync magick; do
+for tool in wget tar mksquashfs xorriso grub-mkstandalone mformat mcopy mkfs.vfat sbverify rsync magick; do
   if ! command -v "$tool" >/dev/null 2>&1; then
     echo "Error: Required host tool '$tool' is not installed." >&2
-    echo "       Install missing tools with: sudo apt install imagemagick mtools xorriso grub-pc-bin grub-efi-amd64-bin squashfs-tools" >&2
+    echo "       Install missing tools with: sudo apt install dosfstools imagemagick mtools sbsigntool xorriso grub-pc-bin squashfs-tools" >&2
     exit 1
   fi
 done
@@ -195,6 +195,11 @@ EOF
     grub-pc-bin \
     grub-efi-amd64-bin \
     grub-efi-amd64 \
+    grub-efi-amd64-signed \
+    shim-signed \
+    mokutil \
+    sbsigntool \
+    efibootmgr \
     binutils \
     git \
     curl \
@@ -214,6 +219,13 @@ EOF
     mtools \
     parted \
     lvm2
+fi
+
+# Cached chroots created before Secure Boot support must receive the signed chain.
+if ! sudo chroot "$CHROOT_DIR" dpkg-query -W shim-signed grub-efi-amd64-signed mokutil sbsigntool efibootmgr >/dev/null 2>&1; then
+  sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get update
+  sudo chroot "$CHROOT_DIR" env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    shim-signed grub-efi-amd64-signed mokutil sbsigntool efibootmgr
 fi
 
 # ---------------------------------------------------------------------------
@@ -380,8 +392,8 @@ echo "Generating ISO checksum manifest..."
 sudo bash -c 'cd "$1" && find . -type f ! -name md5sum.txt -print0 | sort -z | xargs -0 md5sum > md5sum.txt' bash "$IMAGE_DIR"
 sudo chmod 0644 "$IMAGE_DIR/md5sum.txt"
 
-# 11. Build bootable ISO with grub-mkrescue
-echo "Building the bootable ISO..."
-sudo grub-mkrescue -o "$ISO_OUT" "$IMAGE_DIR"
+# 11. Build hybrid BIOS/UEFI ISO with the Ubuntu signed Secure Boot chain
+echo "Building the signed hybrid bootable ISO..."
+sudo bash "$WORKSPACE/install/iso/build-bootable-iso.sh" "$IMAGE_DIR" "$CHROOT_DIR" "$ISO_OUT"
 
 echo "ISO successfully built at: $ISO_OUT"

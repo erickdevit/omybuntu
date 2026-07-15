@@ -250,34 +250,21 @@ fn render_storage_mode(frame: &mut Frame, app: &App, area: Rect) {
     let inner = outer.inner(area);
     frame.render_widget(outer, area);
 
-    let alongside_selected = app.storage_mode == StorageMode::AlongsideWindows;
-    let erase_selected = app.storage_mode == StorageMode::EraseDisk;
     let alongside_available = !app.alongside_candidates.is_empty();
-    let alongside_style = if alongside_selected && alongside_available {
-        theme::selected()
-    } else if alongside_available {
-        theme::base()
-    } else {
-        theme::muted()
-    };
+    let alongside_selected = alongside_available && app.storage_mode == StorageMode::AlongsideWindows;
+    let erase_selected = !alongside_available || app.storage_mode == StorageMode::EraseDisk;
+    let alongside_style = if alongside_selected { theme::selected() } else { theme::base() };
     let erase_style = if erase_selected { theme::selected() } else { theme::base() };
-    let alongside_detail = if alongside_available {
+
+    let mut items = Vec::new();
+    if alongside_available {
         let template = app.tr(
             "eligible Windows layout(s) found with at least 64 GiB free",
             "layout(s) Windows elegível(is) encontrado(s) com pelo menos 64 GiB livres",
             "diseño(s) de Windows compatible(s) encontrado(s) con al menos 64 GiB libres",
         );
-        format!("      {} {template}.", app.alongside_candidates.len())
-    } else {
-        app.tr(
-            "      Requires UEFI/GPT Windows and at least 64 GiB of unallocated space.",
-            "      Requer Windows UEFI/GPT e pelo menos 64 GiB de espaço não alocado.",
-            "      Requiere Windows UEFI/GPT y al menos 64 GiB de espacio no asignado.",
-        ).to_string()
-    };
-
-    let items = vec![
-        ListItem::new(vec![
+        let alongside_detail = format!("      {} {template}.", app.alongside_candidates.len());
+        items.push(ListItem::new(vec![
             Line::from(Span::styled(
                 format!("  {}  {}", if alongside_selected { "●" } else { "○" }, app.tr(
                     "Install alongside Windows (Recommended)",
@@ -293,8 +280,9 @@ fn render_storage_mode(frame: &mut Frame, app: &App, area: Rect) {
             ), theme::muted())),
             Line::from(Span::styled(alongside_detail, theme::muted())),
             Line::from(""),
-        ]),
-        ListItem::new(vec![
+        ]));
+    }
+    items.push(ListItem::new(vec![
             Line::from(Span::styled(
                 format!("  {}  {}", if erase_selected { "●" } else { "○" }, app.tr(
                     "Erase the entire selected disk",
@@ -308,10 +296,10 @@ fn render_storage_mode(frame: &mut Frame, app: &App, area: Rect) {
                 "      Exclui todas as partições e dados do disco selecionado.",
                 "      Elimina todas las particiones y datos del disco seleccionado.",
             ), theme::warning_style())),
-        ]),
-    ];
+        ]));
 
-    frame.render_widget(List::new(items), v_center(inner, 8));
+    let content_height = if alongside_available { 8 } else { 3 };
+    frame.render_widget(List::new(items), v_center(inner, content_height));
 }
 
 // ─── Keyboard ─────────────────────────────────────────────────────────────────
@@ -960,11 +948,33 @@ mod tests {
             .join("\n")
     }
 
+    fn windows_candidate() -> crate::storage::AlongsideCandidate {
+        crate::storage::AlongsideCandidate {
+            disk: crate::storage::DiskInfo {
+                path: "/dev/nvme0n1".into(),
+                size: "512.0 GiB".into(),
+                size_bytes: 512 * 1024 * 1024 * 1024,
+                model: "Test SSD".into(),
+            },
+            esp_partition: "/dev/nvme0n1p1".into(),
+            esp_uuid: "ABCD-1234".into(),
+            root_partition_number: 4,
+            free_region: crate::storage::FreeRegion {
+                start_sector: 1_000_000,
+                end_sector: 300_000_000,
+                size_bytes: 140 * 1024 * 1024 * 1024,
+            },
+            bitlocker_detected: true,
+            secure_boot_enabled: true,
+        }
+    }
+
     #[test]
     fn storage_mode_screen_renders_safe_choices_and_requirements() {
         let mut app = App::new();
         app.step = Step::StorageMode;
         app.storage_mode = StorageMode::AlongsideWindows;
+        app.alongside_candidates = vec![windows_candidate()];
         let output = rendered_text(&mut app);
         if std::env::var_os("OMYBUNTU_RENDER_SNAPSHOT").is_some() {
             std::fs::write("/tmp/omybuntu-storage-screen.txt", &output).expect("write TUI snapshot");
@@ -972,6 +982,29 @@ mod tests {
         assert!(output.contains("Install alongside Windows"));
         assert!(output.contains("64 GiB"));
         assert!(output.contains("Erase the entire selected disk"));
+    }
+
+    #[test]
+    fn storage_mode_screen_hides_alongside_without_windows() {
+        let mut app = App::new();
+        app.step = Step::StorageMode;
+        app.storage_mode = StorageMode::EraseDisk;
+        app.alongside_candidates.clear();
+        let output = rendered_text(&mut app);
+        if std::env::var_os("OMYBUNTU_RENDER_SNAPSHOT").is_some() {
+            std::fs::write("/tmp/omybuntu-storage-no-windows.txt", &output)
+                .expect("write TUI snapshot without Windows");
+        }
+        assert!(!output.contains("Install alongside Windows"));
+        assert!(!output.contains("64 GiB"));
+        assert!(output.contains("Erase the entire selected disk"));
+
+        app.storage_mode = StorageMode::AlongsideWindows;
+        app.handle_key(crossterm::event::KeyEvent::new(
+            crossterm::event::KeyCode::Right,
+            crossterm::event::KeyModifiers::NONE,
+        ));
+        assert_eq!(app.storage_mode, StorageMode::EraseDisk);
     }
 
     #[test]
@@ -991,24 +1024,7 @@ mod tests {
         app.storage_mode = StorageMode::AlongsideWindows;
         app.encrypt = true;
         app.secure_boot_enabled = true;
-        app.alongside_candidates = vec![crate::storage::AlongsideCandidate {
-            disk: crate::storage::DiskInfo {
-                path: "/dev/nvme0n1".into(),
-                size: "512.0 GiB".into(),
-                size_bytes: 512 * 1024 * 1024 * 1024,
-                model: "Test SSD".into(),
-            },
-            esp_partition: "/dev/nvme0n1p1".into(),
-            esp_uuid: "ABCD-1234".into(),
-            root_partition_number: 4,
-            free_region: crate::storage::FreeRegion {
-                start_sector: 1_000_000,
-                end_sector: 300_000_000,
-                size_bytes: 140 * 1024 * 1024 * 1024,
-            },
-            bitlocker_detected: true,
-            secure_boot_enabled: true,
-        }];
+        app.alongside_candidates = vec![windows_candidate()];
         let output = rendered_text(&mut app);
         assert!(output.contains("BitLocker recovery key"));
         assert!(output.contains("MOK Enrollment Password"));

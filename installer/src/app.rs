@@ -607,20 +607,23 @@ impl App {
     fn key_storage_mode(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Up | KeyCode::Down | KeyCode::Left | KeyCode::Right | KeyCode::Tab => {
-                self.storage_mode = match self.storage_mode {
-                    StorageMode::EraseDisk => StorageMode::AlongsideWindows,
-                    StorageMode::AlongsideWindows => StorageMode::EraseDisk,
-                };
+                if !self.alongside_candidates.is_empty() {
+                    self.storage_mode = match self.storage_mode {
+                        StorageMode::EraseDisk => StorageMode::AlongsideWindows,
+                        StorageMode::AlongsideWindows => StorageMode::EraseDisk,
+                    };
+                } else {
+                    self.storage_mode = StorageMode::EraseDisk;
+                }
                 self.disk_idx = 0;
                 self.disk_focus = 0;
             }
             KeyCode::Enter => {
-                if self.storage_mode == StorageMode::AlongsideWindows && self.alongside_candidates.is_empty() {
-                    self.disk_error = Some("No eligible Windows installation was found".into());
-                } else {
-                    self.disk_idx = 0;
-                    self.step = self.step.next();
+                if self.alongside_candidates.is_empty() {
+                    self.storage_mode = StorageMode::EraseDisk;
                 }
+                self.disk_idx = 0;
+                self.step = self.step.next();
             }
             KeyCode::Esc => { self.step = self.step.prev(); }
             _ => {}

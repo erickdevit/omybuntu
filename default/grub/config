@@ -10,7 +10,7 @@ GRUB_TIMEOUT_STYLE=menu
 GRUB_THEME="/boot/grub/themes/omybuntu/theme.txt"
 
 # Boot parameters
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=0 systemd.show_status=false rd.udev.log_level=0 vt.global_cursor_default=0"
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash loglevel=0 systemd.show_status=false rd.udev.log_level=0 vt.global_cursor_default=0 vt.handoff=7"
 
 # Uncomment to enable GRUB terminal output for debugging
 # GRUB_TERMINAL=console

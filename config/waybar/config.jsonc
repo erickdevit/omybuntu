@@ -3,8 +3,8 @@
   "layer": "top",
   "position": "left",
   "spacing": 0,
-  "height": 26,
-  "width": 0,
+  "height": 0,
+  "width": 28,
   "modules-left": ["custom/omybuntu", "hyprland/workspaces"],
   "modules-center": ["clock#horizontal", "clock#vertical", "custom/weather", "custom/update", "custom/voxtype", "custom/screenrecording-indicator", "custom/idle-indicator", "custom/notification-silencing-indicator"],
   "modules-right": [

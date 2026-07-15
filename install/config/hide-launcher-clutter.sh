@@ -34,6 +34,8 @@ launcher_clutter_desktops=(
   org.freedesktop.IBus.Panel.Emojier.desktop
   org.freedesktop.IBus.Panel.Extension.Gtk3.desktop
   org.freedesktop.IBus.Panel.Wayland.Gtk3.desktop
+  org.gnome.Papers.desktop
+  org.gnome.Papers-previewer.desktop
 )
 
 for desktop in "${launcher_clutter_desktops[@]}"; do
@@ -48,4 +50,8 @@ done < <(sudo find /usr/share/applications /usr/local/share/applications \
 
 if omybuntu-pkg-present foot; then
   omybuntu-pkg-drop foot
+fi
+
+if omybuntu-pkg-present papers; then
+  omybuntu-pkg-drop papers
 fi

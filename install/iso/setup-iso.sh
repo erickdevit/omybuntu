@@ -51,7 +51,7 @@ done
 
 # Keep the live ISO lean and aligned with the Alacritty-first default. Chrome is
 # intentionally kept because the live environment must always include a browser.
-for pkg in ghostty typora; do
+for pkg in ghostty papers typora; do
   if dpkg -l "$pkg" 2>/dev/null | grep -q "^ii"; then
     sudo DEBIAN_FRONTEND=noninteractive apt-get purge -y "$pkg"
   fi
@@ -340,6 +340,8 @@ live_hidden_desktops=(
   "org.freedesktop.IBus.Panel.Emojier.desktop"
   "org.freedesktop.IBus.Panel.Extension.Gtk3.desktop"
   "org.freedesktop.IBus.Panel.Wayland.Gtk3.desktop"
+  "org.gnome.Papers.desktop"
+  "org.gnome.Papers-previewer.desktop"
 )
 
 for desktop in "${live_hidden_desktops[@]}"; do

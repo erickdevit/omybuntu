@@ -50,7 +50,7 @@ fi
 mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
 cp "$ICON_PATH" ~/.local/share/icons/hicolor/48x48/apps/"$(basename "$ICON_PATH")"
 if omybuntu-cmd-present gtk-update-icon-cache; then
-  gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null || true
+  gtk-update-icon-cache --ignore-theme-index ~/.local/share/icons/hicolor &>/dev/null || true
 fi
 
 if [[ $WINDOW_STYLE == "float" ]]; then

@@ -7,13 +7,24 @@ OMYBUNTU_PATH="${OMYBUNTU_PATH:-$HOME/.local/share/omybuntu}"
 mkdir -p ~/.local/share/icons/hicolor/48x48/apps/
 cp "$OMYBUNTU_PATH"/applications/icons/*.png ~/.local/share/icons/hicolor/48x48/apps/
 if omybuntu-cmd-present gtk-update-icon-cache; then
-  gtk-update-icon-cache ~/.local/share/icons/hicolor &>/dev/null || true
+  gtk-update-icon-cache --ignore-theme-index ~/.local/share/icons/hicolor &>/dev/null || true
 fi
 
 # Copy .desktop declarations
 mkdir -p ~/.local/share/applications
 cp "$OMYBUNTU_PATH"/applications/*.desktop ~/.local/share/applications/
-cp "$OMYBUNTU_PATH"/applications/hidden/*.desktop ~/.local/share/applications/
+for desktop in "$OMYBUNTU_PATH"/applications/hidden/*.desktop; do
+  desktop_name=$(basename "$desktop")
+  if [[ $desktop_name == *ImageMagick* || $desktop_name == *imagemagick* || $desktop_name == display-im6* ]]; then
+    continue
+  fi
+  cp "$desktop" ~/.local/share/applications/
+done
+
+rm -f \
+  ~/.local/share/applications/display-im6*.desktop \
+  ~/.local/share/applications/*ImageMagick*.desktop \
+  ~/.local/share/applications/*imagemagick*.desktop
 
 if omybuntu-cmd-present alacritty; then
   cp "$OMYBUNTU_PATH/default/alacritty/Alacritty.desktop" ~/.local/share/applications/

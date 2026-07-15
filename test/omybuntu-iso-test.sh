@@ -543,9 +543,14 @@ icons_content=$(<"$ROOT/install/packaging/icons.sh")
 
 # Waybar position is left
 waybar_config_content=$(<"$ROOT/config/waybar/config.jsonc")
-[[ $waybar_config_content == *'"position": "left"'* ]] && \
-  ok "waybar position is left by default" || \
-  nok "waybar position is not left by default"
+[[ $waybar_config_content == *'"position": "left"'* && $waybar_config_content == *'"height": 0'* && $waybar_config_content == *'"width": 28'* ]] && \
+  ok "waybar fills the left edge with vertical dimensions" || \
+  nok "waybar does not use full-height vertical dimensions"
+
+monitors_config_content=$(<"$ROOT/config/hypr/monitors.conf")
+[[ $monitors_config_content == *'env = GDK_SCALE,1.25'* && $monitors_config_content == *'monitor=,preferred,auto,1.25'* ]] && \
+  ok "Hyprland defaults to 1.25 monitor and toolkit scaling" || \
+  nok "Hyprland default scale is not 1.25"
 
 # omybuntu-tui-monitors is compiled and copied
 build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
@@ -721,9 +726,14 @@ fred_content=$(<"$ROOT/install/config/hardware/intel/fred.sh")
 
 # Check that live ISO grub.cfg has console suppressions
 live_grub_content=$(<"$ROOT/install/iso/grub.cfg")
-[[ $live_grub_content == *systemd.show_status=false* && $live_grub_content == *loglevel=0* ]] && \
-  ok "live ISO grub.cfg has console suppressions" || \
-  nok "live ISO grub.cfg does not have console suppressions"
+grub_defaults_content=$(<"$ROOT/default/grub/config")
+if [[ $live_grub_content == *systemd.show_status=false* && $live_grub_content == *loglevel=0* ]] \
+  && [[ $live_grub_content == *'set gfxpayload=keep'* && $live_grub_content == *vt.handoff=7* ]] \
+  && [[ $grub_defaults_content == *vt.handoff=7* ]]; then
+  ok "GRUB suppresses the console and preserves the framebuffer for Plymouth"
+else
+  nok "GRUB does not preserve a clean transition to Plymouth"
+fi
 
 grub_theme_content=$(<"$ROOT/default/grub/theme.txt")
 [[ $grub_theme_content != *'+ scrollbar'* && $grub_theme_content != *fill_color* ]] && \
@@ -795,6 +805,7 @@ fi
 
 # Launcher hygiene: Ghostty-only terminal and hidden clutter apps
 base_packages_content=$(<"$ROOT/install/omybuntu-base.packages")
+base_packages_content=${base_packages_content//$'\r'/}
 [[ $base_packages_content != *$'\nfoot'$* && $base_packages_content != *$'\nfoot\n'* ]] && \
   ok "base packages no longer install foot by default" || \
   nok "base packages still install foot by default"
@@ -808,18 +819,32 @@ hide_launcher_content=$(<"$ROOT/install/config/hide-launcher-clutter.sh")
   ok "install hides fcitx and foot clutter from the launcher" || \
   nok "install does not hide launcher clutter"
 
+mimetypes_content=$(<"$ROOT/install/config/mimetypes.sh")
+[[ $base_packages_content == *$'\nevince\n'* && $hide_launcher_content == *omybuntu-pkg-drop*papers* && $mimetypes_content == *'org.gnome.Evince.desktop application/pdf'* ]] && \
+  ok "install keeps Evince and removes the redundant Papers reader" || \
+  nok "install does not enforce Evince as the only document reader"
+
 for hidden_desktop in \
   "com.mitchellh.ghostty.desktop" \
   "typora.desktop" \
   "Docker.desktop" \
   "Google Messages.desktop" \
-  "display-im6.q16.desktop" \
   "gnome-network-panel.desktop" \
   "org.freedesktop.IBus.Setup.desktop"; do
   [[ -f "$ROOT/applications/hidden/$hidden_desktop" ]] && \
     ok "hidden launcher stub exists: $hidden_desktop" || \
     nok "hidden launcher stub missing: $hidden_desktop"
 done
+
+refresh_apps_content=$(<"$ROOT/bin/omybuntu-refresh-applications")
+[[ $refresh_apps_content == *'gtk-update-icon-cache --ignore-theme-index'* && $refresh_apps_content == *'display-im6*.desktop'* && $refresh_apps_content == *'*ImageMagick*.desktop'* ]] && \
+  ok "application refresh builds the local icon cache without restoring ImageMagick launchers" || \
+  nok "application refresh can leave icons unresolved or restore ImageMagick launchers"
+
+tui_install_content=$(<"$ROOT/bin/omybuntu-tui-install")
+[[ $tui_install_content == *'gtk-update-icon-cache --ignore-theme-index'* ]] && \
+  ok "TUI launchers refresh their local icon cache" || \
+  nok "TUI launcher icons are not added to a usable cache"
 
 [[ ! -f $ROOT/applications/typora.desktop ]] && \
   ok "typora launcher is not advertised by default" || \

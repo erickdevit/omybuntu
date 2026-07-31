@@ -1,0 +1,7 @@
+*.sh text eol=lf
+boot.sh text eol=lf
+install.sh text eol=lf
+bin/* text eol=lf
+install/*.packages text eol=lf
+install/iso/casper-bottom/* text eol=lf
+test/* text eol=lf

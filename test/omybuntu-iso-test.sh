@@ -919,13 +919,15 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   nok "ISO build does not write Omybuntu build metadata"
 
 version_content=$(<"$ROOT/version")
-release_tag_pattern='^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]*)?$'
+release_tag_pattern='^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]+)?$'
 [[ $version_content =~ $release_tag_pattern ]] && \
   ok "source version uses the vX.Y.Z_dev convention" || \
   nok "source version does not use the expected release convention"
 
-if [[ v1.1.6_dev =~ $release_tag_pattern ]] \
+if [[ v1.0.0_dev1 =~ $release_tag_pattern ]] \
+  && [[ v1.0.0_rc1 =~ $release_tag_pattern ]] \
   && [[ v1.1.6 =~ $release_tag_pattern ]] \
+  && [[ ! v1.1.6_dev =~ $release_tag_pattern ]] \
   && [[ ! v0.0.1.5-dev1 =~ $release_tag_pattern ]] \
   && [[ ! v1.1.6.1_dev =~ $release_tag_pattern ]]; then
   ok "release convention accepts exactly three numeric components"
@@ -937,16 +939,26 @@ fi
   ok "ISO preserves the complete requested version in its filename and embedded metadata" || \
   nok "ISO build does not propagate the requested version"
 
-[[ $build_iso_content == *'_dev[0-9]*$'*dev* && $build_iso_content == *'_rc[0-9]*$'*rc* ]] && \
+[[ $build_iso_content == *'_dev[0-9]+$'*dev* && $build_iso_content == *'_rc[0-9]+$'*rc* ]] && \
   ok "tagged ISO builds infer their update channel from the version suffix" || \
   nok "tagged ISO builds do not infer dev and rc channels"
+
+version_channel_content=$(<"$ROOT/bin/omybuntu-version-channel")
+branch_set_content=$(<"$ROOT/bin/omybuntu-branch-set")
+if [[ $build_iso_content != *'build_branch == "main"'* ]] \
+  && [[ $version_channel_content != *'current_branch == "main"'* ]] \
+  && [[ $branch_set_content != *'main|master'* ]]; then
+  ok "master is the only stable release branch"
+else
+  nok "main remains available as an operational release branch"
+fi
 
 [[ $build_iso_content == *'md5sum.txt'* && $build_iso_content == *'xargs -0 md5sum'* ]] && \
   ok "ISO build writes casper checksum manifest" || \
   nok "ISO build does not write casper checksum manifest"
 
 gitlab_ci_content=$(<"$ROOT/.gitlab-ci.yml")
-if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]*)?$/'* ]] \
+if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]+)?$/'* ]] \
   && [[ $gitlab_ci_content == *'CI_PIPELINE_SOURCE == "web"'* ]] \
   && [[ $gitlab_ci_content == *'when: never'* ]]; then
   ok "GitLab creates ISO pipelines only for three-part version tags and manual runs"
@@ -954,13 +966,32 @@ else
   nok "GitLab pipeline rules allow unintended automatic ISO builds"
 fi
 
+if [[ $gitlab_ci_content == *'stage: test'* ]] \
+  && [[ $gitlab_ci_content == *'./test/omybuntu-cli-test.sh'* ]] \
+  && [[ $gitlab_ci_content == *'./test/omybuntu-iso-test.sh'* ]] \
+  && [[ $gitlab_ci_content == *'./test/omybuntu-update-available-test.sh'* ]]; then
+  ok "GitLab requires all repository tests before building the ISO"
+else
+  nok "GitLab does not enforce every release test"
+fi
+
+if [[ $gitlab_ci_content == *'git merge-base --is-ancestor'* ]] \
+  && [[ $gitlab_ci_content == *'release/checklists/$CI_COMMIT_TAG.md'* ]] \
+  && [[ $gitlab_ci_content == *"grep -qx 'Status: approved'"* ]]; then
+  ok "GitLab validates tag branches and stable hardware approval"
+else
+  nok "GitLab release promotion gates are incomplete"
+fi
+
 update_available_content=$(<"$ROOT/bin/omybuntu-update-available")
 if [[ $update_available_content == *'v[0-9]+\.[0-9]+\.[0-9]+'* ]] \
   && [[ $update_available_content == *'_${version_pattern}_dev'* || $update_available_content == *'${version_pattern}_dev'* ]] \
-  && [[ $update_available_content == *'${version_pattern}_rc'* ]]; then
-  ok "update discovery follows stable, dev, and rc three-part tags"
+  && [[ $update_available_content == *'${version_pattern}_rc'* ]] \
+  && [[ $update_available_content == *'--merged="$remote_branch"'* ]] \
+  && [[ $update_available_content == *'--merged=HEAD'* ]]; then
+  ok "update discovery follows channel branches and three-part tags"
 else
-  nok "update discovery still depends on the legacy tag convention"
+  nok "update discovery does not isolate reachable channel tags"
 fi
 
 if [[ $gitlab_ci_content == *'export OMYBUNTU_ISO_VERSION="$package_version"'* ]] \
@@ -976,21 +1007,33 @@ fi
 if [[ $gitlab_ci_content == *'/packages/generic/omybuntu/'* ]] \
   && [[ $gitlab_ci_content == *'JOB-TOKEN: ${CI_JOB_TOKEN}'* ]] \
   && [[ $gitlab_ci_content == *'sha256sum "$package_file"'* ]] \
+  && [[ $gitlab_ci_content == *'--detach-sign "$package_file"'* ]] \
+  && [[ $gitlab_ci_content == *'git verify-tag "$CI_COMMIT_TAG"'* ]] \
+  && [[ $gitlab_ci_content == *omybuntu-release-key.asc* ]] \
   && [[ $gitlab_ci_content == *'"*.iso.sha256"'* ]]; then
-  ok "GitLab publishes the ISO and checksum through the Generic Package Registry"
+  ok "GitLab publishes signed ISO metadata through the Generic Package Registry"
 else
-  nok "GitLab ISO publication or checksum handling is incomplete"
+  nok "GitLab ISO signing or publication is incomplete"
 fi
 
 if [[ $gitlab_ci_content == *'stage: release'* ]] \
   && [[ $gitlab_ci_content == *'registry.gitlab.com/gitlab-org/cli:latest'* ]] \
   && [[ $gitlab_ci_content == *'GLAB_ENABLE_CI_AUTOLOGIN: "true"'* ]] \
-  && [[ $gitlab_ci_content == *'glab release view "$CI_COMMIT_TAG"'* ]] \
   && [[ $gitlab_ci_content == *'glab release create "$CI_COMMIT_TAG"'* ]] \
+  && [[ $gitlab_ci_content == *'--notes-file release-notes.md'* ]] \
   && [[ $gitlab_ci_content == *'"link_type":"package"'* ]]; then
   ok "GitLab creates or updates a tag release with versioned ISO links"
 else
   nok "GitLab release publication is incomplete"
+fi
+
+gitattributes_content=$(<"$ROOT/.gitattributes")
+if [[ $gitattributes_content == *'*.sh text eol=lf'* ]] \
+  && [[ $gitattributes_content == *'bin/* text eol=lf'* ]] \
+  && [[ $gitattributes_content == *'test/* text eol=lf'* ]]; then
+  ok "shell entrypoints and tests are normalized to LF"
+else
+  nok "shell line ending policy is incomplete"
 fi
 
 webapp_install_content=$(<"$ROOT/bin/omybuntu-webapp-install")

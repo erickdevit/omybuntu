@@ -104,13 +104,27 @@ To target a specific branch or a custom fork for deployment, specify `OMYBUNTU_R
 OMYBUNTU_REPO="erickdevit/omybuntu" OMYBUNTU_REF="master" bash -c "$(curl -fsSL https://raw.githubusercontent.com/erickdevit/omybuntu/master/boot.sh)"
 ```
 
-### 2. Ready-to-Run ISO (Coming Very Soon)
+### 2. Ready-to-Run ISO
 
-For a streamlined bare-metal deployment, we are building a custom Omybuntu ISO installer.
-* **Direct Boot**: Boot straight into the installer which configures Ubuntu and Hyprland without requiring an existing GNOME/Ubuntu Desktop installation.
-* **No Bloat**: Avoids standard GNOME packages, installing only what is defined in the Omybuntu base package lists.
-* **Rapid Deployment**: Incorporates custom chroot scripts to prepare system storage quickly.
-* **Status**: The ISO generation scripts are in active development and testing. The official .iso image will be made available for download very soon.
+Versioned AMD64 ISO builds based on Ubuntu 26.04 are published through
+[Omybuntu GitLab Releases](https://gitlab.com/erickwornex/omybuntu/-/releases).
+Ubuntu 26.04 on AMD64 is the supported base for Omybuntu 1.0; other Ubuntu
+versions and CPU architectures are not part of the 1.0 compatibility matrix.
+
+Each tagged release includes the ISO, its SHA-256 checksum, a detached GPG
+signature, and the public release key. Download all four files and verify them
+before writing the ISO to a USB drive:
+
+```bash
+sha256sum --check omybuntu-v1.0.0-amd64.iso.sha256
+gpg --import omybuntu-release-key.asc
+gpg --fingerprint
+gpg --verify omybuntu-v1.0.0-amd64.iso.sig omybuntu-v1.0.0-amd64.iso
+```
+
+Compare the imported key fingerprint with the fingerprint shown in the GitLab
+release notes. Back up important data before installation, especially when
+repartitioning a disk or configuring Windows dual boot.
 
 ---
 

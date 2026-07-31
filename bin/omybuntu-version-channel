@@ -11,7 +11,7 @@ elif [[ -f $OMYBUNTU_PATH/.build-info ]]; then
 else
   # Fallback to current Git branch
   current_branch=$(git -C "$OMYBUNTU_PATH" branch --show-current 2>/dev/null || true)
-  if [[ $current_branch == "main" || $current_branch == "master" ]]; then
+  if [[ $current_branch == "master" ]]; then
     channel="stable"
   elif [[ $current_branch == "rc" ]]; then
     channel="rc"

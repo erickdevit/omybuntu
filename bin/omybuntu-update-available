@@ -7,29 +7,47 @@ version_pattern='v[0-9]+\.[0-9]+\.[0-9]+'
 
 case "$channel" in
 stable|edge)
+  branch="master"
   pattern_grep="^${version_pattern}$"
   ;;
 rc)
-  pattern_grep="^${version_pattern}_rc[0-9]*$"
+  branch="rc"
+  pattern_grep="^${version_pattern}_rc[0-9]+$"
   ;;
 dev)
-  pattern_grep="^${version_pattern}_dev[0-9]*$"
+  branch="dev"
+  pattern_grep="^${version_pattern}_dev[0-9]+$"
   ;;
 *)
-  pattern_grep="^${version_pattern}$"
+  echo "Unable to check for updates on unknown channel '$channel'"
+  exit 1
   ;;
 esac
 
-# Fetch latest remote tag matching the channel
-latest_tag=$(git -C "$OMYBUNTU_PATH" ls-remote --tags origin | grep -v "{}" | awk '{print $2}' | sed 's#refs/tags/##' | grep -E "$pattern_grep" | sort -V | tail -n 1)
+# Fetch the channel branch and tags so unrelated channel tags cannot affect the result.
+remote_branch="refs/remotes/origin/$branch"
+if ! git -C "$OMYBUNTU_PATH" fetch --quiet --tags origin \
+  "+refs/heads/$branch:$remote_branch"; then
+  echo "Unable to fetch updates for channel '$channel'"
+  exit 1
+fi
+
+latest_tag=$(git -C "$OMYBUNTU_PATH" for-each-ref \
+  --merged="$remote_branch" \
+  --sort=-version:refname \
+  --format='%(refname:strip=2)' refs/tags | grep -E "$pattern_grep" | head -n 1)
 
 if [[ -z $latest_tag ]]; then
   echo "Omybuntu is up to date (no remote tags for channel '$channel')"
   exit 1
 fi
 
-# Get latest local tag matching the channel
-current_tag=$(git -C "$OMYBUNTU_PATH" tag --list | grep -E "$pattern_grep" | sort -V | tail -n 1)
+# Only a channel tag reachable from the installed commit represents the
+# currently installed release.
+current_tag=$(git -C "$OMYBUNTU_PATH" for-each-ref \
+  --merged=HEAD \
+  --sort=-version:refname \
+  --format='%(refname:strip=2)' refs/tags | grep -E "$pattern_grep" | head -n 1)
 
 if [[ -z $current_tag ]]; then
   current_tag="none"

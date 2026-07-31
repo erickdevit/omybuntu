@@ -16,7 +16,7 @@ rc)
   ;;
 dev)
   branch="dev"
-  pattern_grep="^${version_pattern}_dev[0-9]+$"
+  pattern_grep="^${version_pattern}_dev$"
   ;;
 *)
   echo "Unable to check for updates on unknown channel '$channel'"

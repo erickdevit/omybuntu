@@ -12,25 +12,21 @@ stable tag while its physical validation checklist is pending.
 3. Protect the `v*` tag pattern and the `rc` and `master` branches in GitLab.
 4. Apply equivalent branch protection to `rc` and `master` in GitHub.
 
-## First v1.0 development build
+## Prepare the v1.0 candidate on dev
 
-The source `version` must contain `v1.0.0_dev1`. Commit and push the candidate
-to both development remotes, then create a signed tag:
+The source `version` remains `v1.1.7_dev`. Do not move or recreate its existing
+tag to represent stable 1.0. Commit and push the candidate to both development
+remotes:
 
 ```bash
 git switch dev
 git push origin dev
 git push gitlab dev
-git tag --sign v1.0.0_dev1 --message "Omybuntu v1.0.0_dev1"
-git push gitlab v1.0.0_dev1
 ```
 
-Wait for the GitLab test, build, signature, and release jobs to pass. Only then
-mirror the immutable tag used by installed systems:
-
-```bash
-git push origin v1.0.0_dev1
-```
+Run a manual GitLab pipeline for the `dev` commit and wait for its test and ISO
+build jobs to pass. Manual builds are unsigned and do not create a public
+release.
 
 ## First release candidate
 

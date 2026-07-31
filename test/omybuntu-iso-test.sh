@@ -919,15 +919,15 @@ build_iso_content=$(<"$ROOT/install/iso/build-iso.sh")
   nok "ISO build does not write Omybuntu build metadata"
 
 version_content=$(<"$ROOT/version")
-release_tag_pattern='^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]+)?$'
+release_tag_pattern='^v[0-9]+\.[0-9]+\.[0-9]+(_dev|_rc[0-9]+)?$'
 [[ $version_content =~ $release_tag_pattern ]] && \
   ok "source version uses the vX.Y.Z_dev convention" || \
   nok "source version does not use the expected release convention"
 
-if [[ v1.0.0_dev1 =~ $release_tag_pattern ]] \
+if [[ v1.1.7_dev =~ $release_tag_pattern ]] \
   && [[ v1.0.0_rc1 =~ $release_tag_pattern ]] \
   && [[ v1.1.6 =~ $release_tag_pattern ]] \
-  && [[ ! v1.1.6_dev =~ $release_tag_pattern ]] \
+  && [[ ! v1.1.6_dev1 =~ $release_tag_pattern ]] \
   && [[ ! v0.0.1.5-dev1 =~ $release_tag_pattern ]] \
   && [[ ! v1.1.6.1_dev =~ $release_tag_pattern ]]; then
   ok "release convention accepts exactly three numeric components"
@@ -939,7 +939,7 @@ fi
   ok "ISO preserves the complete requested version in its filename and embedded metadata" || \
   nok "ISO build does not propagate the requested version"
 
-[[ $build_iso_content == *'_dev[0-9]+$'*dev* && $build_iso_content == *'_rc[0-9]+$'*rc* ]] && \
+[[ $build_iso_content == *'_dev$'*dev* && $build_iso_content == *'_rc[0-9]+$'*rc* ]] && \
   ok "tagged ISO builds infer their update channel from the version suffix" || \
   nok "tagged ISO builds do not infer dev and rc channels"
 
@@ -958,7 +958,7 @@ fi
   nok "ISO build does not write casper checksum manifest"
 
 gitlab_ci_content=$(<"$ROOT/.gitlab-ci.yml")
-if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(_(dev|rc)[0-9]+)?$/'* ]] \
+if [[ $gitlab_ci_content == *'CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+(_dev|_rc[0-9]+)?$/'* ]] \
   && [[ $gitlab_ci_content == *'CI_PIPELINE_SOURCE == "web"'* ]] \
   && [[ $gitlab_ci_content == *'when: never'* ]]; then
   ok "GitLab creates ISO pipelines only for three-part version tags and manual runs"

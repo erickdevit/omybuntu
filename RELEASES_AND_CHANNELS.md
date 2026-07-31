@@ -16,26 +16,28 @@ Omybuntu 1.0 officially supports the Omybuntu AMD64 ISO built on Ubuntu
 | Stable | `master` | `vX.Y.Z` | Production |
 | Edge | `master` | `vX.Y.Z` | Stable Omybuntu with rolling upstream packages |
 | RC | `rc` | `vX.Y.Z_rcN` | Release candidate |
-| Dev | `dev` | `vX.Y.Z_devN` | Experimental |
+| Dev | `dev` | `vX.Y.Z_dev` | Experimental |
 
 `master` is intentionally retained for compatibility with Omarchy upstream
 and existing Omybuntu installations. `main` is not an Omybuntu release branch.
 
-Release tags always contain exactly three numeric version components. The
-first stable series uses `v1.0.0_devN`, `v1.0.0_rcN`, and `v1.0.0`. Older tags
-using a hyphen or provisional four-part versions are historical only and must
-not be reused for new releases.
+Release tags always contain exactly three numeric version components. Stable
+1.0 uses `v1.0.0_rcN` and `v1.0.0`. Development follows its own forward-moving
+version line, currently `v1.1.7_dev`; preparing stable 1.0 must not move,
+replace, or recreate that dev tag. Older tags using a hyphen or four numeric
+components are historical only and must not be reused for new releases.
 
 ## Promotion flow
 
 ```mermaid
 graph LR
-  Dev["dev + vX.Y.Z_devN"] --> RC["rc + vX.Y.Z_rcN"]
+  Dev["dev + vX.Y.Z_dev"] --> RC["rc + vX.Y.Z_rcN"]
   RC --> Stable["master + vX.Y.Z"]
 ```
 
-1. Merge feature and bug-fix branches into `dev` and tag a verified commit as
-   `vX.Y.Z_devN`.
+1. Merge feature and bug-fix branches into `dev`. Advance its `vX.Y.Z_dev` tag
+   only when the development version itself changes, never to name a stable
+   release candidate.
 2. Promote the approved commit to `rc`, then tag it as `vX.Y.Z_rcN`.
 3. Complete the physical validation matrix in
    `release/checklists/vX.Y.Z.md`.
@@ -61,9 +63,8 @@ that branch and its tags from the installed repository's `origin`, and only
 considers tags reachable from that branch. The installed version is the newest
 matching tag reachable from `HEAD`.
 
-Tags are ordered by version after strict channel-pattern filtering. Historical
-development tags without a numbered `_devN` suffix are ignored without
-deleting published history.
+Tags are ordered by version after strict channel-pattern filtering. Dev accepts
+only `_dev`, RC accepts `_rcN`, and stable accepts no suffix.
 
 When an update is selected, `omybuntu update` pulls the active branch, runs
 timestamped migrations, and updates system packages through APT.
